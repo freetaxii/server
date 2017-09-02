@@ -20,10 +20,12 @@ import (
 
 type SystemConfigType struct {
 	System struct {
-		Listen         string
-		Prefix         string
-		DbFile         string
-		DbFileFullPath string
+		Listen          string
+		Prefix          string
+		DbFile          string
+		DbFileFullPath  string
+		HtmlDir         string
+		HtmlDirFullPath string
 	}
 	Logging struct {
 		Enabled         bool
@@ -58,6 +60,7 @@ func (this *SystemConfigType) LoadSystemConfig(filename string) {
 
 	// Lets assign the full paths to a few variables so we can use them later
 	this.System.DbFileFullPath = this.System.Prefix + "/" + this.System.DbFile
+	this.System.HtmlDirFullPath = this.System.Prefix + "/" + this.System.HtmlDir
 	this.Logging.LogFileFullPath = this.System.Prefix + "/" + this.Logging.LogFile
 
 	if this.Logging.LogLevel >= 5 {

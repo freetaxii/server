@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>FreeTAXII - Discovery Service</title>
+	<meta name="author" content="Bret Jordan">
+	<meta name="description" content="FreeTAXII - A TAXII 2 server">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<table style="background-color: #800400; width: 100%; float: left;" cellpadding="3">
+<tbody>
+<tr>
+<td><span style="color: #ffffff;">FreeTAXII - A TAXII 2 Server</span></td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<h2 style="color: #2e6c80;">Discovery Service</h2>
+<table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
+<tbody>
+<tr>
+<td style="width: 150px;">Title:</td>
+<td>{{ .Title }}</td>
+</tr>
+<tr>
+<td>Description:</td>
+<td>{{ .Description }}</td>
+</tr>
+<tr>
+<td>Contact:</td>
+<td>{{ .Contact }}</td>
+</tr>
+<tr>
+<td>Default API Root:</td>
+<td><a href="{{ .Default }}">{{ .Default }}</a></td>
+</tr>
+<tr>
+<td style="vertical-align: top;">API Roots:</td>
+<td>{{ range .Api_roots }} <a href="{{ . }}">{{ . }}</a><br> {{ end }}</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<hr width="100%" />
+<div style="text-align: center;"><span style="color: #949392; font-size: 75%;">Copyright 2017 - Bret Jordan</span></div>
+</body>
+</html>
