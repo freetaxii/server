@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>FreeTAXII - Discovery Service</title>
+	<title>FreeTAXII - API Root Service</title>
 	<meta name="author" content="Bret Jordan">
 	<meta name="description" content="FreeTAXII - A TAXII 2 server">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
 </tbody>
 </table>
 <p>&nbsp;</p>
-<h2 style="color: #2e6c80;">Discovery Service</h2>
+<h2 style="color: #2e6c80;">API Root Service</h2>
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
 <tbody>
 <tr>
@@ -27,20 +27,12 @@
 <td>{{ .Description }}</td>
 </tr>
 <tr>
-<td>Contact:</td>
-<td>{{ .Contact }}</td>
+<td style="vertical-align: top;">Versions:</td>
+<td>{{ range .Api_roots }} {{ . }}<br> {{ end }}</td>
 </tr>
 <tr>
-<td>Path:</td>
-<td>{{ .DB_sPath }}</td>
-</tr>
-<tr>
-<td>Default API Root:</td>
-<td><a href="{{ .Default }}">{{ .Default }}</a></td>
-</tr>
-<tr>
-<td style="vertical-align: top;">API Roots:</td>
-<td>{{ range .Api_roots }} <a href="{{ . }}">{{ . }}</a><br> {{ end }}</td>
+<td>Max Content Length:</td>
+<td>{{ .Max_content_length }}</td>
 </tr>
 </tbody>
 </table>

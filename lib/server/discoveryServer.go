@@ -27,7 +27,8 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 	var jsondata []byte
 	var formatpretty bool = false
 	var taxiiHeader headers.HttpHeaderType
-	// TODO add path prefix for html templates to system config
+
+	// Setup HTML template
 	var htmlDiscoveryResourceFile string = "discoveryResource.html"
 	var htmlDiscoveryResource string = this.SysConfig.System.HtmlDir + "/" + htmlDiscoveryResourceFile
 	var htmlTemplateDiscoveryResource = template.Must(template.ParseFiles(htmlDiscoveryResource))
@@ -48,7 +49,7 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 	httpHeaderAccept = r.Header.Get("Accept")
 
 	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		mediaType = defs.TAXII_MEDIA_TYPE + "; charset=utf-8"
+		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
 		jsondata = this.createDiscoveryResponse(formatpretty, index)

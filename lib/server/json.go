@@ -8,7 +8,6 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/freetaxii/libtaxii2/objects"
 	"log"
 )
 
@@ -23,16 +22,8 @@ import (
 func (this *ServerType) createDiscoveryResponse(formatPretty bool, index int) []byte {
 	var jsondata []byte
 	var err error
-	tm := objects.NewDiscovery()
 
-	// TODO pull these from the database or the ServerType object if it has been loaded from database
-	tm.SetTitle(this.DiscoveryService.Resources[index].Title)
-	tm.SetDescription(this.DiscoveryService.Resources[index].Description)
-	tm.SetContact(this.DiscoveryService.Resources[index].Contact)
-	tm.SetDefault(this.DiscoveryService.Resources[index].Default)
-	for _, apiroot := range this.DiscoveryService.Resources[index].Api_roots {
-		tm.AddApiRoot(apiroot)
-	}
+	tm := this.DiscoveryService.Resources[index]
 
 	if formatPretty == true {
 		jsondata, err = json.MarshalIndent(tm, "", "    ")

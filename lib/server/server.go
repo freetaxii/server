@@ -8,6 +8,8 @@ package server
 
 import (
 	"github.com/freetaxii/freetaxii-server/lib/systemconfig"
+	"github.com/freetaxii/libtaxii2/objects/api_root"
+	"github.com/freetaxii/libtaxii2/objects/discovery"
 )
 
 // ----------------------------------------------------------------------
@@ -17,19 +19,15 @@ import (
 type ServerType struct {
 	SysConfig        *systemconfig.SystemConfigType
 	DiscoveryService DiscoveryServiceType
+	ApiRootService   ApiRootServiceType
 }
 
 type DiscoveryServiceType struct {
 	Enabled   bool
-	Resources []DiscoveryResourceType
+	Resources []discovery.DiscoveryType
 }
 
-type DiscoveryResourceType struct {
-	Id          int
-	Title       string
-	Description string
-	Location    string
-	Contact     string
-	Default     string
-	Api_roots   []string
+type ApiRootServiceType struct {
+	Enabled   bool
+	Resources []api_root.ApiRootType
 }

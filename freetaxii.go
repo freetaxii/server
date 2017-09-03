@@ -57,6 +57,7 @@ func main() {
 	syscfg.LoadSystemConfig(*sOptSystemConfigFilename)
 	taxiiServer.SysConfig = &syscfg
 	taxiiServer.LoadDiscoveryServicesConfig()
+	taxiiServer.LoadApiRootServicesConfig()
 
 	// --------------------------------------------------
 	// Setup Logging File
@@ -86,27 +87,39 @@ func main() {
 	// Setup Discovery Server
 	// --------------------------------------------------
 
-	// TODO set this up in a loop
-	// How do you know which instance is being used? Without that you can not display the correct information from the object
+	// This will look to see if there are any discovery services defined in the database
+	// If there are, it will loop through the list and setup handlers for each one of them
+	// The HandleFunc passes in an index value so that the handler instance will know
+	// which Discovery Service it is processing. Without that information it can not
+	// build the correct Discovery response message.
 	if taxiiServer.DiscoveryService.Enabled == true {
 		for i, _ := range taxiiServer.DiscoveryService.Resources {
 			var index int = i
-			var path string = taxiiServer.DiscoveryService.Resources[index].Location
 
-			log.Println("Starting TAXII Discovery services at:", taxiiServer.DiscoveryService.Resources[index].Location)
-			router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.DiscoveryServerHandler(w, r, index) }).Methods("GET")
-			serviceCounter++
+			// Check to see if this entry is actually enabled
+			if taxiiServer.DiscoveryService.Resources[index].DB_bEnabled == true {
+				var path string = taxiiServer.DiscoveryService.Resources[index].DB_sPath
+
+				log.Println("Starting TAXII Discovery service at:", path)
+				router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.DiscoveryServerHandler(w, r, index) }).Methods("GET")
+				serviceCounter++
+			}
 		}
 	}
 
 	// // --------------------------------------------------
-	// // Setup Collection Server
+	// // Setup API Root Server
 	// // --------------------------------------------------
 
-	// if syscfg.Services.Collection != "" {
-	// 	log.Println("Starting TAXII Collection services at:", syscfg.Services.Collection)
-	// 	http.HandleFunc(syscfg.Services.Collection, taxiiServer.CollectionServerHandler)
-	// 	serviceCounter++
+	// if taxiiServer.ApiRootService.Enabled == true {
+	// 	for i, _ := range taxiiServer.ApiRootService.Resources {
+	// 		var index int = i
+	// 		var path string = taxiiServer.ApiRootService.Resources[index].Path
+
+	// 		log.Println("Starting TAXII API Root service at:", taxiiServer.ApiRootService.Resources[index].Path)
+	// 		router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.ApiRootServerHandler(w, r, index) }).Methods("GET")
+	// 		serviceCounter++
+	// 	}
 	// }
 
 	// // --------------------------------------------------
