@@ -9,7 +9,6 @@ package main
 import (
 	"fmt"
 	"github.com/freetaxii/freetaxii-server/lib/server"
-	"github.com/freetaxii/freetaxii-server/lib/systemconfig"
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt"
 	"log"
@@ -18,12 +17,12 @@ import (
 )
 
 const (
-	DEFAULT_SYSTEM_CONFIG_FILENAME = "etc/freetaxii.conf"
+	DEFAULT_SERVER_CONFIG_FILENAME = "etc/freetaxii.conf"
 )
 
 var sVersion = "0.0.1"
 
-var sOptSystemConfigFilename = getopt.StringLong("config", 'c', DEFAULT_SYSTEM_CONFIG_FILENAME, "System Configuration File", "string")
+var sOptServerConfigFilename = getopt.StringLong("config", 'c', DEFAULT_SERVER_CONFIG_FILENAME, "System Configuration File", "string")
 var bOptHelp = getopt.BoolLong("help", 0, "Help")
 var bOptVer = getopt.BoolLong("version", 0, "Version")
 
@@ -47,17 +46,13 @@ func main() {
 
 	router := mux.NewRouter()
 	serviceCounter := 0
-	var syscfg systemconfig.SystemConfigType
 	var taxiiServer server.ServerType
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
 	// --------------------------------------------------
 
-	syscfg.LoadSystemConfig(*sOptSystemConfigFilename)
-	taxiiServer.SysConfig = &syscfg
-	taxiiServer.LoadDiscoveryServicesConfig()
-	taxiiServer.LoadApiRootServicesConfig()
+	taxiiServer.LoadServerConfig(*sOptServerConfigFilename)
 
 	// --------------------------------------------------
 	// Setup Logging File
@@ -68,8 +63,8 @@ func main() {
 	// take the last bit in case there is multiple directories /etc/foo/bar/stuff.log
 
 	// Only enable logging to a file if it is turned on in the configuration file
-	if syscfg.Logging.Enabled == true {
-		logFile, err := os.OpenFile(syscfg.Logging.LogFileFullPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if taxiiServer.Logging.Enabled == true {
+		logFile, err := os.OpenFile(taxiiServer.Logging.LogFileFullPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
@@ -97,8 +92,8 @@ func main() {
 			var index int = i
 
 			// Check to see if this entry is actually enabled
-			if taxiiServer.DiscoveryService.Resources[index].DB_bEnabled == true {
-				var path string = taxiiServer.DiscoveryService.Resources[index].DB_sPath
+			if taxiiServer.DiscoveryService.Resources[index].Enabled == true {
+				var path string = taxiiServer.DiscoveryService.Resources[index].Path
 
 				log.Println("Starting TAXII Discovery service at:", path)
 				router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.DiscoveryServerHandler(w, r, index) }).Methods("GET")
@@ -126,9 +121,9 @@ func main() {
 	// // Setup Poll Server
 	// // --------------------------------------------------
 
-	// if syscfg.Services.Poll != "" {
-	// 	log.Println("Starting TAXII Poll services at:", syscfg.Services.Poll)
-	// 	http.HandleFunc(syscfg.Services.Poll, taxiiServer.PollServerHandler)
+	// if taxiiServer.Services.Poll != "" {
+	// 	log.Println("Starting TAXII Poll services at:", taxiiServer.Services.Poll)
+	// 	http.HandleFunc(taxiiServer.Services.Poll, taxiiServer.PollServerHandler)
 	// 	serviceCounter++
 	// }
 
@@ -136,9 +131,9 @@ func main() {
 	// // Setup Admin Server
 	// // --------------------------------------------------
 
-	// if syscfg.Services.Admin != "" {
-	// 	log.Println("Starting TAXII Admin services at:", syscfg.Services.Admin)
-	// 	http.HandleFunc(syscfg.Services.Admin, taxiiServer.AdminServerHandler)
+	// if taxiiServer.Services.Admin != "" {
+	// 	log.Println("Starting TAXII Admin services at:", taxiiServer.Services.Admin)
+	// 	http.HandleFunc(taxiiServer.Services.Admin, taxiiServer.AdminServerHandler)
 	// 	//serviceCounter++  Do not count this service in the list
 	// }
 
@@ -155,9 +150,9 @@ func main() {
 	// --------------------------------------------------
 
 	// TODO - Need to verify the list address is a valid IPv4 address and port combination.
-	if syscfg.System.Listen != "" {
-		log.Println("Listening on:", syscfg.System.Listen)
-		http.ListenAndServe(syscfg.System.Listen, router)
+	if taxiiServer.System.Listen != "" {
+		log.Println("Listening on:", taxiiServer.System.Listen)
+		http.ListenAndServe(taxiiServer.System.Listen, router)
 	} else {
 		log.Fatalln("The listen directive is missing from the configuration file")
 	}

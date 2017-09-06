@@ -30,16 +30,16 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 
 	// Setup HTML template
 	var htmlDiscoveryResourceFile string = "discoveryResource.html"
-	var htmlDiscoveryResource string = this.SysConfig.System.HtmlDir + "/" + htmlDiscoveryResourceFile
+	var htmlDiscoveryResource string = this.System.HtmlDir + "/" + htmlDiscoveryResourceFile
 	var htmlTemplateDiscoveryResource = template.Must(template.ParseFiles(htmlDiscoveryResource))
 
-	if this.SysConfig.Logging.LogLevel >= 3 {
+	if this.Logging.LogLevel >= 3 {
 		log.Printf("DEBUG-3: Found Request on Discovery Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
 	// that will generate errors below.
-	if this.SysConfig.Logging.LogLevel >= 5 {
+	if this.Logging.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -66,7 +66,7 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 		w.Write(jsondata)
 	}
 
-	if this.SysConfig.Logging.LogLevel >= 1 {
+	if this.Logging.LogLevel >= 1 {
 		log.Println("DEBUG-1: Sending Discovery Response to", r.RemoteAddr)
 	}
 }

@@ -4,10 +4,13 @@
 // that can be found in the LICENSE file in the root of the source
 // tree.
 
-package systemconfig
+package server
 
 import (
 	"encoding/json"
+	"github.com/freetaxii/libtaxii2/objects/api_root"
+	"github.com/freetaxii/libtaxii2/objects/common"
+	"github.com/freetaxii/libtaxii2/objects/discovery"
 	"log"
 	"os"
 )
@@ -18,7 +21,7 @@ import (
 // Log Level 4 =
 // Log Level 5 = RAW packet/message decode and output
 
-type SystemConfigType struct {
+type ServerType struct {
 	System struct {
 		Listen          string
 		Prefix          string
@@ -33,13 +36,34 @@ type SystemConfigType struct {
 		LogFile         string
 		LogFileFullPath string
 	}
+	DiscoveryService struct {
+		Enabled   bool
+		Resources []DiscoveryResourceType
+	}
+	ApiRootService struct {
+		Enabled   bool
+		Resources []ApiRootResourceType
+	}
+}
+
+type DiscoveryResourceType struct {
+	common.DiscoveryMetadataProperties
+	Resource discovery.DiscoveryType
+}
+
+type ApiRootResourceType struct {
+	common.ApiRootMetadataProperties
+	Resource api_root.ApiRootType
 }
 
 // --------------------------------------------------
 // Load Configuration File and Parse JSON
 // --------------------------------------------------
 
-func (this *SystemConfigType) LoadSystemConfig(filename string) {
+// LoadServerConfig - This methods takes in one parameter
+// param: s - a string value representing a filename of the configuration file
+func (this *ServerType) LoadServerConfig(filename string) {
+	// TODO - Need to make make a validation check for the configuration file
 
 	// Open and read configuration file
 	sysConfigFileData, err := os.Open(filename)

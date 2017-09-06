@@ -20,27 +20,27 @@
 <tbody>
 <tr>
 <td style="width: 150px;">Title:</td>
-<td>{{ .Title }}</td>
+<td>{{ .Resource.Title }}</td>
 </tr>
 <tr>
 <td>Description:</td>
-<td>{{ .Description }}</td>
+<td>{{ .Resource.Description }}</td>
 </tr>
 <tr>
 <td>Contact:</td>
-<td>{{ .Contact }}</td>
+<td>{{ .Resource.Contact }}</td>
 </tr>
 <tr>
 <td>Path:</td>
-<td>{{ .DB_sPath }}</td>
+<td>{{ .Path }}</td>
 </tr>
 <tr>
 <td>Default API Root:</td>
-<td><a href="{{ .Default }}">{{ .Default }}</a></td>
+<td><a href="{{ .Resource.Default }}">{{ .Resource.Default }}</a></td>
 </tr>
 <tr>
 <td style="vertical-align: top;">API Roots:</td>
-<td>{{ range .Api_roots }} <a href="{{ . }}">{{ . }}</a><br> {{ end }}</td>
+<td>{{ range .Resource.Api_roots }} <a href="{{ . }}">{{ . }}</a><br> {{ end }}</td>
 </tr>
 </tbody>
 </table>

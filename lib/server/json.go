@@ -23,7 +23,7 @@ func (this *ServerType) createDiscoveryResponse(formatPretty bool, index int) []
 	var jsondata []byte
 	var err error
 
-	tm := this.DiscoveryService.Resources[index]
+	tm := this.DiscoveryService.Resources[index].Resource
 
 	if formatPretty == true {
 		jsondata, err = json.MarshalIndent(tm, "", "    ")
