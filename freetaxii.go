@@ -82,7 +82,7 @@ func main() {
 	// Setup Discovery Server
 	// --------------------------------------------------
 
-	// This will look to see if there are any discovery services defined in the database
+	// This will look to see if there are any Discovery services defined in the config file.
 	// If there are, it will loop through the list and setup handlers for each one of them
 	// The HandleFunc passes in an index value so that the handler instance will know
 	// which Discovery Service it is processing. Without that information it can not
@@ -102,30 +102,25 @@ func main() {
 		}
 	}
 
-	// // --------------------------------------------------
-	// // Setup API Root Server
-	// // --------------------------------------------------
+	// This will look to see if there are any API Root services defined in the config file.
+	// If there are, it will loop through the list and setup handlers for each one of them
+	// The HandleFunc passes in an index value so that the handler instance will know
+	// which Discovery Service it is processing. Without that information it can not
+	// build the correct Discovery response message.
+	if taxiiServer.ApiRootService.Enabled == true {
+		for i, _ := range taxiiServer.ApiRootService.Resources {
+			var index int = i
 
-	// if taxiiServer.ApiRootService.Enabled == true {
-	// 	for i, _ := range taxiiServer.ApiRootService.Resources {
-	// 		var index int = i
-	// 		var path string = taxiiServer.ApiRootService.Resources[index].Path
+			// Check to see if this entry is actually enabled
+			if taxiiServer.ApiRootService.Resources[index].Enabled == true {
+				var path string = taxiiServer.ApiRootService.Resources[index].Path
 
-	// 		log.Println("Starting TAXII API Root service at:", taxiiServer.ApiRootService.Resources[index].Path)
-	// 		router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.ApiRootServerHandler(w, r, index) }).Methods("GET")
-	// 		serviceCounter++
-	// 	}
-	// }
-
-	// // --------------------------------------------------
-	// // Setup Poll Server
-	// // --------------------------------------------------
-
-	// if taxiiServer.Services.Poll != "" {
-	// 	log.Println("Starting TAXII Poll services at:", taxiiServer.Services.Poll)
-	// 	http.HandleFunc(taxiiServer.Services.Poll, taxiiServer.PollServerHandler)
-	// 	serviceCounter++
-	// }
+				log.Println("Starting TAXII API Root service at:", path)
+				router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.ApiRootServerHandler(w, r, index) }).Methods("GET")
+				serviceCounter++
+			}
+		}
+	}
 
 	// // --------------------------------------------------
 	// // Setup Admin Server

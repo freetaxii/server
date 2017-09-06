@@ -29,9 +29,9 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlDiscoveryResourceFile string = "discoveryResource.html"
-	var htmlDiscoveryResource string = this.System.HtmlDir + "/" + htmlDiscoveryResourceFile
-	var htmlTemplateDiscoveryResource = template.Must(template.ParseFiles(htmlDiscoveryResource))
+	var htmlResourceFile string = "discoveryResource.html"
+	var htmlResource string = this.System.HtmlDir + "/" + htmlResourceFile
+	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
 	if this.Logging.LogLevel >= 3 {
 		log.Printf("DEBUG-3: Found Request on Discovery Server Handler from %s", r.RemoteAddr)
@@ -57,7 +57,7 @@ func (this *ServerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Re
 	} else if strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		htmlTemplateDiscoveryResource.ExecuteTemplate(w, htmlDiscoveryResourceFile, this.DiscoveryService.Resources[index])
+		htmlTemplateResource.ExecuteTemplate(w, htmlResourceFile, this.DiscoveryService.Resources[index])
 	} else {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)

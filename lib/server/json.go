@@ -38,3 +38,27 @@ func (this *ServerType) createDiscoveryResponse(formatPretty bool, index int) []
 	}
 	return jsondata
 }
+
+// createApiRootResponse - This takes in two parameters and will create the TAXII ecoded JSON response
+// param: formatPretty - This is a boolean that will tell the Marshal process to format and indent the JSON
+// param: index - An integer that lets this method know which API Root service is being handled by this instance
+// retval: jsondata - A byte array of JSON encoded data
+func (this *ServerType) createApiRootResponse(formatPretty bool, index int) []byte {
+	var jsondata []byte
+	var err error
+
+	tm := this.ApiRootService.Resources[index].Resource
+
+	if formatPretty == true {
+		jsondata, err = json.MarshalIndent(tm, "", "    ")
+	} else {
+		jsondata, err = json.Marshal(tm)
+	}
+
+	if err != nil {
+		// If we can not create a status message then there is something
+		// wrong with the APIs and nothing is going to work.
+		log.Fatal("Unable to create API Root Response Message")
+	}
+	return jsondata
+}

@@ -19,20 +19,22 @@
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
 <tbody>
 <tr>
-<td style="width: 150px;">Title:</td>
+<td style="width: 150px;">Path:</td>
+<td>{{ .Path }}</td>
+</tr>
+<tr>
+<td>Title:</td>
 <td>{{ .Resource.Title }}</td>
 </tr>
+{{if .Resource.Description}}
 <tr>
 <td>Description:</td>
 <td>{{ .Resource.Description }}</td>
 </tr>
+{{end}}
 <tr>
 <td>Contact:</td>
 <td>{{ .Resource.Contact }}</td>
-</tr>
-<tr>
-<td>Path:</td>
-<td>{{ .Path }}</td>
 </tr>
 <tr>
 <td>Default API Root:</td>
