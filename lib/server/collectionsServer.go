@@ -15,12 +15,12 @@ import (
 	"strings"
 )
 
-// DiscoveryServerHandler - This method takes in three parameters. The last parameter
+// ApiRootServerHandler - This method takes in three parameters. The last parameter
 // the index is so that this handler will know which directory service is being called
 // in case there is more than one.
 // param: w - http.ResponseWriter
 // param: r - *http.Request
-func (this *ServerHandlerType) DiscoveryServerHandler(w http.ResponseWriter, r *http.Request) {
+func (this *ServerHandlerType) CollectionsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -28,12 +28,12 @@ func (this *ServerHandlerType) DiscoveryServerHandler(w http.ResponseWriter, r *
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlResourceFile string = "discoveryResource.html"
+	var htmlResourceFile string = "collectionsResource.html"
 	var htmlResource string = this.HtmlDir + "/" + htmlResourceFile
 	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on Discovery Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on Collections Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -66,6 +66,6 @@ func (this *ServerHandlerType) DiscoveryServerHandler(w http.ResponseWriter, r *
 	}
 
 	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending Discovery Response to", r.RemoteAddr)
+		log.Println("DEBUG-3: Sending API Root Response to", r.RemoteAddr)
 	}
 }

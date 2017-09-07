@@ -22,12 +22,10 @@
 <td style="width: 150px;">Path:</td>
 <td>{{ .Path }}</td>
 </tr>
-{{if .Collections}}
 <tr>
-<td>Collections:</td>
-<td><a href="{{ .Collections }}">{{ .Collections }}</a></td>
+<td>Collections URL:</td>
+<td><a href="{{ .Path }}collections/">{{ .Path }}collections/</a></td>
 </tr>
-{{end}}
 <tr>
 <td>Title:</td>
 <td>{{ .Resource.Title }}</td>

@@ -9,6 +9,7 @@ package main
 import (
 	"fmt"
 	"github.com/freetaxii/freetaxii-server/lib/server"
+	"github.com/freetaxii/libtaxii2/objects"
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt"
 	"log"
@@ -46,13 +47,13 @@ func main() {
 
 	router := mux.NewRouter()
 	serviceCounter := 0
-	var taxiiServer server.ServerType
+	var taxiiServerConfig server.ServerConfigType
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
 	// --------------------------------------------------
 
-	taxiiServer.LoadServerConfig(*sOptServerConfigFilename)
+	taxiiServerConfig.LoadServerConfig(*sOptServerConfigFilename)
 
 	// --------------------------------------------------
 	// Setup Logging File
@@ -63,8 +64,8 @@ func main() {
 	// take the last bit in case there is multiple directories /etc/foo/bar/stuff.log
 
 	// Only enable logging to a file if it is turned on in the configuration file
-	if taxiiServer.Logging.Enabled == true {
-		logFile, err := os.OpenFile(taxiiServer.Logging.LogFileFullPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if taxiiServerConfig.Logging.Enabled == true {
+		logFile, err := os.OpenFile(taxiiServerConfig.Logging.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
@@ -79,44 +80,89 @@ func main() {
 	log.Println("Starting FreeTAXII Server")
 
 	// --------------------------------------------------
-	// Setup Discovery Server
+	// Start a Discovery handler
 	// --------------------------------------------------
-
 	// This will look to see if there are any Discovery services defined in the config file.
 	// If there are, it will loop through the list and setup handlers for each one of them
-	// The HandleFunc passes in an index value so that the handler instance will know
-	// which Discovery Service it is processing. Without that information it can not
-	// build the correct Discovery response message.
-	if taxiiServer.DiscoveryService.Enabled == true {
-		for i, _ := range taxiiServer.DiscoveryService.Resources {
+	// The HandleFunc passes in copy of the Discovery Resource and the extra meta data
+	// that it needs to process the request.
+	if taxiiServerConfig.DiscoveryService.Enabled == true {
+		for i, _ := range taxiiServerConfig.DiscoveryService.Services {
 			var index int = i
 
 			// Check to see if this entry is actually enabled
-			if taxiiServer.DiscoveryService.Resources[index].Enabled == true {
-				var path string = taxiiServer.DiscoveryService.Resources[index].Path
+			if taxiiServerConfig.DiscoveryService.Services[index].Enabled == true {
 
-				log.Println("Starting TAXII Discovery service at:", path)
-				router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.DiscoveryServerHandler(w, r, index) }).Methods("GET")
+				// Make a copy of just the elements that we need to process the request and nothing more.
+				// This is done to prevent sending the entire server config in to each handler
+				var taxiiDiscovery server.ServerHandlerType
+				taxiiDiscovery.Path = taxiiServerConfig.DiscoveryService.Services[index].Path
+				taxiiDiscovery.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiDiscovery.LogLevel = taxiiServerConfig.Logging.LogLevel
+				taxiiDiscovery.Resource = taxiiServerConfig.DiscoveryService.Services[index].Resource
+
+				log.Println("Starting TAXII Discovery service at:", taxiiDiscovery.Path)
+				router.HandleFunc(taxiiDiscovery.Path, taxiiDiscovery.DiscoveryServerHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
 	}
 
+	// --------------------------------------------------
+	// Start an API Root handler
+	// --------------------------------------------------
 	// This will look to see if there are any API Root services defined in the config file.
 	// If there are, it will loop through the list and setup handlers for each one of them
-	// The HandleFunc passes in an index value so that the handler instance will know
-	// which Discovery Service it is processing. Without that information it can not
-	// build the correct Discovery response message.
-	if taxiiServer.ApiRootService.Enabled == true {
-		for i, _ := range taxiiServer.ApiRootService.Resources {
+	// The HandleFunc passes in copy of the API Root Resource and the extra meta data
+	// that it needs to process the request.
+	if taxiiServerConfig.ApiRootService.Enabled == true {
+		for i, _ := range taxiiServerConfig.ApiRootService.Services {
 			var index int = i
 
 			// Check to see if this entry is actually enabled
-			if taxiiServer.ApiRootService.Resources[index].Enabled == true {
-				var path string = taxiiServer.ApiRootService.Resources[index].Path
+			if taxiiServerConfig.ApiRootService.Services[index].Enabled == true {
 
-				log.Println("Starting TAXII API Root service at:", path)
-				router.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) { taxiiServer.ApiRootServerHandler(w, r, index) }).Methods("GET")
+				// Make a copy of just the elements that we need to process the request and nothing more.
+				// This is done to prevent sending the entire server config in to each handler
+				var taxiiApiRoot server.ServerHandlerType
+				taxiiApiRoot.Path = taxiiServerConfig.ApiRootService.Services[index].Path
+				taxiiApiRoot.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiApiRoot.LogLevel = taxiiServerConfig.Logging.LogLevel
+				taxiiApiRoot.Resource = taxiiServerConfig.ApiRootService.Services[index].Resource
+
+				log.Println("Starting TAXII API Root service at:", taxiiApiRoot.Path)
+				router.HandleFunc(taxiiApiRoot.Path, taxiiApiRoot.ApiRootServerHandler).Methods("GET")
+
+				// --------------------------------------------------
+				// Start a Collections handler
+				// --------------------------------------------------
+				log.Println("Starting TAXII Collections for API Root:", taxiiApiRoot.Path)
+
+				// Make a copy of just the elements that we need to process the request and nothing more.
+				// This is done to prevent sending the entire server config in to each handler
+				var taxiiCollections server.ServerHandlerType
+				taxiiCollections.Path = taxiiServerConfig.ApiRootService.Services[index].Path + "collections/"
+				taxiiCollections.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiCollections.LogLevel = taxiiServerConfig.Logging.LogLevel
+
+				// We need to look in to this instance of the API Root and find out which collections are tied to it
+				// Then we can use that ID to pull from the collections list and add them to this collection
+				collections := objects.NewCollections()
+				for _, value := range taxiiServerConfig.ApiRootService.Services[index].Collections {
+
+					// Only add the collection if it is enabled
+					if taxiiServerConfig.Collections[value].Enabled == true {
+
+						// If enabled, only add the collection to the list if the collection can either be read or written to
+						if taxiiServerConfig.Collections[value].Resource.Can_read == true || taxiiServerConfig.Collections[value].Resource.Can_write == true {
+							collections.AddCollection(taxiiServerConfig.Collections[value].Resource)
+						}
+					}
+
+				}
+				taxiiCollections.Resource = collections
+
+				router.HandleFunc(taxiiCollections.Path, taxiiCollections.CollectionsServerHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
@@ -126,9 +172,9 @@ func main() {
 	// // Setup Admin Server
 	// // --------------------------------------------------
 
-	// if taxiiServer.Services.Admin != "" {
-	// 	log.Println("Starting TAXII Admin services at:", taxiiServer.Services.Admin)
-	// 	http.HandleFunc(taxiiServer.Services.Admin, taxiiServer.AdminServerHandler)
+	// if taxiiServerConfig.Services.Admin != "" {
+	// 	log.Println("Starting TAXII Admin services at:", taxiiServerConfig.Services.Admin)
+	// 	http.HandleFunc(taxiiServerConfig.Services.Admin, taxiiServerConfig.AdminServerHandler)
 	// 	//serviceCounter++  Do not count this service in the list
 	// }
 
@@ -145,9 +191,9 @@ func main() {
 	// --------------------------------------------------
 
 	// TODO - Need to verify the list address is a valid IPv4 address and port combination.
-	if taxiiServer.System.Listen != "" {
-		log.Println("Listening on:", taxiiServer.System.Listen)
-		http.ListenAndServe(taxiiServer.System.Listen, router)
+	if taxiiServerConfig.System.Listen != "" {
+		log.Println("Listening on:", taxiiServerConfig.System.Listen)
+		http.ListenAndServe(taxiiServerConfig.System.Listen, router)
 	} else {
 		log.Fatalln("The listen directive is missing from the configuration file")
 	}

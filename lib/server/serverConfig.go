@@ -9,7 +9,7 @@ package server
 import (
 	"encoding/json"
 	"github.com/freetaxii/libtaxii2/objects/api_root"
-	"github.com/freetaxii/libtaxii2/objects/common"
+	"github.com/freetaxii/libtaxii2/objects/collection"
 	"github.com/freetaxii/libtaxii2/objects/discovery"
 	"log"
 	"os"
@@ -21,39 +21,58 @@ import (
 // Log Level 4 =
 // Log Level 5 = RAW packet/message decode and output
 
-type ServerType struct {
+type ServerConfigType struct {
 	System struct {
-		Listen          string
-		Prefix          string
-		DbFile          string
-		DbFileFullPath  string
-		HtmlDir         string
-		HtmlDirFullPath string
+		Protocol string
+		Listen   string
+		Prefix   string
+		DbConfig bool
+		DbFile   string
+		HtmlDir  string
 	}
 	Logging struct {
-		Enabled         bool
-		LogLevel        int
-		LogFile         string
-		LogFileFullPath string
+		Enabled  bool
+		LogLevel int
+		LogFile  string
 	}
 	DiscoveryService struct {
-		Enabled   bool
-		Resources []DiscoveryResourceType
+		Enabled  bool
+		Services []DiscoveryServiceType
 	}
 	ApiRootService struct {
-		Enabled   bool
-		Resources []ApiRootResourceType
+		Enabled  bool
+		Services []ApiRootServiceType
 	}
+	Collections map[string]CollectionServiceType
 }
 
-type DiscoveryResourceType struct {
-	common.DiscoveryMetadataProperties
+type DiscoveryServiceType struct {
+	Enabled  bool
+	Path     string
 	Resource discovery.DiscoveryType
 }
 
-type ApiRootResourceType struct {
-	common.ApiRootMetadataProperties
-	Resource api_root.ApiRootType
+type ApiRootServiceType struct {
+	Enabled     bool
+	Path        string
+	Collections []string
+	Resource    api_root.ApiRootType
+}
+
+type CollectionServiceType struct {
+	Enabled  bool
+	Resource collection.CollectionType
+}
+
+// --------------------------------------------------
+// Setup Handler Structs
+// --------------------------------------------------
+// This struct will handle discovery, api_root, collections, collection, etc
+type ServerHandlerType struct {
+	HtmlDir  string
+	LogLevel int
+	Path     string
+	Resource interface{}
 }
 
 // --------------------------------------------------
@@ -62,7 +81,7 @@ type ApiRootResourceType struct {
 
 // LoadServerConfig - This methods takes in one parameter
 // param: s - a string value representing a filename of the configuration file
-func (this *ServerType) LoadServerConfig(filename string) {
+func (this *ServerConfigType) LoadServerConfig(filename string) {
 	// TODO - Need to make make a validation check for the configuration file
 
 	// Open and read configuration file
@@ -81,11 +100,6 @@ func (this *ServerType) LoadServerConfig(filename string) {
 	if err != nil {
 		log.Fatalf("error parsing configuration file %v", err)
 	}
-
-	// Lets assign the full paths to a few variables so we can use them later
-	this.System.DbFileFullPath = this.System.Prefix + "/" + this.System.DbFile
-	this.System.HtmlDirFullPath = this.System.Prefix + "/" + this.System.HtmlDir
-	this.Logging.LogFileFullPath = this.System.Prefix + "/" + this.Logging.LogFile
 
 	if this.Logging.LogLevel >= 5 {
 		log.Printf("DEBUG-5: System Configuration Dump %+v\n", this)

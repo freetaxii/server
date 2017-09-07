@@ -20,8 +20,7 @@ import (
 // in case there is more than one.
 // param: w - http.ResponseWriter
 // param: r - *http.Request
-// param: index - An integer that lets this method know which discovery service is being handled by this instance
-func (this *ServerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Request, index int) {
+func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -30,16 +29,16 @@ func (this *ServerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Requ
 
 	// Setup HTML template
 	var htmlResourceFile string = "apirootResource.html"
-	var htmlResource string = this.System.HtmlDir + "/" + htmlResourceFile
+	var htmlResource string = this.HtmlDir + "/" + htmlResourceFile
 	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
-	if this.Logging.LogLevel >= 3 {
+	if this.LogLevel >= 3 {
 		log.Printf("DEBUG-3: Found Request on API Root Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
 	// that will generate errors below.
-	if this.Logging.LogLevel >= 5 {
+	if this.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -52,21 +51,21 @@ func (this *ServerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Requ
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = this.createApiRootResponse(formatpretty, index)
+		jsondata = this.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
-	} else if strings.Contains(httpHeaderAccept, "text/html") {
-		mediaType = "text/html; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
-		htmlTemplateResource.ExecuteTemplate(w, htmlResourceFile, this.ApiRootService.Resources[index])
-	} else {
+	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = this.createApiRootResponse(formatpretty, index)
+		jsondata = this.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
+	} else {
+		mediaType = "text/html; charset=utf-8"
+		w.Header().Set("Content-Type", mediaType)
+		htmlTemplateResource.ExecuteTemplate(w, htmlResourceFile, this)
 	}
 
-	if this.Logging.LogLevel >= 1 {
-		log.Println("DEBUG-1: Sending API Root Response to", r.RemoteAddr)
+	if this.LogLevel >= 3 {
+		log.Println("DEBUG-3: Sending API Root Response to", r.RemoteAddr)
 	}
 }
