@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>FreeTAXII - Collections Service</title>
+	<title>FreeTAXII - Objects Service</title>
 	<meta name="author" content="Bret Jordan">
 	<meta name="description" content="FreeTAXII - A TAXII 2 server">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
 </tbody>
 </table>
 <p>&nbsp;</p>
-<h2 style="color: #2e6c80;">Collections Service</h2>
+<h2 style="color: #2e6c80;">Objects Service</h2>
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
 <tbody>
 <tr>
@@ -23,39 +23,9 @@
 <td>{{ .Path }}</td>
 </tr>
 <tr>
-<td colspan="2"><hr width="100%"></td>
+<td style="vertical-align: top;">STIX Bundle:</td>
+<td><pre>{{ .Resource }}</pre></td>
 </tr>
-{{ range .Resource.Collections }}
-<tr>
-<td>ID:</td>
-<td><a href="{{ .Id }}/">{{ .Id }}</a></td>
-</tr>
-<tr>
-<td>Title:</td>
-<td>{{ .Title }}</td>
-</tr>
-{{if .Description}}
-<tr>
-<td>Description:</td>
-<td>{{ .Description }}</td>
-</tr>
-{{end}}
-<tr>
-<td>Can Read:</td>
-<td>{{ .Can_read }}</td>
-</tr>
-<tr>
-<td>Can Write:</td>
-<td>{{ .Can_write }}</td>
-</tr>
-<tr>
-<td style="vertical-align: top;">Media Types:</td>
-<td>{{ range .Media_types }} {{ . }}<br> {{ end }}</td>
-</tr>
-<tr>
-<td colspan="2"><hr width="100%"></td>
-</tr>
-{{ end }}
 </tbody>
 </table>
 <p>&nbsp;</p>

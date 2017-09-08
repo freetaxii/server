@@ -20,7 +20,7 @@ import (
 // in case there is more than one.
 // param: w - http.ResponseWriter
 // param: r - *http.Request
-func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Request) {
+func (this *ServerHandlerType) CollectionServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -28,12 +28,12 @@ func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *ht
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlResourceFile string = "apirootResource.html"
+	var htmlResourceFile string = "collectionResource.html"
 	var htmlResource string = this.HtmlDir + "/" + htmlResourceFile
 	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on the API Root Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on the Collection Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -66,6 +66,6 @@ func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *ht
 	}
 
 	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending API Root Response to", r.RemoteAddr)
+		log.Println("DEBUG-3: Sending Collection Response to", r.RemoteAddr)
 	}
 }

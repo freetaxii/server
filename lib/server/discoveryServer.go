@@ -33,7 +33,7 @@ func (this *ServerHandlerType) DiscoveryServerHandler(w http.ResponseWriter, r *
 	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on Discovery Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on the Discovery Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems

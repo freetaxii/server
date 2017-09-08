@@ -132,11 +132,11 @@ func main() {
 
 				log.Println("Starting TAXII API Root service at:", taxiiApiRoot.Path)
 				router.HandleFunc(taxiiApiRoot.Path, taxiiApiRoot.ApiRootServerHandler).Methods("GET")
+				serviceCounter++
 
 				// --------------------------------------------------
 				// Start a Collections handler
 				// --------------------------------------------------
-				log.Println("Starting TAXII Collections for API Root:", taxiiApiRoot.Path)
 
 				// Make a copy of just the elements that we need to process the request and nothing more.
 				// This is done to prevent sending the entire server config in to each handler
@@ -146,7 +146,7 @@ func main() {
 				taxiiCollections.LogLevel = taxiiServerConfig.Logging.LogLevel
 
 				// We need to look in to this instance of the API Root and find out which collections are tied to it
-				// Then we can use that ID to pull from the collections list and add them to this collection
+				// Then we can use that ID to pull from the collections list and add them to this list of valid collections
 				collections := objects.NewCollections()
 				for _, value := range taxiiServerConfig.ApiRootService.Services[index].Collections {
 
@@ -162,8 +162,44 @@ func main() {
 				}
 				taxiiCollections.Resource = collections
 
+				log.Println("Starting TAXII Collections service of:", taxiiCollections.Path, "on API Root:", taxiiApiRoot.Path)
 				router.HandleFunc(taxiiCollections.Path, taxiiCollections.CollectionsServerHandler).Methods("GET")
-				serviceCounter++
+
+				// --------------------------------------------------
+				// Start a Collection handler
+				// --------------------------------------------------
+
+				// We need to loop through each collection in this API Root and setup a handler for it.
+				for i, value := range collections.Collections {
+
+					// Make a copy of just the elements that we need to process the request and nothing more.
+					// This is done to prevent sending the entire server config in to each handler
+					var taxiiCollection server.ServerHandlerType
+					taxiiCollection.Path = taxiiCollections.Path + value.Id + "/"
+					taxiiCollection.HtmlDir = taxiiServerConfig.System.HtmlDir
+					taxiiCollection.LogLevel = taxiiServerConfig.Logging.LogLevel
+					taxiiCollection.Resource = collections.Collections[i]
+
+					// --------------------------------------------------
+					// Start a Collection handler
+					// --------------------------------------------------
+					log.Println("Starting TAXII Collection service of:", taxiiCollection.Path)
+
+					// We do not need to check to see if the collection is enabled and readable/writeable because that was already done
+					// TODO add support for post if the colleciton is writeable
+					router.HandleFunc(taxiiCollection.Path, taxiiCollection.CollectionServerHandler).Methods("GET")
+
+					// --------------------------------------------------
+					// Start a Objects handler
+					// --------------------------------------------------
+					var taxiiObjects server.ServerHandlerType
+					taxiiObjects.Path = taxiiCollection.Path + "objects/"
+					taxiiObjects.HtmlDir = taxiiServerConfig.System.HtmlDir
+					taxiiObjects.LogLevel = taxiiServerConfig.Logging.LogLevel
+
+					log.Println("Starting TAXII Object service of:", taxiiObjects.Path)
+					router.HandleFunc(taxiiObjects.Path, taxiiObjects.ObjectsServerHandler).Methods("GET")
+				}
 			}
 		}
 	}

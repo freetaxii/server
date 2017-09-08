@@ -33,7 +33,7 @@ func (this *ServerHandlerType) CollectionsServerHandler(w http.ResponseWriter, r
 	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on Collections Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on the Collections Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -66,6 +66,6 @@ func (this *ServerHandlerType) CollectionsServerHandler(w http.ResponseWriter, r
 	}
 
 	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending API Root Response to", r.RemoteAddr)
+		log.Println("DEBUG-3: Sending Collections Response to", r.RemoteAddr)
 	}
 }
