@@ -20,7 +20,7 @@ import (
 // in case there is more than one.
 // param: w - http.ResponseWriter
 // param: r - *http.Request
-func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *http.Request) {
+func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -28,12 +28,10 @@ func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *ht
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlResourceFile string = "apirootResource.html"
-	var htmlResource string = this.HtmlDir + "/" + htmlResourceFile
-	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
+	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlResourcePath))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on the API Root Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on the", this.Type, "Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -41,6 +39,8 @@ func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *ht
 	if this.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
+
+	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
 	// --------------------------------------------------
 	// Decode incoming request message
@@ -62,10 +62,10 @@ func (this *ServerHandlerType) ApiRootServerHandler(w http.ResponseWriter, r *ht
 	} else {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		htmlTemplateResource.ExecuteTemplate(w, htmlResourceFile, this)
+		htmlTemplateResource.ExecuteTemplate(w, this.HtmlResourceFile, this)
 	}
 
 	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending API Root Response to", r.RemoteAddr)
+		log.Println("DEBUG-3: Sending", this.Type, "Response to", r.RemoteAddr)
 	}
 }

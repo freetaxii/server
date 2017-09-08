@@ -4,10 +4,11 @@
 // that can be found in the LICENSE file in the root of the source
 // tree.
 
-package server
+package config
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/freetaxii/libtaxii2/objects/api_root"
 	"github.com/freetaxii/libtaxii2/objects/collection"
 	"github.com/freetaxii/libtaxii2/objects/discovery"
@@ -29,6 +30,8 @@ type ServerConfigType struct {
 		DbConfig bool
 		DbFile   string
 		HtmlDir  string
+		TlsKey   string
+		TlsCrt   string
 	}
 	Logging struct {
 		Enabled  bool
@@ -65,17 +68,6 @@ type CollectionServiceType struct {
 }
 
 // --------------------------------------------------
-// Setup Handler Structs
-// --------------------------------------------------
-// This struct will handle discovery, api_root, collections, collection, etc
-type ServerHandlerType struct {
-	HtmlDir  string
-	LogLevel int
-	Path     string
-	Resource interface{}
-}
-
-// --------------------------------------------------
 // Load Configuration File and Parse JSON
 // --------------------------------------------------
 
@@ -104,4 +96,13 @@ func (this *ServerConfigType) LoadServerConfig(filename string) {
 	if this.Logging.LogLevel >= 5 {
 		log.Printf("DEBUG-5: System Configuration Dump %+v\n", this)
 	}
+}
+
+// VerifyServerConfig - This method will verify that the configuration file has what it needs
+// TODO finish fleshing this out
+func (this *ServerConfigType) VerifyServerConfig() error {
+	if this.System.Listen == "" {
+		return errors.New("The listen directive is missing from the configuration file")
+	}
+	return nil
 }

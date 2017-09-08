@@ -30,12 +30,10 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlResourceFile string = "objectsResource.html"
-	var htmlResource string = this.HtmlDir + "/" + htmlResourceFile
-	var htmlTemplateResource = template.Must(template.ParseFiles(htmlResource))
+	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlResourcePath))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on the Collection Server Handler from %s", r.RemoteAddr)
+		log.Printf("DEBUG-3: Found Request on the", this.Type, "Server Handler from %s", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -67,6 +65,8 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 
 	this.Resource = stixBundle
 
+	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
+
 	// --------------------------------------------------
 	// Decode incoming request message
 	// --------------------------------------------------
@@ -93,10 +93,10 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 		formatpretty = true
 		jsondata = this.createTAXIIResponse(formatpretty)
 		this.Resource = string(jsondata)
-		htmlTemplateResource.ExecuteTemplate(w, htmlResourceFile, this)
+		htmlTemplateResource.ExecuteTemplate(w, this.HtmlResourceFile, this)
 	}
 
 	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending Collection Response to", r.RemoteAddr)
+		log.Println("DEBUG-3: Sending", this.Type, "Response to", r.RemoteAddr)
 	}
 }

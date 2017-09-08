@@ -7,7 +7,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/freetaxii/freetaxii-server/lib/config"
 	"github.com/freetaxii/freetaxii-server/lib/server"
 	"github.com/freetaxii/libtaxii2/objects"
 	"github.com/gorilla/mux"
@@ -47,13 +49,17 @@ func main() {
 
 	router := mux.NewRouter()
 	serviceCounter := 0
-	var taxiiServerConfig server.ServerConfigType
+	var taxiiServerConfig config.ServerConfigType
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
 	// --------------------------------------------------
 
 	taxiiServerConfig.LoadServerConfig(*sOptServerConfigFilename)
+	configError := taxiiServerConfig.VerifyServerConfig()
+	if configError != nil {
+		log.Fatalln(configError)
+	}
 
 	// --------------------------------------------------
 	// Setup Logging File
@@ -96,13 +102,15 @@ func main() {
 				// Make a copy of just the elements that we need to process the request and nothing more.
 				// This is done to prevent sending the entire server config in to each handler
 				var taxiiDiscovery server.ServerHandlerType
+				taxiiDiscovery.Type = "Discovery"
 				taxiiDiscovery.Path = taxiiServerConfig.DiscoveryService.Services[index].Path
-				taxiiDiscovery.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiDiscovery.HtmlResourceFile = "discoveryResource.html"
+				taxiiDiscovery.HtmlResourcePath = taxiiServerConfig.System.HtmlDir + "/" + taxiiDiscovery.HtmlResourceFile
 				taxiiDiscovery.LogLevel = taxiiServerConfig.Logging.LogLevel
 				taxiiDiscovery.Resource = taxiiServerConfig.DiscoveryService.Services[index].Resource
 
 				log.Println("Starting TAXII Discovery service at:", taxiiDiscovery.Path)
-				router.HandleFunc(taxiiDiscovery.Path, taxiiDiscovery.DiscoveryServerHandler).Methods("GET")
+				router.HandleFunc(taxiiDiscovery.Path, taxiiDiscovery.TaxiiServerHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
@@ -125,13 +133,15 @@ func main() {
 				// Make a copy of just the elements that we need to process the request and nothing more.
 				// This is done to prevent sending the entire server config in to each handler
 				var taxiiApiRoot server.ServerHandlerType
+				taxiiApiRoot.Type = "API-Root"
 				taxiiApiRoot.Path = taxiiServerConfig.ApiRootService.Services[index].Path
-				taxiiApiRoot.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiApiRoot.HtmlResourceFile = "apirootResource.html"
+				taxiiApiRoot.HtmlResourcePath = taxiiServerConfig.System.HtmlDir + "/" + taxiiApiRoot.HtmlResourceFile
 				taxiiApiRoot.LogLevel = taxiiServerConfig.Logging.LogLevel
 				taxiiApiRoot.Resource = taxiiServerConfig.ApiRootService.Services[index].Resource
 
 				log.Println("Starting TAXII API Root service at:", taxiiApiRoot.Path)
-				router.HandleFunc(taxiiApiRoot.Path, taxiiApiRoot.ApiRootServerHandler).Methods("GET")
+				router.HandleFunc(taxiiApiRoot.Path, taxiiApiRoot.TaxiiServerHandler).Methods("GET")
 				serviceCounter++
 
 				// --------------------------------------------------
@@ -141,8 +151,10 @@ func main() {
 				// Make a copy of just the elements that we need to process the request and nothing more.
 				// This is done to prevent sending the entire server config in to each handler
 				var taxiiCollections server.ServerHandlerType
+				taxiiCollections.Type = "Collections"
 				taxiiCollections.Path = taxiiServerConfig.ApiRootService.Services[index].Path + "collections/"
-				taxiiCollections.HtmlDir = taxiiServerConfig.System.HtmlDir
+				taxiiCollections.HtmlResourceFile = "collectionsResource.html"
+				taxiiCollections.HtmlResourcePath = taxiiServerConfig.System.HtmlDir + "/" + taxiiCollections.HtmlResourceFile
 				taxiiCollections.LogLevel = taxiiServerConfig.Logging.LogLevel
 
 				// We need to look in to this instance of the API Root and find out which collections are tied to it
@@ -162,8 +174,8 @@ func main() {
 				}
 				taxiiCollections.Resource = collections
 
-				log.Println("Starting TAXII Collections service of:", taxiiCollections.Path, "on API Root:", taxiiApiRoot.Path)
-				router.HandleFunc(taxiiCollections.Path, taxiiCollections.CollectionsServerHandler).Methods("GET")
+				log.Println("Starting TAXII Collections service of:", taxiiCollections.Path)
+				router.HandleFunc(taxiiCollections.Path, taxiiCollections.TaxiiServerHandler).Methods("GET")
 
 				// --------------------------------------------------
 				// Start a Collection handler
@@ -175,8 +187,10 @@ func main() {
 					// Make a copy of just the elements that we need to process the request and nothing more.
 					// This is done to prevent sending the entire server config in to each handler
 					var taxiiCollection server.ServerHandlerType
+					taxiiCollection.Type = "Collection"
 					taxiiCollection.Path = taxiiCollections.Path + value.Id + "/"
-					taxiiCollection.HtmlDir = taxiiServerConfig.System.HtmlDir
+					taxiiCollection.HtmlResourceFile = "collectionResource.html"
+					taxiiCollection.HtmlResourcePath = taxiiServerConfig.System.HtmlDir + "/" + taxiiCollection.HtmlResourceFile
 					taxiiCollection.LogLevel = taxiiServerConfig.Logging.LogLevel
 					taxiiCollection.Resource = collections.Collections[i]
 
@@ -187,14 +201,16 @@ func main() {
 
 					// We do not need to check to see if the collection is enabled and readable/writeable because that was already done
 					// TODO add support for post if the colleciton is writeable
-					router.HandleFunc(taxiiCollection.Path, taxiiCollection.CollectionServerHandler).Methods("GET")
+					router.HandleFunc(taxiiCollection.Path, taxiiCollection.TaxiiServerHandler).Methods("GET")
 
 					// --------------------------------------------------
 					// Start a Objects handler
 					// --------------------------------------------------
 					var taxiiObjects server.ServerHandlerType
+					taxiiObjects.Type = "Objects"
 					taxiiObjects.Path = taxiiCollection.Path + "objects/"
-					taxiiObjects.HtmlDir = taxiiServerConfig.System.HtmlDir
+					taxiiObjects.HtmlResourceFile = "objectsResource.html"
+					taxiiObjects.HtmlResourcePath = taxiiServerConfig.System.HtmlDir + "/" + taxiiObjects.HtmlResourceFile
 					taxiiObjects.LogLevel = taxiiServerConfig.Logging.LogLevel
 
 					log.Println("Starting TAXII Object service of:", taxiiObjects.Path)
@@ -225,15 +241,35 @@ func main() {
 	// --------------------------------------------------
 	// Listen for Incoming Connections
 	// --------------------------------------------------
-
-	// TODO - Need to verify the list address is a valid IPv4 address and port combination.
-	if taxiiServerConfig.System.Listen != "" {
+	if taxiiServerConfig.System.Protocol == "http" {
 		log.Println("Listening on:", taxiiServerConfig.System.Listen)
-		http.ListenAndServe(taxiiServerConfig.System.Listen, router)
+		log.Fatalln(http.ListenAndServe(taxiiServerConfig.System.Listen, router))
 	} else {
-		log.Fatalln("The listen directive is missing from the configuration file")
-	}
+		// --------------------------------------------------
+		// Configure TLS settings
+		// --------------------------------------------------
+		tlsConfig := &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			},
+		}
+		tlsServer := &http.Server{
+			Addr:         taxiiServerConfig.System.Listen,
+			Handler:      router,
+			TLSConfig:    tlsConfig,
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+		}
 
+		tlsKeyPath := "etc/tls/" + taxiiServerConfig.System.TlsKey
+		tlsCrtPath := "etc/tls/" + taxiiServerConfig.System.TlsCrt
+		log.Fatalln(tlsServer.ListenAndServeTLS(tlsCrtPath, tlsKeyPath))
+	}
 }
 
 // --------------------------------------------------
