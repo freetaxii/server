@@ -29,11 +29,14 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 	var formatpretty bool = false
 	var taxiiHeader headers.HttpHeaderType
 
+	// Setup a STIX Bundle to be used for response
+	stixBundle := stixObjects.NewBundle()
+
 	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlResourcePath))
+	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlPath))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on the", this.Type, "Server Handler from %s", r.RemoteAddr)
+		log.Println("DEBUG-3: Found Request on the", this.Type, "Server Handler from", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -42,7 +45,7 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
-	stixBundle := stixObjects.NewBundle()
+	// If you get a request for a single object, then only send that one object.  Otherwise send them all.
 
 	// This is just sample data
 	// TODO move to a database
@@ -93,7 +96,7 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 		formatpretty = true
 		jsondata = this.createTAXIIResponse(formatpretty)
 		this.Resource = string(jsondata)
-		htmlTemplateResource.ExecuteTemplate(w, this.HtmlResourceFile, this)
+		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
 	}
 
 	if this.LogLevel >= 3 {

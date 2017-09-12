@@ -8,10 +8,11 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/freetaxii/libtaxii2/objects/api_root"
 	"github.com/freetaxii/libtaxii2/objects/collection"
+	"github.com/freetaxii/libtaxii2/objects/collections"
 	"github.com/freetaxii/libtaxii2/objects/discovery"
+	"github.com/gorilla/mux"
 	"log"
 	"os"
 )
@@ -23,6 +24,7 @@ import (
 // Log Level 5 = RAW packet/message decode and output
 
 type ServerConfigType struct {
+	Router *mux.Router
 	System struct {
 		Protocol string
 		Listen   string
@@ -40,30 +42,50 @@ type ServerConfigType struct {
 	}
 	DiscoveryService struct {
 		Enabled  bool
+		HtmlFile string
 		Services []DiscoveryServiceType
 	}
 	ApiRootService struct {
 		Enabled  bool
+		HtmlFile string
 		Services []ApiRootServiceType
 	}
-	Collections map[string]CollectionServiceType
+	AllCollections map[string]CollectionServiceType
 }
 
+// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
 type DiscoveryServiceType struct {
 	Enabled  bool
+	Name     string
 	Path     string
+	HtmlFile string
 	Resource discovery.DiscoveryType
 }
 
+// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
 type ApiRootServiceType struct {
 	Enabled     bool
+	Name        string
 	Path        string
-	Collections []string
-	Resource    api_root.ApiRootType
+	HtmlFile    string
+	Collections struct {
+		Enabled          bool
+		Path             string
+		HtmlFile         string
+		ValidCollections []string
+		Resource         collections.CollectionsType
+	}
+	Collection struct {
+		HtmlFile string
+	}
+	Resource api_root.ApiRootType
 }
 
+// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
 type CollectionServiceType struct {
 	Enabled  bool
+	Name     string
+	Path     string
 	Resource collection.CollectionType
 }
 
@@ -78,6 +100,7 @@ func (this *ServerConfigType) LoadServerConfig(filename string) {
 
 	// Open and read configuration file
 	sysConfigFileData, err := os.Open(filename)
+	defer sysConfigFileData.Close()
 	if err != nil {
 		log.Fatalf("error opening configuration file: %v", err)
 	}
@@ -101,8 +124,15 @@ func (this *ServerConfigType) LoadServerConfig(filename string) {
 // VerifyServerConfig - This method will verify that the configuration file has what it needs
 // TODO finish fleshing this out
 func (this *ServerConfigType) VerifyServerConfig() error {
-	if this.System.Listen == "" {
-		return errors.New("The listen directive is missing from the configuration file")
+	var err error
+	err = this.verifyConfigDirectives()
+	if err != nil {
+		return err
+	}
+
+	err = this.verifyHtmlTemplateFiles()
+	if err != nil {
+		return err
 	}
 	return nil
 }

@@ -15,9 +15,7 @@ import (
 	"strings"
 )
 
-// ApiRootServerHandler - This method takes in three parameters. The last parameter
-// the index is so that this handler will know which directory service is being called
-// in case there is more than one.
+// TaxiiServerHandler - This method takes in two parameters and handles all requestes for TAXII media type responses
 // param: w - http.ResponseWriter
 // param: r - *http.Request
 func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,10 +26,10 @@ func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlResourcePath))
+	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlPath))
 
 	if this.LogLevel >= 3 {
-		log.Printf("DEBUG-3: Found Request on the", this.Type, "Server Handler from %s", r.RemoteAddr)
+		log.Println("DEBUG-3: Found Request on the", this.Type, "Server Handler from", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
@@ -62,7 +60,7 @@ func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http
 	} else {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		htmlTemplateResource.ExecuteTemplate(w, this.HtmlResourceFile, this)
+		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
 	}
 
 	if this.LogLevel >= 3 {

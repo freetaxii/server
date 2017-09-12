@@ -16,36 +16,30 @@
 </table>
 <p>&nbsp;</p>
 <h2 style="color: #2e6c80;">API Root Service</h2>
+
+<p>Path: {{ .Path }}<br>
+Collections URL: <a href="{{ .Path }}collections/">{{ .Path }}collections/</a><br>
+<hr width="100%"></p>
+
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
 <tbody>
 <tr>
-<td style="width: 150px;">Path:</td>
-<td>{{ .Path }}</td>
-</tr>
-<tr>
-<td>Collections URL:</td>
-<td><a href="{{ .Path }}collections/">{{ .Path }}collections/</a></td>
-</tr>
-<tr>
-<td colspan="2"><hr width="100%"></td>
-</tr>
-<tr>
-<td>Title:</td>
-<td>{{ .Resource.Title }}</td>
+	<td style="width: 150px;">Title:</td>
+	<td>{{ .Resource.Title }}</td>
 </tr>
 {{if .Resource.Description}}
 <tr>
-<td>Description:</td>
-<td>{{ .Resource.Description }}</td>
+	<td>Description:</td>
+	<td>{{ .Resource.Description }}</td>
 </tr>
 {{end}}
 <tr>
-<td style="vertical-align: top;">Versions:</td>
-<td>{{ range .Resource.Versions }} {{ . }}<br> {{ end }}</td>
+	<td style="vertical-align: top;">Versions:</td>
+	<td>{{ range .Resource.Versions }} {{ . }}<br> {{ end }}</td>
 </tr>
 <tr>
-<td>Max Content Length:</td>
-<td>{{ .Resource.Max_content_length }}</td>
+	<td>Max Content Length:</td>
+	<td>{{ .Resource.Max_content_length }}</td>
 </tr>
 </tbody>
 </table>

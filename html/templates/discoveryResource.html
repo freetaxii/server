@@ -16,35 +16,32 @@
 </table>
 <p>&nbsp;</p>
 <h2 style="color: #2e6c80;">Discovery Service</h2>
+
+<p>Path: {{ .Path }}<br>
+<hr width="100%"></p>
+
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
 <tbody>
 <tr>
-<td style="width: 150px;">Path:</td>
-<td>{{ .Path }}</td>
-</tr>
-<tr>
-<td colspan="2"><hr width="100%"></td>
-</tr>
-<tr>
-<td>Title:</td>
-<td>{{ .Resource.Title }}</td>
+<td style="width: 150px;">Title:</td>
+	<td>{{ .Resource.Title }}</td>
 </tr>
 {{if .Resource.Description}}
 <tr>
-<td>Description:</td>
-<td>{{ .Resource.Description }}</td>
+	<td>Description:</td>
+	<td>{{ .Resource.Description }}</td>
 </tr>
 {{end}}
 {{if .Resource.Contact}}
 <tr>
-<td>Contact:</td>
-<td>{{ .Resource.Contact }}</td>
+	<td>Contact:</td>
+	<td>{{ .Resource.Contact }}</td>
 </tr>
 {{end}}
 {{if .Resource.Default}}
 <tr>
-<td>Default API Root:</td>
-<td><a href="{{ .Resource.Default }}">{{ .Resource.Default }}</a></td>
+	<td>Default API Root:</td>
+	<td><a href="{{ .Resource.Default }}">{{ .Resource.Default }}</a></td>
 </tr>
 {{end}}
 <tr>
