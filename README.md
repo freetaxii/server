@@ -2,6 +2,9 @@
 
 The FreeTAXII-Server is a TAXII 2 Server written in Go (golang)
 
+## Version ##
+0.0.1
+
 
 ## Installation ##
 
