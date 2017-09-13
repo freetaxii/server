@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"github.com/freetaxii/libtaxii2/objects/api_root"
 	"github.com/freetaxii/libtaxii2/objects/collection"
-	"github.com/freetaxii/libtaxii2/objects/collections"
 	"github.com/freetaxii/libtaxii2/objects/discovery"
 	"github.com/gorilla/mux"
 	"log"
@@ -42,15 +41,19 @@ type ServerConfigType struct {
 	}
 	DiscoveryService struct {
 		Enabled  bool
+		Html     bool
 		HtmlFile string
 		Services []DiscoveryServiceType
 	}
 	ApiRootService struct {
 		Enabled  bool
+		Html     bool
 		HtmlFile string
 		Services []ApiRootServiceType
 	}
-	AllCollections map[string]CollectionServiceType
+	DiscoveryResources  map[string]discovery.DiscoveryType
+	ApiRootResources    map[string]api_root.ApiRootType
+	CollectionResources map[string]collection.CollectionType
 }
 
 // If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
@@ -59,7 +62,7 @@ type DiscoveryServiceType struct {
 	Name     string
 	Path     string
 	HtmlFile string
-	Resource discovery.DiscoveryType
+	Resource string
 }
 
 // If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
@@ -68,25 +71,19 @@ type ApiRootServiceType struct {
 	Name        string
 	Path        string
 	HtmlFile    string
+	Resource    string
 	Collections struct {
-		Enabled          bool
-		Path             string
-		HtmlFile         string
-		ValidCollections []string
-		Resource         collections.CollectionsType
+		Enabled  bool
+		Path     string
+		HtmlFile string
+		Members  []string
 	}
 	Collection struct {
 		HtmlFile string
 	}
-	Resource api_root.ApiRootType
-}
-
-// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
-type CollectionServiceType struct {
-	Enabled  bool
-	Name     string
-	Path     string
-	Resource collection.CollectionType
+	Objects struct {
+		HtmlFile string
+	}
 }
 
 // --------------------------------------------------
@@ -126,11 +123,6 @@ func (this *ServerConfigType) LoadServerConfig(filename string) {
 func (this *ServerConfigType) VerifyServerConfig() error {
 	var err error
 	err = this.verifyConfigDirectives()
-	if err != nil {
-		return err
-	}
-
-	err = this.verifyHtmlTemplateFiles()
 	if err != nil {
 		return err
 	}

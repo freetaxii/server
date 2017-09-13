@@ -29,10 +29,11 @@ func (this *ServerConfigType) StartApiRootService() int {
 			var ts server.ServerHandlerType
 			ts.Type = "API-Root"
 			ts.Path = this.ApiRootService.Services[apiRootIndex].Path
+			ts.Html = this.ApiRootService.Html
 			ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFile
 			ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
 			ts.LogLevel = this.Logging.LogLevel
-			ts.Resource = this.ApiRootService.Services[apiRootIndex].Resource
+			ts.Resource = this.ApiRootResources[this.ApiRootService.Services[apiRootIndex].Resource]
 
 			log.Println("Starting TAXII API Root service at:", ts.Path)
 			this.Router.HandleFunc(ts.Path, ts.TaxiiServerHandler).Methods("GET")

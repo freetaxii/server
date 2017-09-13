@@ -28,10 +28,11 @@ func (this *ServerConfigType) StartDiscoveryService() int {
 			var ts server.ServerHandlerType
 			ts.Type = "Discovery"
 			ts.Path = this.DiscoveryService.Services[index].Path
+			ts.Html = this.DiscoveryService.Html
 			ts.HtmlFile = this.DiscoveryService.Services[index].HtmlFile
 			ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
 			ts.LogLevel = this.Logging.LogLevel
-			ts.Resource = this.DiscoveryService.Services[index].Resource
+			ts.Resource = this.DiscoveryResources[this.DiscoveryService.Services[index].Resource]
 
 			log.Println("Starting TAXII Discovery service at:", ts.Path)
 			this.Router.HandleFunc(ts.Path, ts.TaxiiServerHandler).Methods("GET")

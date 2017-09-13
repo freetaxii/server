@@ -50,17 +50,22 @@ func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
 		jsondata = this.createTAXIIResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
 		jsondata = this.createTAXIIResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
-	} else {
+	} else if this.Html == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
+		w.WriteHeader(http.StatusOK)
 		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
+	} else {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
 	if this.LogLevel >= 3 {

@@ -20,10 +20,13 @@ import (
 // param: apiRootIndex - an integer representing the current location of the API-Root for loop
 func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 
+	this.ApiRootService.Services[apiRootIndex].Collections.Path = this.ApiRootService.Services[apiRootIndex].Path + "collections/"
+
 	// Make a copy of just the elements that we need to process the request and nothing more.
 	// This is done to prevent sending the entire server config in to each handler
 	var ts server.ServerHandlerType
 	ts.Type = "Collections"
+	ts.Html = this.ApiRootService.Html
 	ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path
 	ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].Collections.HtmlFile
 	ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
@@ -35,20 +38,15 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 	// Then we can use that ID to pull from the collections list and add them to this list of valid collections
 
 	collections := objects.NewCollections()
-	for _, value := range this.ApiRootService.Services[apiRootIndex].Collections.ValidCollections {
+	for _, value := range this.ApiRootService.Services[apiRootIndex].Collections.Members {
 
-		// Only add the collection if it is enabled
-		if this.AllCollections[value].Enabled == true {
-
-			// If enabled, only add the collection to the list if the collection can either be read or written to
-			if this.AllCollections[value].Resource.Can_read == true || this.AllCollections[value].Resource.Can_write == true {
-				collections.AddCollection(this.AllCollections[value].Resource)
-			}
+		// If enabled, only add the collection to the list if the collection can either be read or written to
+		if this.CollectionResources[value].Can_read == true || this.CollectionResources[value].Can_write == true {
+			collections.AddCollection(this.CollectionResources[value])
 		}
 
 	}
 	ts.Resource = collections
-	this.ApiRootService.Services[apiRootIndex].Collections.Resource = collections
 
 	log.Println("Starting TAXII Collections service of:", ts.Path)
 	this.Router.HandleFunc(ts.Path, ts.TaxiiServerHandler).Methods("GET")
@@ -58,4 +56,43 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 	// --------------------------------------------------
 	this.startCollectionService(apiRootIndex)
 
+}
+
+// StartCollection - This will look to see which collections are defined for this
+// Collections group in this API Root. If they are enabled, it will setup handlers for it.
+// The HandleFunc passes in copy of the Collection Resource and the extra meta data
+// that it needs to process the request.
+// This method should only be called from the startCollectionsService()
+// param: apiRootIndex - an integer representing the current location of the API-Root for loop
+func (this *ServerConfigType) startCollectionService(apiRootIndex int) {
+
+	// We need to loop through each collection in this API Root and setup a handler for it.
+	for _, value := range this.ApiRootService.Services[apiRootIndex].Collections.Members {
+
+		// Make a copy of just the elements that we need to process the request and nothing more.
+		// This is done to prevent sending the entire server config in to each handler
+		var ts server.ServerHandlerType
+		ts.Type = "Collection"
+		ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path + value + "/"
+		ts.Html = this.ApiRootService.Html
+		ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].Collection.HtmlFile
+		ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
+		ts.LogLevel = this.Logging.LogLevel
+		ts.Resource = this.CollectionResources[value]
+
+		// --------------------------------------------------
+		// Start a Collection handler
+		// --------------------------------------------------
+		log.Println("Starting TAXII Collection service of:", ts.Path)
+
+		// We do not need to check to see if the collection is enabled and readable/writeable because that was already done
+		// TODO add support for post if the colleciton is writeable
+		this.Router.HandleFunc(ts.Path, ts.TaxiiServerHandler).Methods("GET")
+
+		// --------------------------------------------------
+		// Start an Objects handler
+		// --------------------------------------------------
+		this.startObjectsService(apiRootIndex, value)
+		this.startObjectByIdService(apiRootIndex, value)
+	}
 }

@@ -12,6 +12,7 @@ package server
 // This struct will handle discovery, api_root, collections, collection, etc
 type ServerHandlerType struct {
 	Type     string
+	Html     bool
 	HtmlFile string
 	HtmlPath string
 	LogLevel int

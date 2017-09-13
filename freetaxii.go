@@ -115,6 +115,7 @@ func main() {
 		// --------------------------------------------------
 		// Configure TLS settings
 		// --------------------------------------------------
+		// TODO move TLS elements to configuraiton file
 		tlsConfig := &tls.Config{
 			MinVersion:               tls.VersionTLS12,
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
