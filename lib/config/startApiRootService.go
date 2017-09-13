@@ -30,7 +30,7 @@ func (this *ServerConfigType) StartApiRootService() int {
 			ts.Type = "API-Root"
 			ts.Path = this.ApiRootService.Services[apiRootIndex].Path
 			ts.Html = this.ApiRootService.Html
-			ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFile
+			ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFiles.ApiRoot
 			ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
 			ts.LogLevel = this.Logging.LogLevel
 			ts.Resource = this.ApiRootResources[this.ApiRootService.Services[apiRootIndex].Resource]

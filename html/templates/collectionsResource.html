@@ -34,11 +34,11 @@
 {{ range .Resource.Collections }}
 <tbody>
 <tr>
-	<td><a href="{{ .Id }}/">{{ .Id }}</a></td>
-	<td>{{ .Title }}</td>
-	<td>{{ .Description }}</td>
-	<td>{{ .Can_read }}</td>
-	<td>{{ .Can_write }}</td>
+	<td style="vertical-align: top;"><a href="{{ .Id }}/">{{ .Id }}</a></td>
+	<td style="vertical-align: top;">{{ .Title }}</td>
+	<td style="vertical-align: top;">{{ .Description }}</td>
+	<td style="vertical-align: top;">{{ .Can_read }}</td>
+	<td style="vertical-align: top;">{{ .Can_write }}</td>
 	<td style="vertical-align: top;">{{ range .Media_types }} {{ . }}<br> {{ end }}</td>
 </tr>
 {{ end }}

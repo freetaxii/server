@@ -29,6 +29,7 @@ type ServerConfigType struct {
 		Listen   string
 		Prefix   string
 		DbConfig bool
+		DbType   string
 		DbFile   string
 		HtmlDir  string
 		TlsKey   string
@@ -46,14 +47,14 @@ type ServerConfigType struct {
 		Services []DiscoveryServiceType
 	}
 	ApiRootService struct {
-		Enabled  bool
-		Html     bool
-		HtmlFile string
-		Services []ApiRootServiceType
+		Enabled   bool
+		Html      bool
+		HtmlFiles HtmlFilesType
+		Services  []ApiRootServiceType
 	}
 	DiscoveryResources  map[string]discovery.DiscoveryType
 	ApiRootResources    map[string]api_root.ApiRootType
-	CollectionResources map[string]collection.CollectionType
+	CollectionResources map[string]CollectionServiceType
 }
 
 // If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
@@ -70,20 +71,29 @@ type ApiRootServiceType struct {
 	Enabled     bool
 	Name        string
 	Path        string
-	HtmlFile    string
+	HtmlFiles   HtmlFilesType
 	Resource    string
 	Collections struct {
-		Enabled  bool
-		Path     string
-		HtmlFile string
-		Members  []string
+		Enabled bool
+		Path    string
+		Members []string
 	}
-	Collection struct {
-		HtmlFile string
+}
+
+type HtmlFilesType struct {
+	ApiRoot     string
+	Collections string
+	Collection  string
+	Objects     string
+}
+
+type CollectionServiceType struct {
+	Location     string
+	RemoteConfig struct {
+		Name string
+		Url  string
 	}
-	Objects struct {
-		HtmlFile string
-	}
+	Resource collection.CollectionType
 }
 
 // --------------------------------------------------

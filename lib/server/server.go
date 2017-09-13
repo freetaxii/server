@@ -11,11 +11,16 @@ package server
 // --------------------------------------------------
 // This struct will handle discovery, api_root, collections, collection, etc
 type ServerHandlerType struct {
-	Type     string
-	Html     bool
-	HtmlFile string
-	HtmlPath string
-	LogLevel int
-	Path     string
-	Resource interface{}
+	Type         string
+	Html         bool
+	HtmlFile     string
+	HtmlPath     string
+	LogLevel     int
+	Path         string
+	Resource     interface{}
+	Location     string
+	RemoteConfig struct {
+		Name string
+		Url  string
+	}
 }

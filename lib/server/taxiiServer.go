@@ -15,7 +15,8 @@ import (
 	"strings"
 )
 
-// TaxiiServerHandler - This method takes in two parameters and handles all requestes for TAXII media type responses
+// -----------------------------------------------------------------------------
+// TaxiiServerHandler - This method takes in two parameters and handles all requests for TAXII media type responses
 // param: w - http.ResponseWriter
 // param: r - *http.Request
 func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http.Request) {

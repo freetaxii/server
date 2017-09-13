@@ -12,6 +12,7 @@ import (
 	"log"
 )
 
+// --------------------------------------------------------------------------------
 // StartCollections - This will look to see if the Collections service is enabled
 // in the config file for a given API Root. If it is, it will setup handlers for it.
 // The HandleFunc passes in copy of the Collections Resource and the extra meta data
@@ -28,7 +29,7 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 	ts.Type = "Collections"
 	ts.Html = this.ApiRootService.Html
 	ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path
-	ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].Collections.HtmlFile
+	ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFiles.Collections
 	ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
 	ts.LogLevel = this.Logging.LogLevel
 	// This next value will be set down below
@@ -41,8 +42,8 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 	for _, value := range this.ApiRootService.Services[apiRootIndex].Collections.Members {
 
 		// If enabled, only add the collection to the list if the collection can either be read or written to
-		if this.CollectionResources[value].Can_read == true || this.CollectionResources[value].Can_write == true {
-			collections.AddCollection(this.CollectionResources[value])
+		if this.CollectionResources[value].Resource.Can_read == true || this.CollectionResources[value].Resource.Can_write == true {
+			collections.AddCollection(this.CollectionResources[value].Resource)
 		}
 
 	}
@@ -58,6 +59,7 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 
 }
 
+// --------------------------------------------------------------------------------
 // StartCollection - This will look to see which collections are defined for this
 // Collections group in this API Root. If they are enabled, it will setup handlers for it.
 // The HandleFunc passes in copy of the Collection Resource and the extra meta data
@@ -73,12 +75,12 @@ func (this *ServerConfigType) startCollectionService(apiRootIndex int) {
 		// This is done to prevent sending the entire server config in to each handler
 		var ts server.ServerHandlerType
 		ts.Type = "Collection"
-		ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path + value + "/"
+		ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path + this.CollectionResources[value].Resource.Id + "/"
 		ts.Html = this.ApiRootService.Html
-		ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].Collection.HtmlFile
+		ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFiles.Collection
 		ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile
 		ts.LogLevel = this.Logging.LogLevel
-		ts.Resource = this.CollectionResources[value]
+		ts.Resource = this.CollectionResources[value].Resource
 
 		// --------------------------------------------------
 		// Start a Collection handler
@@ -92,6 +94,7 @@ func (this *ServerConfigType) startCollectionService(apiRootIndex int) {
 		// --------------------------------------------------
 		// Start an Objects handler
 		// --------------------------------------------------
+		// This will pass in the map name not the UUIDv4 collection ID
 		this.startObjectsService(apiRootIndex, value)
 		this.startObjectByIdService(apiRootIndex, value)
 	}
