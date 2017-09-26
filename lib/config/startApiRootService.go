@@ -19,7 +19,7 @@ import (
 func (this *ServerConfigType) StartApiRootService() int {
 	var serviceCounter int = 0
 
-	for apiRootIndex, _ := range this.ApiRootService.Services {
+	for apiRootIndex := range this.ApiRootService.Services {
 
 		// Check to see if this entry is actually enabled
 		if this.ApiRootService.Services[apiRootIndex].Enabled == true {

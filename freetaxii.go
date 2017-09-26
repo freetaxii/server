@@ -17,6 +17,7 @@ import (
 	"os"
 )
 
+// DEFAULT_SERVER_CONFIG_FILENAME - is a constant for the default location of the configuration file
 const (
 	DEFAULT_SERVER_CONFIG_FILENAME = "etc/freetaxii.conf"
 )
@@ -115,7 +116,7 @@ func main() {
 		// --------------------------------------------------
 		// Configure TLS settings
 		// --------------------------------------------------
-		// TODO move TLS elements to configuraiton file
+		// TODO move TLS elements to configuration file
 		tlsConfig := &tls.Config{
 			MinVersion:               tls.VersionTLS12,
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
@@ -141,7 +142,7 @@ func main() {
 }
 
 // --------------------------------------------------
-// Print Help and Version infomration
+// Print Help and Version information
 // --------------------------------------------------
 
 func printHelp() {

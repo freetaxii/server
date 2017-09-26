@@ -9,7 +9,8 @@ package server
 // --------------------------------------------------
 // Setup Handler Structs
 // --------------------------------------------------
-// This struct will handle discovery, api_root, collections, collection, etc
+
+// ServerHandlerType - This struct will handle the discovery, api_root, collections, collection, etc
 type ServerHandlerType struct {
 	Type         string
 	Html         bool

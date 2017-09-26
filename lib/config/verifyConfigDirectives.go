@@ -33,9 +33,9 @@ func (this *ServerConfigType) verifyConfigDirectives() error {
 	}
 
 	// Discovery Service Directive
-	for i, _ := range this.DiscoveryService.Services {
+	for i := range this.DiscoveryService.Services {
 
-		// Verify the Discovery Name is defined in the configuraiton file. This is used as the path name
+		// Verify the Discovery Name is defined in the configuration file. This is used as the path name
 		if this.DiscoveryService.Services[i].Name == "" {
 			log.Println("CONFIG: One or more Discovery Services is missing the 'name' directive in the configuration file")
 			problemsFound++
@@ -52,7 +52,7 @@ func (this *ServerConfigType) verifyConfigDirectives() error {
 	}
 
 	// API Service Directives
-	for i, _ := range this.ApiRootService.Services {
+	for i := range this.ApiRootService.Services {
 
 		// Verify the API Name is defined in the configuration file. This is used as the path name
 		if this.ApiRootService.Services[i].Name == "" {
@@ -100,12 +100,12 @@ func (this *ServerConfigType) verifyHtmlTemplateFiles() int {
 		problemsFound += this.verifyHtmlFileExists(this.DiscoveryService.HtmlFile)
 
 		// Need to check to see if the HTML resource file was redefined at each service level
-		for i, _ := range this.DiscoveryService.Services {
+		for i := range this.DiscoveryService.Services {
 			// If it is not defined at the service level, lets copy in the parent, this will make it easier to work with later on
 			if this.DiscoveryService.Services[i].HtmlFile == "" {
 				this.DiscoveryService.Services[i].HtmlFile = this.DiscoveryService.HtmlFile
 			} else {
-				// Only test if the file was redefined at this level. No need to retest the inhertied filename since it was already checked
+				// Only test if the file was redefined at this level. No need to retest the inherited filename since it was already checked
 				problemsFound += this.verifyHtmlFileExists(this.DiscoveryService.Services[i].HtmlFile)
 			}
 		} // End for loop
@@ -145,13 +145,13 @@ func (this *ServerConfigType) verifyHtmlTemplateFiles() int {
 	// Lets check to see if any of the HTML template files have been redefined at the service level
 	if this.ApiRootService.Html == true {
 
-		for i, _ := range this.ApiRootService.Services {
+		for i := range this.ApiRootService.Services {
 
 			// If it is not defined at the service level, lets copy in the parent, this will make it easier to work with later on
 			if this.ApiRootService.Services[i].HtmlFiles.ApiRoot == "" {
 				this.ApiRootService.Services[i].HtmlFiles.ApiRoot = this.ApiRootService.HtmlFiles.ApiRoot
 			} else {
-				// Only test if the file was redefined at this level. No need to retest the inhertied filename since it was already checked
+				// Only test if the file was redefined at this level. No need to retest the inherited filename since it was already checked
 				problemsFound += this.verifyHtmlFileExists(this.ApiRootService.Services[i].HtmlFiles.ApiRoot)
 			}
 
@@ -159,7 +159,7 @@ func (this *ServerConfigType) verifyHtmlTemplateFiles() int {
 			if this.ApiRootService.Services[i].HtmlFiles.Collections == "" {
 				this.ApiRootService.Services[i].HtmlFiles.Collections = this.ApiRootService.HtmlFiles.Collections
 			} else {
-				// Only test if the file was redefined at this level. No need to retest the inhertied filename since it was already checked
+				// Only test if the file was redefined at this level. No need to retest the inherited filename since it was already checked
 				problemsFound += this.verifyHtmlFileExists(this.ApiRootService.Services[i].HtmlFiles.Collections)
 			}
 
@@ -167,7 +167,7 @@ func (this *ServerConfigType) verifyHtmlTemplateFiles() int {
 			if this.ApiRootService.Services[i].HtmlFiles.Collection == "" {
 				this.ApiRootService.Services[i].HtmlFiles.Collection = this.ApiRootService.HtmlFiles.Collection
 			} else {
-				// Only test if the file was redefined at this level. No need to retest the inhertied filename since it was already checked
+				// Only test if the file was redefined at this level. No need to retest the inherited filename since it was already checked
 				problemsFound += this.verifyHtmlFileExists(this.ApiRootService.Services[i].HtmlFiles.Collection)
 			}
 
@@ -175,7 +175,7 @@ func (this *ServerConfigType) verifyHtmlTemplateFiles() int {
 			if this.ApiRootService.Services[i].HtmlFiles.Objects == "" {
 				this.ApiRootService.Services[i].HtmlFiles.Objects = this.ApiRootService.HtmlFiles.Objects
 			} else {
-				// Only test if the file was redefined at this level. No need to retest the inhertied filename since it was already checked
+				// Only test if the file was redefined at this level. No need to retest the inherited filename since it was already checked
 				problemsFound += this.verifyHtmlFileExists(this.ApiRootService.Services[i].HtmlFiles.Objects)
 			}
 

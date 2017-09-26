@@ -88,7 +88,7 @@ func (this *ServerConfigType) startCollectionService(apiRootIndex int) {
 		log.Println("Starting TAXII Collection service of:", ts.Path)
 
 		// We do not need to check to see if the collection is enabled and readable/writeable because that was already done
-		// TODO add support for post if the colleciton is writeable
+		// TODO add support for post if the collection is writeable
 		this.Router.HandleFunc(ts.Path, ts.TaxiiServerHandler).Methods("GET")
 
 		// --------------------------------------------------

@@ -41,7 +41,7 @@ func (this *HttpHeaderType) DebugHttpRequest(r *http.Request) {
 	fmt.Println("DEBUG: RequestURI", r.RequestURI)
 	fmt.Println("DEBUG: TLS", r.TLS)
 	fmt.Println("DEBUG: --------------- END HTTP DUMP ---------------")
-	fmt.Println("\n")
+	fmt.Println()
 	fmt.Println("DEBUG: --------------- BEGIN HEADER DUMP ---------------")
 	for k, v := range r.Header {
 		fmt.Println("DEBUG:", k, v)

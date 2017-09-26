@@ -19,8 +19,11 @@ import (
 )
 
 // -----------------------------------------------------------------------------
+
 // ObjectsServerHandler - This method takes in two parameters.
+//
 // param: w - http.ResponseWriter
+//
 // param: r - *http.Request
 func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
@@ -71,7 +74,9 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
 	// --------------------------------------------------
+	//
 	// Decode incoming request message
+	//
 	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 
@@ -105,8 +110,11 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 }
 
 // -----------------------------------------------------------------------------
+
 // ObjectsServerRemoteHandler - This method takes in two parameters.
+//
 // param: w - http.ResponseWriter
+//
 // param: r - *http.Request
 func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
@@ -132,6 +140,8 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 	}
 
 	resp, _ := http.Get(this.RemoteConfig.Url)
+
+	// TODO need to check for errors first
 	defer resp.Body.Close()
 	rawhtmlbody, _ := ioutil.ReadAll(resp.Body)
 	s := string(rawhtmlbody)
@@ -154,7 +164,9 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
 	// --------------------------------------------------
+	//
 	// Decode incoming request message
+	//
 	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 

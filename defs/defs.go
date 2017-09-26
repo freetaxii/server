@@ -7,8 +7,6 @@
 package defs
 
 const (
-	COMPANY          = "freetaxii"
-	COMPANY_NS       = "http://freetaxii.com"
 	STIX_MEDIA_TYPE  = "application/vnd.oasis.stix+json"
 	STIX_VERSION     = "version=2.1"
 	TAXII_MEDIA_TYPE = "application/vnd.oasis.taxii+json"

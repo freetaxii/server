@@ -18,7 +18,7 @@ import (
 // retval: serviceCounter - an integer that keeps track of how many services were started
 func (this *ServerConfigType) StartDiscoveryService() int {
 	var serviceCounter int = 0
-	for index, _ := range this.DiscoveryService.Services {
+	for index := range this.DiscoveryService.Services {
 
 		// Check to see if this entry is actually enabled
 		if this.DiscoveryService.Services[index].Enabled == true {
