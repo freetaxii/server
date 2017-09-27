@@ -22,7 +22,12 @@ const (
 	DEFAULT_SERVER_CONFIG_FILENAME = "etc/freetaxii.conf"
 )
 
-var sVersion = "0.0.1"
+// Version - This product version as fed from the Makefile
+var Version string
+
+// Build - The product build version as fed from the Makefile
+// This used the Git Head hash as an identifier
+var Build string
 
 var sOptServerConfigFilename = getopt.StringLong("config", 'c', DEFAULT_SERVER_CONFIG_FILENAME, "System Configuration File", "string")
 var bOptHelp = getopt.BoolLong("help", 0, "Help")
@@ -164,6 +169,15 @@ func printOutputHeader() {
 	fmt.Println("")
 	fmt.Println("FreeTAXII Server")
 	fmt.Println("Copyright, Bret Jordan")
-	fmt.Println("Version:", sVersion)
+	if Version == "" {
+		fmt.Println("Version: UNKNOWN")
+	} else {
+		fmt.Println("Version:", Version)
+	}
+	if Build == "" {
+		fmt.Println("Build: UNKNOWN")
+	} else {
+		fmt.Println("Build:", Build)
+	}
 	fmt.Println("")
 }

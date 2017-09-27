@@ -1,8 +1,6 @@
 # FreeTAXII/freetaxii-server #
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/freetaxii/freetaxii-server)](https://goreportcard.com/report/github.com/freetaxii/freetaxii-server)
-
-[![GoDoc](https://godoc.org/github.com/freetaxii/freetaxii-server?status.png)](https://godoc.org/github.com/freetaxii/freetaxii-server)
+[![Go Report Card](https://goreportcard.com/badge/github.com/freetaxii/freetaxii-server)](https://goreportcard.com/report/github.com/freetaxii/freetaxii-server)  [![GoDoc](https://godoc.org/github.com/freetaxii/freetaxii-server?status.png)](https://godoc.org/github.com/freetaxii/freetaxii-server)
 
 The FreeTAXII-Server is a TAXII 2 Server written in Go (golang)
 
