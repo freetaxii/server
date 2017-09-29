@@ -28,7 +28,7 @@ Objects URL: <a href="{{ .Path }}objects/">{{ .Path }}objects/</a><br>
 </tr>
 <tr>
 	<td style="width: 150px;">ID:</td>
-	<td>{{ .Resource.Id }}</td>
+	<td>{{ .Resource.ID }}</td>
 </tr>
 <tr>
 	<td>Title:</td>
@@ -42,15 +42,15 @@ Objects URL: <a href="{{ .Path }}objects/">{{ .Path }}objects/</a><br>
 {{end}}
 <tr>
 	<td>Can Read:</td>
-	<td>{{ .Resource.Can_read }}</td>
+	<td>{{ .Resource.CanRead }}</td>
 </tr>
 <tr>
 	<td>Can Write:</td>
-	<td>{{ .Resource.Can_write }}</td>
+	<td>{{ .Resource.CanWrite }}</td>
 </tr>
 <tr>
 	<td style="vertical-align: top;">Media Types:</td>
-	<td>{{ range .Resource.Media_types }} {{ . }}<br> {{ end }}</td>
+	<td>{{ range .Resource.MediaTypes }} {{ . }}<br> {{ end }}</td>
 </tr>
 </tbody>
 </table>

@@ -8,7 +8,7 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/freetaxii/libtaxii2/objects/api_root"
+	"github.com/freetaxii/libtaxii2/objects/apiRoot"
 	"github.com/freetaxii/libtaxii2/objects/collection"
 	"github.com/freetaxii/libtaxii2/objects/discovery"
 	"github.com/gorilla/mux"
@@ -53,7 +53,7 @@ type ServerConfigType struct {
 		Services  []ApiRootServiceType
 	}
 	DiscoveryResources  map[string]discovery.DiscoveryType
-	ApiRootResources    map[string]api_root.ApiRootType
+	ApiRootResources    map[string]apiRoot.APIRootType
 	CollectionResources map[string]CollectionServiceType
 }
 

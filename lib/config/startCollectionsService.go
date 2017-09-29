@@ -42,7 +42,7 @@ func (this *ServerConfigType) startCollectionsService(apiRootIndex int) {
 	for _, value := range this.ApiRootService.Services[apiRootIndex].Collections.Members {
 
 		// If enabled, only add the collection to the list if the collection can either be read or written to
-		if this.CollectionResources[value].Resource.Can_read == true || this.CollectionResources[value].Resource.Can_write == true {
+		if this.CollectionResources[value].Resource.CanRead == true || this.CollectionResources[value].Resource.CanWrite == true {
 			collections.AddCollection(this.CollectionResources[value].Resource)
 		}
 
@@ -75,7 +75,7 @@ func (this *ServerConfigType) startCollectionService(apiRootIndex int) {
 		// This is done to prevent sending the entire server config in to each handler
 		var ts server.ServerHandlerType
 		ts.Type = "Collection"
-		ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path + this.CollectionResources[value].Resource.Id + "/"
+		ts.Path = this.ApiRootService.Services[apiRootIndex].Collections.Path + this.CollectionResources[value].Resource.ID + "/"
 		ts.Html = this.ApiRootService.Html
 		ts.HtmlFile = this.ApiRootService.Services[apiRootIndex].HtmlFiles.Collection
 		ts.HtmlPath = this.System.HtmlDir + ts.HtmlFile

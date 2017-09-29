@@ -17,7 +17,7 @@ import (
 // param: apiRootIndex - an integer representing the current location of the API-Root for loop
 // param: collection - a string value representing a specific collection in the map
 func (this *ServerConfigType) startObjectsService(apiRootIndex int, collection string) {
-	collectionid := this.CollectionResources[collection].Resource.Id
+	collectionid := this.CollectionResources[collection].Resource.ID
 
 	// Make a copy of just the elements that we need to process the request and nothing more.
 	// This is done to prevent sending the entire server config in to each handler
@@ -48,7 +48,7 @@ func (this *ServerConfigType) startObjectsService(apiRootIndex int, collection s
 // param: apiRootIndex - an integer representing the current location of the API-Root for loop
 // param: collectionid - a string value representing a specific collection id
 func (this *ServerConfigType) startObjectByIdService(apiRootIndex int, collection string) {
-	collectionid := this.CollectionResources[collection].Resource.Id
+	collectionid := this.CollectionResources[collection].Resource.ID
 
 	// Make a copy of just the elements that we need to process the request and nothing more.
 	// This is done to prevent sending the entire server config in to each handler
