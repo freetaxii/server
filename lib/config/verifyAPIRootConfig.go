@@ -57,13 +57,9 @@ func (ezt *ServerConfigType) verifyAPIRootConfig() error {
 	}
 
 	// Return errors if there were any
-	if problemsFound == 1 {
-		log.Println("ERROR:", problemsFound, "error was found in the API Root configuration")
-		return errors.New("Configuration Errors Found")
-	} else if problemsFound > 1 {
-		log.Println("ERROR:", problemsFound, "errors were found in the API Root configuration")
-		return errors.New("Configuration Errors Found")
-	} else {
-		return nil
+	if problemsFound > 0 {
+		log.Println("ERROR: The API Root configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
 	}
+	return nil
 }

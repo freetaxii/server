@@ -21,6 +21,10 @@ func (ezt *ServerConfigType) VerifyServerConfig() error {
 
 	err = ezt.verifyGlobalConfig()
 
+	if err != nil {
+		return err
+	}
+
 	// --------------------------------------------------
 	// Discovery Server
 	// --------------------------------------------------
@@ -36,6 +40,10 @@ func (ezt *ServerConfigType) VerifyServerConfig() error {
 		err = ezt.verifyDiscoveryHTMLConfig()
 	} else {
 		log.Println("CONFIG: The Discovery Server is not configured to use HTML output")
+	}
+
+	if err != nil {
+		return err
 	}
 
 	// --------------------------------------------------

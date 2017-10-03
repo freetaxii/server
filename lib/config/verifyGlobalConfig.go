@@ -9,6 +9,7 @@ package config
 import (
 	"errors"
 	"log"
+	"strings"
 )
 
 // verifyGlobalDirectives - This method will verify that each required
@@ -32,6 +33,11 @@ func (ezt *ServerConfigType) verifyGlobalConfig() error {
 	if ezt.Global.Prefix == "" {
 		log.Println("CONFIG: The global.prefix directive is missing from the configuration file")
 		problemsFound++
+	} else {
+		if !strings.HasSuffix(ezt.Global.Prefix, "/") {
+			log.Println("CONFIG: The global.prefix directive is missing the ending slash '/'")
+			problemsFound++
+		}
 	}
 
 	// Database Configuration Directive
@@ -44,6 +50,11 @@ func (ezt *ServerConfigType) verifyGlobalConfig() error {
 	if ezt.Global.HTMLTemplateDir == "" {
 		log.Println("CONFIG: The global.htmltemplatedir directive is missing from the configuration file")
 		problemsFound++
+	} else {
+		if !strings.HasSuffix(ezt.Global.HTMLTemplateDir, "/") {
+			log.Println("CONFIG: The global.htmltemplatedir directive is missing the ending slash '/'")
+			problemsFound++
+		}
 	}
 
 	// Logging Config
@@ -53,13 +64,9 @@ func (ezt *ServerConfigType) verifyGlobalConfig() error {
 	}
 
 	// Return errors if there were any
-	if problemsFound == 1 {
-		log.Println("ERROR:", problemsFound, "error was found in the configuration file")
-		return errors.New("Configuration Errors Found")
-	} else if problemsFound > 1 {
-		log.Println("ERROR:", problemsFound, "errors were found in the configuration file")
-		return errors.New("Configuration Errors Found")
-	} else {
-		return nil
+	if problemsFound > 0 {
+		log.Println("ERROR: The Global configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
 	}
+	return nil
 }

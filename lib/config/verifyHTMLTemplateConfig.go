@@ -37,7 +37,7 @@ func (ezt *ServerConfigType) verifyDiscoveryHTMLConfig() error {
 
 			// Set the HTMLTemplatePath to the prefix + HTMLTemplateDir from the
 			// global config. This will make it easier for us to use later on.
-			ezt.DiscoveryServer.Services[i].HTMLTemplatePath = ezt.Global.Prefix + "/" + ezt.Global.HTMLTemplateDir
+			ezt.DiscoveryServer.Services[i].HTMLTemplatePath = ezt.Global.Prefix + ezt.Global.HTMLTemplateDir
 
 			// If it is not defined at the service level, lets copy from the
 			// parent, this will make it easier to work with later on.
@@ -51,15 +51,11 @@ func (ezt *ServerConfigType) verifyDiscoveryHTMLConfig() error {
 	}
 
 	// Return errors if there were any
-	if problemsFound == 1 {
-		log.Println("ERROR:", problemsFound, "error was found in the Discovery HTML Template configuration")
-		return errors.New("Configuration Errors Found")
-	} else if problemsFound > 1 {
-		log.Println("ERROR:", problemsFound, "errors were found in the Discovery HTML Template configuration")
-		return errors.New("Configuration Errors Found")
-	} else {
-		return nil
+	if problemsFound > 0 {
+		log.Println("ERROR: The Discovery HTML Template configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
 	}
+	return nil
 }
 
 // ----------------------------------------
@@ -112,7 +108,7 @@ func (ezt *ServerConfigType) verifyAPIRootHTMLConfig() error {
 
 		// Set the HTMLTemplatePath to the prefix + HTMLTemplateDir from the
 		// global config. This will make it easier for us to use later on.
-		ezt.APIRootServer.Services[i].HTMLTemplatePath = ezt.Global.Prefix + "/" + ezt.Global.HTMLTemplateDir
+		ezt.APIRootServer.Services[i].HTMLTemplatePath = ezt.Global.Prefix + ezt.Global.HTMLTemplateDir
 
 		// If it is not defined at the service level, lets copy in the parent, this will make it easier to work with later on
 		if s.HTMLTemplateFiles.APIRoot == "" {
@@ -149,22 +145,18 @@ func (ezt *ServerConfigType) verifyAPIRootHTMLConfig() error {
 	} // End for loop
 
 	// Return errors if there were any
-	if problemsFound == 1 {
-		log.Println("ERROR:", problemsFound, "error was found in the HTML Template configuration")
-		return errors.New("Configuration Errors Found")
-	} else if problemsFound > 1 {
-		log.Println("ERROR:", problemsFound, "errors were found in the HTML Template configuration")
-		return errors.New("Configuration Errors Found")
-	} else {
-		return nil
+	if problemsFound > 0 {
+		log.Println("ERROR: The API Root HTML Template configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
 	}
+	return nil
 }
 
 // -----------------------------------------------------------------------------
 // verifyHTMLFileExists - This method will check to make sure the HTML resource file is found on the filesystem
 // param: file - a string representing the filename name of the HTML resource file
 func (ezt *ServerConfigType) verifyHTMLFileExists(filename string) int {
-	filepath := ezt.Global.HTMLTemplateDir + filename
+	filepath := ezt.Global.Prefix + ezt.Global.HTMLTemplateDir + filename
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
 		log.Println("CONFIG: The HTML template file", filename, "can not be opened:", err)
 		return 1
