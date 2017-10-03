@@ -6,6 +6,7 @@
 
 package defs
 
+// These are globally definded constants for FreeTAXII
 const (
 	STIX_MEDIA_TYPE  = "application/vnd.oasis.stix+json"
 	STIX_VERSION     = "version=2.1"

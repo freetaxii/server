@@ -22,66 +22,77 @@ import (
 // Log Level 4 =
 // Log Level 5 = RAW packet/message decode and output
 
+// ServerConfigType - This type defines the configuration for the entire server.
 type ServerConfigType struct {
 	Router *mux.Router
-	System struct {
-		Protocol string
-		Listen   string
-		Prefix   string
-		DbConfig bool
-		DbType   string
-		DbFile   string
-		HtmlDir  string
-		TlsKey   string
-		TlsCrt   string
+	Global struct {
+		Protocol        string
+		Listen          string
+		Prefix          string
+		DbConfig        bool
+		DbType          string
+		DbFile          string
+		HTMLTemplateDir string
+		TLSKey          string
+		TLSCrt          string
 	}
 	Logging struct {
 		Enabled  bool
 		LogLevel int
 		LogFile  string
 	}
-	DiscoveryService struct {
-		Enabled  bool
-		Html     bool
-		HtmlFile string
-		Services []DiscoveryServiceType
+	DiscoveryServer struct {
+		Enabled          bool
+		HTMLEnabled      bool
+		HTMLTemplateFile string
+		Services         []DiscoveryServiceType
 	}
-	ApiRootService struct {
-		Enabled   bool
-		Html      bool
-		HtmlFiles HtmlFilesType
-		Services  []ApiRootServiceType
+	APIRootServer struct {
+		Enabled           bool
+		HTMLEnabled       bool
+		HTMLTemplateFiles HTMLFilesType
+		Services          []APIRootServiceType
 	}
 	DiscoveryResources  map[string]discovery.DiscoveryType
-	ApiRootResources    map[string]apiRoot.APIRootType
+	APIRootResources    map[string]apiRoot.APIRootType
 	CollectionResources map[string]CollectionServiceType
 }
 
-// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
+// DiscoveryServiceType - This struct represents an instance of a Discovery server.
+// If someone tries to set the 'resourcepath' directive in the configuration file it
+// will get overwritten in code.
 type DiscoveryServiceType struct {
-	Enabled  bool
-	Name     string
-	Path     string
-	HtmlFile string
-	Resource string
+	Enabled          bool
+	Name             string
+	ResourcePath     string // Set in verifyDiscoveryConfig()
+	HTMLEnabled      bool   // Set in verifyDiscoveryHTMLConfig()
+	HTMLTemplateFile string
+	HTMLTemplatePath string // Set in verifyDiscoveryHTMLConfig() = Prefix + HTMLTemplateDir
+	LogLevel         int    // Set in verifyDiscoveryConfig()
+	ResourceID       string
 }
 
-// If someone tries to set the 'path' directive in the configuration file it will just get overwritten in code.
-type ApiRootServiceType struct {
-	Enabled     bool
-	Name        string
-	Path        string
-	HtmlFiles   HtmlFilesType
-	Resource    string
-	Collections struct {
-		Enabled bool
-		Path    string
-		Members []string
+// APIRootServiceType - This struct represents an instance of an API Root server.
+// If someone tries to set the 'path' directive in the configuration file it
+// will just get overwritten in code.
+type APIRootServiceType struct {
+	Enabled           bool
+	Name              string
+	ResourcePath      string // Set in verifyAPIRootConfig()
+	HTMLEnabled       bool   // Set in verifyAPIRootHTMLConfig()
+	HTMLTemplateFiles HTMLFilesType
+	HTMLTemplatePath  string // Set in verifyAPIRootHTMLConfig() = Prefix + HTMLTemplateDir
+	LogLevel          int    // Set in verifyAPIRootConfig()
+	ResourceID        string
+	Collections       struct {
+		Enabled      bool
+		ResourcePath string // Set in verifyAPIRootConfig()
+		Members      []string
 	}
 }
 
-type HtmlFilesType struct {
-	ApiRoot     string
+type HTMLFilesType struct {
+	APIRoot     string
 	Collections string
 	Collection  string
 	Objects     string
@@ -91,7 +102,7 @@ type CollectionServiceType struct {
 	Location     string
 	RemoteConfig struct {
 		Name string
-		Url  string
+		URL  string
 	}
 	Resource collection.CollectionType
 }
@@ -100,9 +111,9 @@ type CollectionServiceType struct {
 // Load Configuration File and Parse JSON
 // --------------------------------------------------
 
-// LoadServerConfig - This methods takes in one parameter
-// param: s - a string value representing a filename of the configuration file
-func (this *ServerConfigType) LoadServerConfig(filename string) {
+// LoadServerConfig - This methods takes in a string value representing a
+// filename of the configuration file and loads the configuration into memory.
+func (ezt *ServerConfigType) LoadServerConfig(filename string) {
 	// TODO - Need to make make a validation check for the configuration file
 
 	// Open and read configuration file
@@ -117,24 +128,14 @@ func (this *ServerConfigType) LoadServerConfig(filename string) {
 	// --------------------------------------------------
 	// Use decoder instead of unmarshal so we can handle stream data
 	decoder := json.NewDecoder(sysConfigFileData)
-	err = decoder.Decode(this)
+	err = decoder.Decode(ezt)
 
 	if err != nil {
 		log.Fatalf("error parsing configuration file %v", err)
 	}
 
-	if this.Logging.LogLevel >= 5 {
-		log.Printf("DEBUG-5: System Configuration Dump %+v\n", this)
+	if ezt.Logging.LogLevel >= 5 {
+		log.Println("DEBUG-5: System Configuration Dump")
+		log.Printf("%+v\n", ezt)
 	}
-}
-
-// VerifyServerConfig - This method will verify that the configuration file has what it needs
-// TODO finish fleshing this out
-func (this *ServerConfigType) VerifyServerConfig() error {
-	var err error
-	err = this.verifyConfigDirectives()
-	if err != nil {
-		return err
-	}
-	return nil
 }

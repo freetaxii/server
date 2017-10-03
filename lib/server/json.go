@@ -18,11 +18,34 @@ import (
 // createDiscoveryResponse - This takes in two parameters and will create the TAXII ecoded JSON response
 // param: formatPretty - This is a boolean that will tell the Marshal process to format and indent the JSON
 // retval: jsondata - A byte array of JSON encoded data
-func (this *ServerHandlerType) createTAXIIResponse(formatPretty bool) []byte {
+func (ezt *ServerHandlerType) createTAXIIResponse(formatPretty bool) []byte {
 	var jsondata []byte
 	var err error
 
-	tm := this.Resource
+	tm := ezt.Resource
+
+	if formatPretty == true {
+		jsondata, err = json.MarshalIndent(tm, "", "    ")
+	} else {
+		jsondata, err = json.Marshal(tm)
+	}
+
+	if err != nil {
+		// If we can not create a status message then there is something
+		// wrong with the APIs and nothing is going to work.
+		log.Fatal("Unable to create Discovery Response Message")
+	}
+	return jsondata
+}
+
+// createDiscoveryResponse - This takes in two parameters and will create the TAXII ecoded JSON response
+// param: formatPretty - This is a boolean that will tell the Marshal process to format and indent the JSON
+// retval: jsondata - A byte array of JSON encoded data
+func (ezt *TAXIIServerHandlerType) createTAXIIResponse(formatPretty bool) []byte {
+	var jsondata []byte
+	var err error
+
+	tm := ezt.Resource
 
 	if formatPretty == true {
 		jsondata, err = json.MarshalIndent(tm, "", "    ")

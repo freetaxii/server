@@ -25,7 +25,7 @@ import (
 // param: w - http.ResponseWriter
 //
 // param: r - *http.Request
-func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -36,15 +36,15 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 	stixBundle := stixObjects.NewBundle()
 
 	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlPath))
+	var htmlTemplateResource = template.Must(template.ParseFiles(ezt.HTMLTemplatePath))
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the", this.Type, "Server Handler from", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
 	// that will generate errors below.
-	if this.LogLevel >= 5 {
+	if ezt.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -69,7 +69,7 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 	i2.AddKillChainPhase("lockheed-martin-cyber-kill-chain", "delivery")
 	stixBundle.AddObject(i2)
 
-	this.Resource = stixBundle
+	ezt.Resource = stixBundle
 
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
@@ -84,13 +84,13 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
 	} else {
 		mediaType = "text/html; charset=utf-8"
@@ -99,13 +99,13 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.
 		formatpretty = true
-		jsondata = this.createTAXIIResponse(formatpretty)
-		this.Resource = string(jsondata)
-		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
+		ezt.Resource = string(jsondata)
+		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
 	}
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending", this.Type, "Response to", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Sending", ezt.Type, "Response to", r.RemoteAddr)
 	}
 }
 
@@ -116,7 +116,7 @@ func (this *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *ht
 // param: w - http.ResponseWriter
 //
 // param: r - *http.Request
-func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
@@ -127,19 +127,19 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 	stixBundle := stixObjects.NewBundle()
 
 	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlPath))
+	var htmlTemplateResource = template.Must(template.ParseFiles(ezt.HTMLTemplatePath))
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the", this.Type, "Server Handler from", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
 	// that will generate errors below.
-	if this.LogLevel >= 5 {
+	if ezt.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
-	resp, _ := http.Get(this.RemoteConfig.Url)
+	resp, _ := http.Get(ezt.RemoteConfig.URL)
 
 	// TODO need to check for errors first
 	defer resp.Body.Close()
@@ -150,7 +150,7 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 
 	for _, value := range body {
 		i1 := stixObjects.NewIndicator()
-		i1.SetName(this.RemoteConfig.Name)
+		i1.SetName(ezt.RemoteConfig.Name)
 		i1.AddLabel("malicious-activity")
 		pattern := "[ ipv4-addr:value = '" + value + "' ]"
 		i1.SetPattern(pattern)
@@ -159,7 +159,7 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 		stixBundle.AddObject(i1)
 	}
 
-	this.Resource = stixBundle
+	ezt.Resource = stixBundle
 
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
@@ -174,27 +174,27 @@ func (this *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter,
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.Write(jsondata)
 	} else {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 
-		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
+		// I needed to convert this to actual JSON since if I just used ezt.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.
 		formatpretty = true
-		jsondata = this.createTAXIIResponse(formatpretty)
-		this.Resource = string(jsondata)
-		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
+		ezt.Resource = string(jsondata)
+		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
 	}
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending", this.Type, "Response to", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Sending", ezt.Type, "Response to", r.RemoteAddr)
 	}
 }

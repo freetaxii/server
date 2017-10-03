@@ -9,8 +9,6 @@ GO_BUILD=$(GO_CMD) build
 GO_CLEAN=$(GO_CMD) clean
 GO_GET=$(GO_CMD) get
 GO_INSTALL=$(GO_CMD) install -v
-GO_LINT=golint
-GO_VET=$(GO_CMD) vet
 NO_COLOR=\033[0m
 OK_COLOR=\033[32;01m
 ERROR_COLOR=\033[31;01m
@@ -21,12 +19,11 @@ WARN_COLOR=\033[33;01m
 BINARY=freetaxii
 
 
-# Variables we want to pass in to the application during compile time
-VERSION=0.0.1
+# The build version that we want to pass in to the application during compile time
 BUILD=`git rev-parse HEAD`
 
 # Setup the -ldflags option for go build here, interpolate the variable values 
-LDFLAGS=-ldflags "-X main.Version=$(VERSION) -X main.Build=$(BUILD)"
+LDFLAGS=-ldflags "-X main.Build=$(BUILD)"
 
 
 # Default target builds FreeTAXII
@@ -54,16 +51,6 @@ clean:
 	@echo "$(OK_COLOR)==> Cleaning $(BINARY)...$(NO_COLOR)"; \
 	if [ -f $(BINARY) ] ; then rm $(BINARY) ; fi
 
-# Run the go vet on the go code
-vet:
-	@echo "$(OK_COLOR)==> Vetting $(BINARY)...$(NO_COLOR)"; \
-	$(GO_VET) ./...
 
-# Run the go linter on the go code
-lint:
-	@echo "$(OK_COLOR)==> Linting $(BINARY)...$(NO_COLOR)"; \
-	$(GO_LINT) ./...
-
-
-.PHONY: clean install vet lint help
+.PHONY: clean install
 

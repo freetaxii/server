@@ -15,27 +15,27 @@ import (
 	"strings"
 )
 
-// -----------------------------------------------------------------------------
-// TaxiiServerHandler - This method takes in two parameters and handles all requests for TAXII media type responses
+// TAXIIServerHandler - This method takes in two parameters and handles all requests for TAXII media type responses
 // param: w - http.ResponseWriter
 // param: r - *http.Request
-func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
-	var formatpretty bool = false
+	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(this.HtmlPath))
+	var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+	var htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the", this.Type, "Server Handler from", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
 	}
 
 	// We need to put this first so that during debugging we can see problems
 	// that will generate errors below.
-	if this.LogLevel >= 5 {
+	if ezt.LogLevel >= 5 {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -50,26 +50,26 @@ func (this *ServerHandlerType) TaxiiServerHandler(w http.ResponseWriter, r *http
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = this.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
-	} else if this.Html == true && strings.Contains(httpHeaderAccept, "text/html") {
+	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
-		htmlTemplateResource.ExecuteTemplate(w, this.HtmlFile, this)
+		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
-	if this.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending", this.Type, "Response to", r.RemoteAddr)
+	if ezt.LogLevel >= 3 {
+		log.Println("DEBUG-3: Sending", ezt.Type, "Response to", r.RemoteAddr)
 	}
 }

@@ -10,6 +10,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/freetaxii/freetaxii-server/lib/config"
+	"github.com/freetaxii/freetaxii-server/lib/server"
+	"github.com/freetaxii/libtaxii2/objects"
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt"
 	"log"
@@ -17,35 +19,16 @@ import (
 	"os"
 )
 
-// DEFAULT_SERVER_CONFIG_FILENAME - is a constant for the default location of the configuration file
-const (
-	DEFAULT_SERVER_CONFIG_FILENAME = "etc/freetaxii.conf"
+// These global variables hold build information. The Build variable will be
+// populated by the Makefile and uses the Git Head hash as its identifier.
+// These variables are used in the console output for --version and --help.
+var (
+	Version = "0.0.1"
+	Build   string
 )
 
-// Version - This product version as fed from the Makefile
-var Version string
-
-// Build - The product build version as fed from the Makefile
-// This used the Git Head hash as an identifier
-var Build string
-
-var sOptServerConfigFilename = getopt.StringLong("config", 'c', DEFAULT_SERVER_CONFIG_FILENAME, "System Configuration File", "string")
-var bOptHelp = getopt.BoolLong("help", 0, "Help")
-var bOptVer = getopt.BoolLong("version", 0, "Version")
-
 func main() {
-	getopt.HelpColumn = 35
-	getopt.DisplayWidth = 120
-	getopt.SetParameters("")
-	getopt.Parse()
-
-	if *bOptVer {
-		printVersion()
-	}
-
-	if *bOptHelp {
-		printHelp()
-	}
+	configFileName := processCommandLineFlags()
 
 	// --------------------------------------------------
 	// Define variables
@@ -53,15 +36,17 @@ func main() {
 
 	router := mux.NewRouter()
 	serviceCounter := 0
-	var taxiiServerConfig config.ServerConfigType
-	taxiiServerConfig.Router = router
+	var config config.ServerConfigType
+	config.Router = router
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
 	// --------------------------------------------------
 
-	taxiiServerConfig.LoadServerConfig(*sOptServerConfigFilename)
-	configError := taxiiServerConfig.VerifyServerConfig()
+	// In addition to checking the configuration for completeness the verify
+	// process will also populate some of the values.
+	config.LoadServerConfig(configFileName)
+	configError := config.VerifyServerConfig()
 	if configError != nil {
 		log.Fatalln(configError)
 	}
@@ -75,8 +60,8 @@ func main() {
 	// take the last bit in case there is multiple directories /etc/foo/bar/stuff.log
 
 	// Only enable logging to a file if it is turned on in the configuration file
-	if taxiiServerConfig.Logging.Enabled == true {
-		logFile, err := os.OpenFile(taxiiServerConfig.Logging.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if config.Logging.Enabled == true {
+		logFile, err := os.OpenFile(config.Logging.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
@@ -93,15 +78,113 @@ func main() {
 	// --------------------------------------------------
 	// Start a Discovery Service handler
 	// --------------------------------------------------
-	if taxiiServerConfig.DiscoveryService.Enabled == true {
-		serviceCounter += taxiiServerConfig.StartDiscoveryService()
+	// This will look to see if there are any Discovery services
+	// defined in the config file. If there are, it will loop through the list and setup
+	// handlers for each one of them. The HandleFunc passes in copy of the Discovery Resource
+	// and the extra meta data that it needs to process the request.
+
+	if config.DiscoveryServer.Enabled == true {
+		for _, s := range config.DiscoveryServer.Services {
+			if s.Enabled == true {
+
+				var ts server.TAXIIServerHandlerType
+				ts.NewDiscoveryHandler(s)
+				ts.Resource = config.DiscoveryResources[s.ResourceID]
+
+				log.Println("Starting TAXII Discovery service at:", s.ResourcePath)
+				router.HandleFunc(s.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
+				serviceCounter++
+			}
+		}
 	}
 
 	// --------------------------------------------------
 	// Start an API Root Service handler
 	// --------------------------------------------------
-	if taxiiServerConfig.ApiRootService.Enabled == true {
-		serviceCounter += taxiiServerConfig.StartApiRootService()
+	// This will look to see if there are any API Root services defined
+	// in the config file. If there are, it will loop through the list and setup handlers
+	// for each one of them. The HandleFunc passes in copy of the API Root Resource and the
+	// extra meta data that it needs to process the request.
+
+	if config.APIRootServer.Enabled == true {
+		for apirootindex, s := range config.APIRootServer.Services {
+			if s.Enabled == true {
+
+				var ts server.TAXIIServerHandlerType
+				ts.NewAPIRootHandler(s)
+				ts.Resource = config.APIRootResources[s.ResourceID]
+
+				log.Println("Starting TAXII API Root service at:", s.ResourcePath)
+				router.HandleFunc(ts.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
+				serviceCounter++
+
+				// --------------------------------------------------
+				// Start a Collections Service handler
+				// --------------------------------------------------
+				// This will look to see if the Collections service is enabled
+				// in the config file for a given API Root. If it is, it will setup handlers for it.
+				// The HandleFunc passes in copy of the Collections Resource and the extra meta data
+				// that it needs to process the request.
+
+				if s.Collections.Enabled == true {
+
+					var ts1 server.TAXIIServerHandlerType
+					ts1.NewCollectionsHandler(s)
+
+					// We need to look in to this instance of the API Root and find out which collections are tied to it
+					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
+					collections := objects.NewCollections()
+					for _, c := range s.Collections.Members {
+
+						// If enabled, only add the collection to the list if the collection can either be read or written to
+						if config.CollectionResources[c].Resource.CanRead == true || config.CollectionResources[c].Resource.CanWrite == true {
+							collections.AddCollection(config.CollectionResources[c].Resource)
+						}
+					}
+					ts1.Resource = collections
+
+					log.Println("Starting TAXII Collections service of:", s.Collections.ResourcePath)
+					router.HandleFunc(ts1.ResourcePath, ts1.TAXIIServerHandler).Methods("GET")
+
+					// --------------------------------------------------
+					// Start a Collection handler
+					// --------------------------------------------------
+					// This will look to see which collections are defined for this
+					// Collections group in this API Root. If they are enabled, it will setup handlers for it.
+					// The HandleFunc passes in copy of the Collection Resource and the extra meta data
+					// that it needs to process the request.
+
+					for _, c := range s.Collections.Members {
+
+						resourcePath := ts1.ResourcePath + config.CollectionResources[c].Resource.ID + "/"
+
+						// Make a copy of just the elements that we need to process the request and nothing more.
+						// This is done to prevent sending the entire server config in to each handler
+						var ts2 server.TAXIIServerHandlerType
+						ts2.NewCollectionHandler(s, resourcePath)
+						ts2.Resource = config.CollectionResources[c].Resource
+
+						// --------------------------------------------------
+						// Start a Collection handler
+						// --------------------------------------------------
+						log.Println("Starting TAXII Collection service of:", resourcePath)
+
+						// We do not need to check to see if the collection is enabled and readable/writable because that was already done
+						// TODO add support for post if the collection is writable
+						router.HandleFunc(ts2.ResourcePath, ts2.TAXIIServerHandler).Methods("GET")
+
+						// --------------------------------------------------
+						// Start an Objects handler
+						// --------------------------------------------------
+						// This will pass in the map name not the UUIDv4 collection ID
+						log.Println("Remove this", apirootindex)
+						// ezt.startObjectsService(apirootindex, c)
+						// ezt.startObjectByIdService(apirootindex, c)
+					}
+
+				}
+			}
+		}
 	}
 
 	// --------------------------------------------------
@@ -114,10 +197,10 @@ func main() {
 	// --------------------------------------------------
 	// Listen for Incoming Connections
 	// --------------------------------------------------
-	if taxiiServerConfig.System.Protocol == "http" {
-		log.Println("Listening on:", taxiiServerConfig.System.Listen)
-		log.Fatalln(http.ListenAndServe(taxiiServerConfig.System.Listen, router))
-	} else {
+	if config.Global.Protocol == "http" {
+		log.Println("Listening on:", config.Global.Listen)
+		log.Fatalln(http.ListenAndServe(config.Global.Listen, router))
+	} else if config.Global.Protocol == "https" {
 		// --------------------------------------------------
 		// Configure TLS settings
 		// --------------------------------------------------
@@ -134,49 +217,61 @@ func main() {
 			},
 		}
 		tlsServer := &http.Server{
-			Addr:         taxiiServerConfig.System.Listen,
+			Addr:         config.Global.Listen,
 			Handler:      router,
 			TLSConfig:    tlsConfig,
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 		}
 
-		tlsKeyPath := "etc/tls/" + taxiiServerConfig.System.TlsKey
-		tlsCrtPath := "etc/tls/" + taxiiServerConfig.System.TlsCrt
+		tlsKeyPath := "etc/tls/" + config.Global.TLSKey
+		tlsCrtPath := "etc/tls/" + config.Global.TLSCrt
 		log.Fatalln(tlsServer.ListenAndServeTLS(tlsCrtPath, tlsKeyPath))
+	} else {
+		log.Fatalln("No valid protocol was defined in the configuration file")
 	} // end else
 }
 
 // --------------------------------------------------
-// Print Help and Version information
+// Private functions
 // --------------------------------------------------
 
-func printHelp() {
-	printOutputHeader()
-	getopt.Usage()
-	os.Exit(0)
+// processCommandLineFlags - This function will process the command line flags
+// and will print the version or help information as needed.
+func processCommandLineFlags() string {
+	defaultServerConfigFilename := "etc/freetaxii.conf"
+	sOptServerConfigFilename := getopt.StringLong("config", 'c', defaultServerConfigFilename, "System Configuration File", "string")
+	bOptHelp := getopt.BoolLong("help", 0, "Help")
+	bOptVer := getopt.BoolLong("version", 0, "Version")
+
+	getopt.HelpColumn = 35
+	getopt.DisplayWidth = 120
+	getopt.SetParameters("")
+	getopt.Parse()
+
+	// Lets check to see if the version command line flag was given. If it is
+	// lets print out the version infomration and exit.
+	if *bOptVer {
+		printOutputHeader()
+		os.Exit(0)
+	}
+
+	// Lets check to see if the help command line flag was given. If it is lets
+	// print out the help information and exit.
+	if *bOptHelp {
+		printOutputHeader()
+		getopt.Usage()
+		os.Exit(0)
+	}
+	return *sOptServerConfigFilename
 }
 
-func printVersion() {
-	printOutputHeader()
-	os.Exit(0)
-}
-
-// --------------------------------------------------
-// Print a header for all output
-// --------------------------------------------------
-
+// printOutputHeader - This function will print a header for all console output
 func printOutputHeader() {
 	fmt.Println("")
 	fmt.Println("FreeTAXII Server")
-	fmt.Println("Copyright, Bret Jordan")
-	if Version == "" {
-		fmt.Println("Version: UNKNOWN")
-	} else {
-		fmt.Println("Version:", Version)
-	}
-	if Build == "" {
-		fmt.Println("Build: UNKNOWN")
-	} else {
+	fmt.Println("Copyright: Bret Jordan")
+	fmt.Println("Version:", Version)
+	if Build != "" {
 		fmt.Println("Build:", Build)
 	}
 	fmt.Println("")
