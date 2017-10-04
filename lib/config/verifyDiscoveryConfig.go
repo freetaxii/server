@@ -13,7 +13,7 @@ import (
 
 // verifyDisocveryConfig - This method will verify all of the configuration
 // directives for the TAXII Discovery Service
-func (ezt *ServerConfigType) verifyDiscoveryConfig() error {
+func (config *ServerConfigType) verifyDiscoveryConfig() error {
 	var problemsFound = 0
 
 	// This variable will track if any of the actual discovery services are
@@ -22,10 +22,10 @@ func (ezt *ServerConfigType) verifyDiscoveryConfig() error {
 	var isServiceEnabled = false
 
 	// Loop through each Discovery Service and verify its configuration
-	for i, value := range ezt.DiscoveryServer.Services {
+	for i, value := range config.DiscoveryServer.Services {
 
 		// Copy in logging level to make it easier to use in a handler
-		ezt.DiscoveryServer.Services[i].LogLevel = ezt.Logging.LogLevel
+		config.DiscoveryServer.Services[i].LogLevel = config.Logging.LogLevel
 
 		// Check to see if this service instance is enabled.
 		if value.Enabled == true {
@@ -37,11 +37,11 @@ func (ezt *ServerConfigType) verifyDiscoveryConfig() error {
 			log.Println("CONFIG: One or more Discovery Services is missing the 'name' directive in the configuration file")
 			problemsFound++
 		} else {
-			ezt.DiscoveryServer.Services[i].ResourcePath = "/" + value.Name + "/"
+			config.DiscoveryServer.Services[i].ResourcePath = "/" + value.Name + "/"
 		}
 
 		// Verify the Discovery Resource that is referenced actually exists
-		if _, ok := ezt.DiscoveryResources[value.ResourceID]; !ok {
+		if _, ok := config.DiscoveryResources[value.ResourceID]; !ok {
 			msg := "CONFIG: The Discovery Resource " + value.ResourceID + " is missing from the configuration file"
 			log.Println(msg)
 			problemsFound++

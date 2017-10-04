@@ -100,6 +100,7 @@ func main() {
 
 	// --------------------------------------------------
 	// Start an API Root Service handler
+	// Example: /api1/
 	// --------------------------------------------------
 	// This will look to see if there are any API Root services defined
 	// in the config file. If there are, it will loop through the list and setup handlers
@@ -107,79 +108,122 @@ func main() {
 	// extra meta data that it needs to process the request.
 
 	if config.APIRootServer.Enabled == true {
-		for apirootindex, s := range config.APIRootServer.Services {
-			if s.Enabled == true {
+		for _, api := range config.APIRootServer.Services {
+			if api.Enabled == true {
 
 				var ts server.TAXIIServerHandlerType
-				ts.NewAPIRootHandler(s)
-				ts.Resource = config.APIRootResources[s.ResourceID]
+				ts.NewAPIRootHandler(api)
+				ts.Resource = config.APIRootResources[api.ResourceID]
 
-				log.Println("Starting TAXII API Root service at:", s.ResourcePath)
+				log.Println("Starting TAXII API Root service at:", api.ResourcePath)
 				router.HandleFunc(ts.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
 				serviceCounter++
 
 				// --------------------------------------------------
 				// Start a Collections Service handler
+				// Example: /api1/collections/
 				// --------------------------------------------------
 				// This will look to see if the Collections service is enabled
-				// in the config file for a given API Root. If it is, it will setup handlers for it.
+				// in the configuration file for a given API Root. If it is, it
+				// will setup handlers for it.
 				// The HandleFunc passes in copy of the Collections Resource and the extra meta data
 				// that it needs to process the request.
 
-				if s.Collections.Enabled == true {
+				if api.Collections.Enabled == true {
 
-					var ts1 server.TAXIIServerHandlerType
-					ts1.NewCollectionsHandler(s)
+					var collectionsSrv server.TAXIIServerHandlerType
+					collectionsSrv.NewCollectionsHandler(api)
+					collections := objects.NewCollections()
 
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
 					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
-					collections := objects.NewCollections()
-					for _, c := range s.Collections.Members {
+					for _, c := range api.Collections.Members {
 
 						// If enabled, only add the collection to the list if the collection can either be read or written to
 						if config.CollectionResources[c].Resource.CanRead == true || config.CollectionResources[c].Resource.CanWrite == true {
 							collections.AddCollection(config.CollectionResources[c].Resource)
 						}
 					}
-					ts1.Resource = collections
+					collectionsSrv.Resource = collections
 
-					log.Println("Starting TAXII Collections service of:", s.Collections.ResourcePath)
-					router.HandleFunc(ts1.ResourcePath, ts1.TAXIIServerHandler).Methods("GET")
+					log.Println("Starting TAXII Collections service of:", api.Collections.ResourcePath)
+					router.HandleFunc(collectionsSrv.ResourcePath, collectionsSrv.TAXIIServerHandler).Methods("GET")
 
 					// --------------------------------------------------
 					// Start a Collection handler
+					// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
 					// --------------------------------------------------
 					// This will look to see which collections are defined for this
-					// Collections group in this API Root. If they are enabled, it will setup handlers for it.
+					// Collections group in this API Root. If they are enabled, it
+					// will setup handlers for it.
 					// The HandleFunc passes in copy of the Collection Resource and the extra meta data
 					// that it needs to process the request.
 
-					for _, c := range s.Collections.Members {
+					for _, c := range api.Collections.Members {
 
-						resourcePath := ts1.ResourcePath + config.CollectionResources[c].Resource.ID + "/"
+						resourceCollectionIDPath := collectionsSrv.ResourcePath + config.CollectionResources[c].Resource.ID + "/"
 
 						// Make a copy of just the elements that we need to process the request and nothing more.
 						// This is done to prevent sending the entire server config in to each handler
-						var ts2 server.TAXIIServerHandlerType
-						ts2.NewCollectionHandler(s, resourcePath)
-						ts2.Resource = config.CollectionResources[c].Resource
+						var collectionSrv server.TAXIIServerHandlerType
+						collectionSrv.NewCollectionHandler(api, resourceCollectionIDPath)
+						collectionSrv.Resource = config.CollectionResources[c].Resource
 
-						// --------------------------------------------------
-						// Start a Collection handler
-						// --------------------------------------------------
-						log.Println("Starting TAXII Collection service of:", resourcePath)
+						log.Println("Starting TAXII Collection service of:", resourceCollectionIDPath)
 
-						// We do not need to check to see if the collection is enabled and readable/writable because that was already done
+						// We do not need to check to see if the collection is enabled
+						// and readable/writable because that was already done
 						// TODO add support for post if the collection is writable
-						router.HandleFunc(ts2.ResourcePath, ts2.TAXIIServerHandler).Methods("GET")
+						router.HandleFunc(collectionSrv.ResourcePath, collectionSrv.TAXIIServerHandler).Methods("GET")
 
 						// --------------------------------------------------
 						// Start an Objects handler
+						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
-						// This will pass in the map name not the UUIDv4 collection ID
-						log.Println("Remove this", apirootindex)
-						// ezt.startObjectsService(apirootindex, c)
-						// ezt.startObjectByIdService(apirootindex, c)
+
+						// Make a copy of just the elements that we need to process the request and nothing more.
+						// This is done to prevent sending the entire server config in to each handler
+						var objectsSrv server.STIXServerHandlerType
+						objectsSrv.Type = "Objects"
+						objectsSrv.ResourcePath = resourceCollectionIDPath + "objects/"
+						objectsSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
+						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
+						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
+						objectsSrv.LogLevel = config.Logging.LogLevel
+						objectsSrv.Location = config.CollectionResources[c].Location
+						objectsSrv.RemoteConfig = config.CollectionResources[c].RemoteConfig
+
+						// --------------------------------------------------
+						// Start a Objects handler
+						// --------------------------------------------------
+						log.Println("Starting TAXII Object service of:", objectsSrv.ResourcePath)
+						if config.CollectionResources[c].Location == "remote" {
+							config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerRemoteHandler).Methods("GET")
+						} else if config.CollectionResources[c].Location == "local" {
+							config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
+						}
+
+						// Make a copy of just the elements that we need to process the request and nothing more.
+						// This is done to prevent sending the entire server config in to each handler
+						var objectsSrvID server.STIXServerHandlerType
+						objectsSrvID.Type = "Objects"
+						objectsSrvID.ResourcePath = resourceCollectionIDPath + "objects/" + "{objectid}/"
+						objectsSrvID.HTMLEnabled = config.APIRootServer.HTMLEnabled
+						objectsSrvID.HTMLTemplateFile = api.HTMLBranding.Objects
+						objectsSrvID.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
+						objectsSrvID.LogLevel = config.Logging.LogLevel
+						objectsSrvID.Location = config.CollectionResources[c].Location
+						objectsSrvID.RemoteConfig = config.CollectionResources[c].RemoteConfig
+
+						// --------------------------------------------------
+						// Start a Objects handler
+						// --------------------------------------------------
+						log.Println("Starting TAXII Object service of:", objectsSrvID.ResourcePath)
+						if config.CollectionResources[c].Location == "remote" {
+							config.Router.HandleFunc(objectsSrvID.ResourcePath, objectsSrvID.ObjectsServerRemoteHandler).Methods("GET")
+						} else if config.CollectionResources[c].Location == "local" {
+							config.Router.HandleFunc(objectsSrvID.ResourcePath, objectsSrvID.ObjectsServerHandler).Methods("GET")
+						}
 					}
 
 				}

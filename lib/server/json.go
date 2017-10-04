@@ -18,7 +18,7 @@ import (
 // createDiscoveryResponse - This takes in two parameters and will create the TAXII ecoded JSON response
 // param: formatPretty - This is a boolean that will tell the Marshal process to format and indent the JSON
 // retval: jsondata - A byte array of JSON encoded data
-func (ezt *ServerHandlerType) createTAXIIResponse(formatPretty bool) []byte {
+func (ezt *STIXServerHandlerType) createSTIXResponse(formatPretty bool) []byte {
 	var jsondata []byte
 	var err error
 

@@ -25,9 +25,12 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 
-	// Setup HTML template
-	var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
-	var htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
+	// Setup HTML template only if HTMLEnabled is true
+	var htmlTemplateResource *template.Template
+	if ezt.HTMLEnabled == true {
+		var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+		htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
+	}
 
 	if ezt.LogLevel >= 3 {
 		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)

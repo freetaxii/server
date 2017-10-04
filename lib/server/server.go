@@ -14,77 +14,83 @@ import (
 // Setup Handler Structs
 // --------------------------------------------------
 
+// TAXIIServerHandlerType - This type will hold the data elements required to
+// process all TAXII media type requests. Since we are using a single handler
+// for multiple taxii messages, we need to know the resource type.
 type TAXIIServerHandlerType struct {
-	// Since we are using a single handler for multiple taxii messages, we need to know the resource type
 	Type             string
 	ResourcePath     string // This is used in the HTML output
 	HTMLEnabled      bool
 	HTMLTemplateFile string
-	HTMLTemplatePath string
+	HTMLTemplatePath string // Prefix + HTMLTemplateDir
 	LogLevel         int
 	Resource         interface{}
 }
 
-// ServerHandlerType - This struct will handle the discovery, api_root, collections, collection, etc
-type ServerHandlerType struct {
-	// Since we are using a single handler for multiple taxii messages, we need to know the resource type
-	Type string
-	// Needed
-	HTMLEnabled bool
-	// Needed
+// STIXServerHandlerType - This type will hold the data elements required to
+// process all STIX media type requests. Since we are using a single handler
+// for multiple stix messages, we need to know the resource type.
+type STIXServerHandlerType struct {
+	Type             string
+	ResourcePath     string // This is used in the HTML output
+	HTMLEnabled      bool
 	HTMLTemplateFile string
-	// HTMLPath = Full path + filename
-	HTMLTemplatePath string
-	// Needed
-	LogLevel int
-	// Not used
-	ResourcePath string
-	Resource     interface{}
-	Location     string
-	RemoteConfig struct {
+	HTMLTemplatePath string // Prefix + HTMLTemplateDir
+	LogLevel         int
+	Resource         interface{}
+	Location         string
+	RemoteConfig     struct {
 		Name string
 		URL  string
 	}
 }
 
+// These methods will copy the elements found in the main configuration file.
+// We do this so that we do not send the entire configuration to a handler.
+// Also, this enables us to create a generic handler that can fulfill requests
+// for all of the TAXII and STIX handlers because we can pre-format the data to
+// be in a consistent and correct from.
+
 // NewDiscoveryHandler - This method will make a copy of the elements found in
-// the main configuration for this Discovery Service and copy them here. We do
-// this so that we do not send the entire configuration to a handler. Also, this
-// enables us to create a generic handler that can fulfill requests for all of
-// the TAXII handlers because we can pre-format the data to be in the correct
-// from.
+// the main configuration for this Discovery Service and copy them here.
 func (ezt *TAXIIServerHandlerType) NewDiscoveryHandler(c config.DiscoveryServiceType) {
 	ezt.Type = "Discovery"
 	ezt.ResourcePath = c.ResourcePath
 	ezt.HTMLEnabled = c.HTMLEnabled
-	ezt.HTMLTemplateFile = c.HTMLTemplateFile
+	ezt.HTMLTemplateFile = c.HTMLBranding.Discovery
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
 	ezt.LogLevel = c.LogLevel
 }
 
+// NewAPIRootHandler - This method will make a copy of the elements found in
+// the main configuration for this API Root Service and copy them here.
 func (ezt *TAXIIServerHandlerType) NewAPIRootHandler(c config.APIRootServiceType) {
 	ezt.Type = "API-Root"
 	ezt.ResourcePath = c.ResourcePath
 	ezt.HTMLEnabled = c.HTMLEnabled
-	ezt.HTMLTemplateFile = c.HTMLTemplateFiles.APIRoot
+	ezt.HTMLTemplateFile = c.HTMLBranding.APIRoot
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
 	ezt.LogLevel = c.LogLevel
 }
 
+// NewCollectionsHandler - This method will make a copy of the elements found in
+// the main configuration for this Collections Service and copy them here.
 func (ezt *TAXIIServerHandlerType) NewCollectionsHandler(c config.APIRootServiceType) {
 	ezt.Type = "Collections"
 	ezt.ResourcePath = c.Collections.ResourcePath
 	ezt.HTMLEnabled = c.HTMLEnabled
-	ezt.HTMLTemplateFile = c.HTMLTemplateFiles.Collections
+	ezt.HTMLTemplateFile = c.HTMLBranding.Collections
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
 	ezt.LogLevel = c.LogLevel
 }
 
+// NewCollectionHandler - This method will make a copy of the elements found in
+// the main configuration for this Collection Service and copy them here.
 func (ezt *TAXIIServerHandlerType) NewCollectionHandler(c config.APIRootServiceType, path string) {
 	ezt.Type = "Collection"
 	ezt.ResourcePath = path
 	ezt.HTMLEnabled = c.HTMLEnabled
-	ezt.HTMLTemplateFile = c.HTMLTemplateFiles.Collection
+	ezt.HTMLTemplateFile = c.HTMLBranding.Collection
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
 	ezt.LogLevel = c.LogLevel
 }

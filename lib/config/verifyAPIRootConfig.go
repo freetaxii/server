@@ -13,7 +13,7 @@ import (
 
 // verifyDisocveryConfig - This method will verify all of the configuration
 // directives for the TAXII Discovery Service
-func (ezt *ServerConfigType) verifyAPIRootConfig() error {
+func (config *ServerConfigType) verifyAPIRootConfig() error {
 	var problemsFound = 0
 
 	// This variable will track if any of the actual api root services are
@@ -22,10 +22,10 @@ func (ezt *ServerConfigType) verifyAPIRootConfig() error {
 	var isServiceEnabled = false
 
 	// API Service Directives
-	for i, value := range ezt.APIRootServer.Services {
+	for i, value := range config.APIRootServer.Services {
 
 		// Copy in logging level to make it easier to use in a handler
-		ezt.APIRootServer.Services[i].LogLevel = ezt.Logging.LogLevel
+		config.APIRootServer.Services[i].LogLevel = config.Logging.LogLevel
 
 		// If this service instance is enabled
 		if value.Enabled == true {
@@ -37,14 +37,14 @@ func (ezt *ServerConfigType) verifyAPIRootConfig() error {
 			log.Println("CONFIG: One or more API Root Services is missing the 'name' directive in the configuration file")
 			problemsFound++
 		} else {
-			ezt.APIRootServer.Services[i].ResourcePath = "/" + value.Name + "/"
+			config.APIRootServer.Services[i].ResourcePath = "/" + value.Name + "/"
 		}
 
 		// Set the collections resource path
-		ezt.APIRootServer.Services[i].Collections.ResourcePath = ezt.APIRootServer.Services[i].ResourcePath + "collections/"
+		config.APIRootServer.Services[i].Collections.ResourcePath = config.APIRootServer.Services[i].ResourcePath + "collections/"
 
 		// Verify the API Resource is found
-		if _, ok := ezt.APIRootResources[value.ResourceID]; !ok {
+		if _, ok := config.APIRootResources[value.ResourceID]; !ok {
 			value := "CONFIG: The API Root Resource " + value.ResourceID + " is missing from the configuration file"
 			log.Println(value)
 			problemsFound++

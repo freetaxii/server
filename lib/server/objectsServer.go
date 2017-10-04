@@ -25,18 +25,22 @@ import (
 // param: w - http.ResponseWriter
 //
 // param: r - *http.Request
-func (ezt *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
-	var formatpretty bool = false
+	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup a STIX Bundle to be used for response
 	stixBundle := stixObjects.NewBundle()
 
-	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(ezt.HTMLTemplatePath))
+	// Setup HTML template only if HTMLEnabled is true
+	var htmlTemplateResource *template.Template
+	if ezt.HTMLEnabled == true {
+		var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+		htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
+	}
 
 	if ezt.LogLevel >= 3 {
 		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
@@ -80,28 +84,33 @@ func (ezt *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *htt
 	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 
-	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
+	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
+		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
-	} else {
+	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
+		w.WriteHeader(http.StatusOK)
 
 		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.
 		formatpretty = true
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
 		ezt.Resource = string(jsondata)
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+	} else {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
 	if ezt.LogLevel >= 3 {
@@ -116,18 +125,22 @@ func (ezt *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *htt
 // param: w - http.ResponseWriter
 //
 // param: r - *http.Request
-func (ezt *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *STIXServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var jsondata []byte
-	var formatpretty bool = false
+	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup a STIX Bundle to be used for response
 	stixBundle := stixObjects.NewBundle()
 
-	// Setup HTML template
-	var htmlTemplateResource = template.Must(template.ParseFiles(ezt.HTMLTemplatePath))
+	// Setup HTML template only if HTMLEnabled is true
+	var htmlTemplateResource *template.Template
+	if ezt.HTMLEnabled == true {
+		var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+		htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
+	}
 
 	if ezt.LogLevel >= 3 {
 		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
@@ -170,28 +183,33 @@ func (ezt *ServerHandlerType) ObjectsServerRemoteHandler(w http.ResponseWriter, 
 	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 
-	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
+	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
+		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
-	} else {
+	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
+		w.WriteHeader(http.StatusOK)
 
-		// I needed to convert this to actual JSON since if I just used ezt.Resource like in other handlers
+		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.
 		formatpretty = true
-		jsondata = ezt.createTAXIIResponse(formatpretty)
+		jsondata = ezt.createSTIXResponse(formatpretty)
 		ezt.Resource = string(jsondata)
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+	} else {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
 	if ezt.LogLevel >= 3 {
