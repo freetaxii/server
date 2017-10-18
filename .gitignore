@@ -6,6 +6,8 @@
 # Folders
 _obj
 _test
+log
+db
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -25,4 +27,5 @@ _testmain.go
 *.sublime-workspace
 *.key
 *.crt
+.DS_Store
 

@@ -38,11 +38,6 @@ type STIXServerHandlerType struct {
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
 	LogLevel         int
 	Resource         interface{}
-	Location         string
-	RemoteConfig     struct {
-		Name string
-		URL  string
-	}
 }
 
 // These methods will copy the elements found in the main configuration file.

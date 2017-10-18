@@ -190,43 +190,19 @@ func main() {
 						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
 						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
 						objectsSrv.LogLevel = config.Logging.LogLevel
-						objectsSrv.Location = config.CollectionResources[c].Location
-						objectsSrv.RemoteConfig = config.CollectionResources[c].RemoteConfig
 
 						// --------------------------------------------------
-						// Start a Objects handler
+						// Start a Objects and Object by ID handlers
 						// --------------------------------------------------
+
 						log.Println("Starting TAXII Object service of:", objectsSrv.ResourcePath)
-						if config.CollectionResources[c].Location == "remote" {
-							config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerRemoteHandler).Methods("GET")
-						} else if config.CollectionResources[c].Location == "local" {
-							config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
-						}
+						config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
 
-						// Make a copy of just the elements that we need to process the request and nothing more.
-						// This is done to prevent sending the entire server config in to each handler
-						var objectsSrvID server.STIXServerHandlerType
-						objectsSrvID.Type = "Objects"
-						objectsSrvID.ResourcePath = resourceCollectionIDPath + "objects/" + "{objectid}/"
-						objectsSrvID.HTMLEnabled = config.APIRootServer.HTMLEnabled
-						objectsSrvID.HTMLTemplateFile = api.HTMLBranding.Objects
-						objectsSrvID.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
-						objectsSrvID.LogLevel = config.Logging.LogLevel
-						objectsSrvID.Location = config.CollectionResources[c].Location
-						objectsSrvID.RemoteConfig = config.CollectionResources[c].RemoteConfig
-
-						// --------------------------------------------------
-						// Start a Objects handler
-						// --------------------------------------------------
-						log.Println("Starting TAXII Object service of:", objectsSrvID.ResourcePath)
-						if config.CollectionResources[c].Location == "remote" {
-							config.Router.HandleFunc(objectsSrvID.ResourcePath, objectsSrvID.ObjectsServerRemoteHandler).Methods("GET")
-						} else if config.CollectionResources[c].Location == "local" {
-							config.Router.HandleFunc(objectsSrvID.ResourcePath, objectsSrvID.ObjectsServerHandler).Methods("GET")
-						}
-					}
-
-				}
+						log.Println("Starting TAXII Object service of:", objectsSrv.ResourcePath)
+						objectsSrv.ResourcePath = resourceCollectionIDPath + "objects/" + "{objectid}/"
+						config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
+					} // End for loop api.Collections.Members
+				} // End if Collections.Enabled == true
 			}
 		}
 	}
