@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/pborman/getopt"
-	"log"
 	"os"
 )
 
@@ -24,29 +23,18 @@ var (
 
 func main() {
 	databaseFilename := processCommandLineFlags()
-	var err error
 	ds := datastore.NewSqlite3(databaseFilename)
 
-	err = ds.Connect()
-	handleError(err)
-
 	ds.CreateAllTables()
-	ds.CreateVocabTables()
-	ds.PopulateVocabTables()
+	ds.CreateAllVocabTables()
+	ds.PopulateAllVocabTables()
 
 	ds.Close()
-
 }
 
 // --------------------------------------------------
 // Private functions
 // --------------------------------------------------
-
-func handleError(err error) {
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
 
 // processCommandLineFlags - This function will process the command line flags
 // and will print the version or help information as needed.
