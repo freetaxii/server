@@ -7,8 +7,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libtaxii2/datastore/sqlite3"
 	"github.com/pborman/getopt"
 	"os"
 )
@@ -24,12 +25,24 @@ var (
 func main() {
 	databaseFilename := processCommandLineFlags()
 	ds := sqlite3.New(databaseFilename)
+	allCollections := ds.GetEnabledCollections()
 
-	ds.CreateAllTables()
-	ds.CreateAllVocabTables()
-	ds.PopulateAllVocabTables()
+	fmt.Println("==========================================================================================")
+	fmt.Printf("%s \t\t\t\t %s\n", "Collection ID", "Title")
+	fmt.Println("==========================================================================================")
+
+	for _, data := range allCollections.Collections {
+		fmt.Printf("%s \t %s\n", data.ID, data.Title)
+	}
 
 	ds.Close()
+
+	fmt.Println("==========================================================================================")
+
+	// Print JSON version of object
+	var data []byte
+	data, _ = json.MarshalIndent(allCollections, "", "    ")
+	fmt.Println(string(data))
 }
 
 // --------------------------------------------------
@@ -69,7 +82,7 @@ func processCommandLineFlags() string {
 // printOutputHeader - This function will print a header for all console output
 func printOutputHeader() {
 	fmt.Println("")
-	fmt.Println("FreeTAXII - STIX Table Creator")
+	fmt.Println("FreeTAXII - TAXII Get Collections")
 	fmt.Println("Copyright: Bret Jordan")
 	fmt.Println("Version:", Version)
 	if Build != "" {
