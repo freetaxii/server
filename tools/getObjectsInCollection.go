@@ -7,14 +7,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/freetaxii/libstix2/objects"
 	"github.com/pborman/getopt"
-	"log"
 	"os"
-	"strings"
 )
 
 // These global variables hold build information. The Build variable will be
@@ -26,50 +22,21 @@ var (
 )
 
 func main() {
-	databaseFilename := processCommandLineFlags()
+	databaseFilename, collectionID := processCommandLineFlags()
 	ds := sqlite3.New(databaseFilename)
-	c := objects.NewCollection()
-	c.NewID()
+	allObjects := ds.GetObjectsInCollection(collectionID)
 
-	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("==========================================================================================")
+	fmt.Printf("%s\n", "STIX ID")
+	fmt.Println("==========================================================================================")
 
-	// Ask for title
-	fmt.Print("Collection Title: ")
-	title, _ := reader.ReadString('\n')
-	title = strings.TrimSuffix(title, "\n")
-	if title != "" {
-		c.SetTitle(title)
-	} else {
-		log.Fatalln("ERROR: The title can not be blank")
+	for _, data := range allObjects {
+		fmt.Printf("%s\n", data)
 	}
 
-	// Ask for descritpion
-	fmt.Print("Description: ")
-	description, _ := reader.ReadString('\n')
-	description = strings.TrimSuffix(description, "\n")
-
-	if description != "" {
-		c.SetDescription(description)
-	}
-
-	fmt.Print("Can Read (y/n): ")
-	canRead, _ := reader.ReadString('\n')
-	canRead = strings.TrimSuffix(canRead, "\n")
-	if canRead == "y" {
-		c.SetCanRead()
-	}
-
-	fmt.Print("Can Write (y/n): ")
-	canWrite, _ := reader.ReadString('\n')
-	canWrite = strings.TrimSuffix(canWrite, "\n")
-	if canWrite == "y" {
-		c.SetCanWrite()
-	}
-
-	c.AddMediaType("application/vnd.oasis.stix+json")
-
-	ds.Put(c)
 	ds.Close()
+
+	fmt.Println("==========================================================================================")
 }
 
 // --------------------------------------------------
@@ -78,9 +45,10 @@ func main() {
 
 // processCommandLineFlags - This function will process the command line flags
 // and will print the version or help information as needed.
-func processCommandLineFlags() string {
+func processCommandLineFlags() (string, string) {
 	defaultDatabaseFilename := "freetaxii.db"
 	sOptDatabaseFilename := getopt.StringLong("filename", 'f', defaultDatabaseFilename, "Database Filename", "string")
+	sOptCollectionID := getopt.StringLong("collection", 'c', "", "Collection ID", "string")
 	bOptHelp := getopt.BoolLong("help", 0, "Help")
 	bOptVer := getopt.BoolLong("version", 0, "Version")
 
@@ -88,6 +56,10 @@ func processCommandLineFlags() string {
 	getopt.DisplayWidth = 120
 	getopt.SetParameters("")
 	getopt.Parse()
+
+	if *sOptCollectionID == "" {
+		os.Exit(1)
+	}
 
 	// Lets check to see if the version command line flag was given. If it is
 	// lets print out the version infomration and exit.
@@ -103,13 +75,13 @@ func processCommandLineFlags() string {
 		getopt.Usage()
 		os.Exit(0)
 	}
-	return *sOptDatabaseFilename
+	return *sOptDatabaseFilename, *sOptCollectionID
 }
 
 // printOutputHeader - This function will print a header for all console output
 func printOutputHeader() {
 	fmt.Println("")
-	fmt.Println("FreeTAXII - TAXII Table Creator")
+	fmt.Println("FreeTAXII - TAXII Get Collections")
 	fmt.Println("Copyright: Bret Jordan")
 	fmt.Println("Version:", Version)
 	if Build != "" {

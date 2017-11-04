@@ -9,7 +9,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/freetaxii/libtaxii2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
 	"os"
 )
