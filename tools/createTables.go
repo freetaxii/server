@@ -8,7 +8,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/freetaxii/libtaxii2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
 	"os"
 )
@@ -25,7 +25,11 @@ func main() {
 	databaseFilename := processCommandLineFlags()
 	ds := sqlite3.New(databaseFilename)
 
-	ds.CreateAllTables()
+	ds.CreateAllSTIXTables()
+	ds.CreateAllVocabTables()
+	ds.PopulateAllVocabTables()
+	ds.CreateAllTAXIITables()
+
 	ds.Close()
 }
 
@@ -66,7 +70,7 @@ func processCommandLineFlags() string {
 // printOutputHeader - This function will print a header for all console output
 func printOutputHeader() {
 	fmt.Println("")
-	fmt.Println("FreeTAXII - TAXII Table Creator")
+	fmt.Println("FreeTAXII - STIX Table Creator")
 	fmt.Println("Copyright: Bret Jordan")
 	fmt.Println("Version:", Version)
 	if Build != "" {
