@@ -10,6 +10,7 @@ import (
 	"github.com/freetaxii/freetaxii-server/defs"
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/objects"
+	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net/http"
@@ -24,6 +25,9 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	var jsondata []byte
 	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
+
+	urlvars := mux.Vars(r)
+	urlObjectID := urlvars["objectid"]
 
 	// Setup a STIX Bundle to be used for response
 	stixBundle := objects.NewBundle()
@@ -45,34 +49,18 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
-	// Get a list of objects that are in the collection
-	allObjects := ezt.DS.GetObjectsInCollection(ezt.CollectionID)
-	for _, stixid := range allObjects {
-		i := ezt.DS.GetObject(stixid)
+	if urlObjectID == "" {
+		// Get a list of objects that are in the collection
+		allObjects := ezt.DS.GetObjectsInCollection(ezt.CollectionID)
+		for _, stixid := range allObjects {
+			i := ezt.DS.GetObject(stixid)
+			stixBundle.AddObject(i)
+		}
+	} else {
+		// TODO make sure this object is in the collection first.
+		i := ezt.DS.GetObject(urlObjectID)
 		stixBundle.AddObject(i)
 	}
-	// 2) Get the actual objects
-
-	// If you get a request for a single object, then only send that one object.  Otherwise send them all.
-
-	// This is just sample data
-	// TODO move to a database
-	// i1 := objects.NewIndicator()
-	// i2 := objects.NewIndicator()
-
-	// i1.SetName("Malware C2 Indicator 2016 - File Hash")
-	// i1.AddLabel("malicious-activity")
-	// i1.SetPattern("[ file:hashes.'SHA-256' = '4bac27393bdd9777ce02453256c5577cd02275510b2227f473d03f533924f877' ]")
-	// i1.SetValidFrom(time.Now())
-	// i1.AddKillChainPhase("lockheed-martin-cyber-kill-chain", "delivery")
-	// stixBundle.AddObject(i1)
-
-	// i2.SetName("Malware C2 Indicator 2016")
-	// i2.AddLabel("malicious-activity")
-	// i2.SetPattern("[ ipv4-addr:value = '198.51.100.1/32' ]")
-	// i2.SetValidFrom(time.Now())
-	// i2.AddKillChainPhase("lockheed-martin-cyber-kill-chain", "delivery")
-	// stixBundle.AddObject(i2)
 
 	// Add resource to object so we can pass it in to the JSON processor
 	ezt.Resource = stixBundle
