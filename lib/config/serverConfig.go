@@ -8,9 +8,7 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/freetaxii/libtaxii2/objects/apiRoot"
-	"github.com/freetaxii/libtaxii2/objects/collection"
-	"github.com/freetaxii/libtaxii2/objects/discovery"
+	"github.com/freetaxii/libstix2/resources"
 	"github.com/gorilla/mux"
 	"log"
 	"os"
@@ -53,9 +51,9 @@ type ServerConfigType struct {
 		HTMLBranding HTMLTemplateFilesType
 		Services     []APIRootServiceType
 	}
-	DiscoveryResources  map[string]discovery.DiscoveryType
-	APIRootResources    map[string]apiRoot.APIRootType
-	CollectionResources map[string]CollectionServiceType
+	DiscoveryResources  map[string]resources.DiscoveryType
+	APIRootResources    map[string]resources.APIRootType
+	CollectionResources map[string]resources.CollectionType
 }
 
 // DiscoveryServiceType - This struct represents an instance of a Discovery server.
@@ -97,15 +95,6 @@ type HTMLTemplateFilesType struct {
 	Collections string
 	Collection  string
 	Objects     string
-}
-
-type CollectionServiceType struct {
-	Location     string
-	RemoteConfig struct {
-		Name string
-		URL  string
-	}
-	Resource collection.CollectionType
 }
 
 // --------------------------------------------------

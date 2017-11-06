@@ -8,6 +8,7 @@ package server
 
 import (
 	"github.com/freetaxii/freetaxii-server/lib/config"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
 )
 
 // --------------------------------------------------
@@ -37,6 +38,8 @@ type STIXServerHandlerType struct {
 	HTMLTemplateFile string
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
 	LogLevel         int
+	CollectionID     string
+	DS               sqlite3.Sqlite3DatastoreType
 	Resource         interface{}
 }
 

@@ -11,7 +11,8 @@ import (
 	"fmt"
 	"github.com/freetaxii/freetaxii-server/lib/config"
 	"github.com/freetaxii/freetaxii-server/lib/server"
-	"github.com/freetaxii/libtaxii2/objects"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/resources"
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt"
 	"log"
@@ -23,7 +24,7 @@ import (
 // populated by the Makefile and uses the Git Head hash as its identifier.
 // These variables are used in the console output for --version and --help.
 var (
-	Version = "0.0.1"
+	Version = "0.0.2"
 	Build   string
 )
 
@@ -50,6 +51,14 @@ func main() {
 	if configError != nil {
 		log.Fatalln(configError)
 	}
+
+	// --------------------------------------------------
+	// Setup Database Connection
+	// --------------------------------------------------
+
+	databaseFilename := config.Global.Prefix + config.Global.DbFile
+	ds := sqlite3.New(databaseFilename)
+	defer ds.Close()
 
 	// --------------------------------------------------
 	// Setup Logging File
@@ -126,22 +135,22 @@ func main() {
 				// This will look to see if the Collections service is enabled
 				// in the configuration file for a given API Root. If it is, it
 				// will setup handlers for it.
-				// The HandleFunc passes in copy of the Collections Resource and the extra meta data
+				// The HandleFunc passes in copy of the Collections Resource and the extra metadata
 				// that it needs to process the request.
 
 				if api.Collections.Enabled == true {
 
 					var collectionsSrv server.TAXIIServerHandlerType
 					collectionsSrv.NewCollectionsHandler(api)
-					collections := objects.NewCollections()
+					collections := resources.NewCollections()
 
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
 					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
 					for _, c := range api.Collections.Members {
 
 						// If enabled, only add the collection to the list if the collection can either be read or written to
-						if config.CollectionResources[c].Resource.CanRead == true || config.CollectionResources[c].Resource.CanWrite == true {
-							collections.AddCollection(config.CollectionResources[c].Resource)
+						if config.CollectionResources[c].CanRead == true || config.CollectionResources[c].CanWrite == true {
+							collections.AddCollection(config.CollectionResources[c])
 						}
 					}
 					collectionsSrv.Resource = collections
@@ -161,13 +170,13 @@ func main() {
 
 					for _, c := range api.Collections.Members {
 
-						resourceCollectionIDPath := collectionsSrv.ResourcePath + config.CollectionResources[c].Resource.ID + "/"
+						resourceCollectionIDPath := collectionsSrv.ResourcePath + config.CollectionResources[c].ID + "/"
 
 						// Make a copy of just the elements that we need to process the request and nothing more.
 						// This is done to prevent sending the entire server config in to each handler
 						var collectionSrv server.TAXIIServerHandlerType
 						collectionSrv.NewCollectionHandler(api, resourceCollectionIDPath)
-						collectionSrv.Resource = config.CollectionResources[c].Resource
+						collectionSrv.Resource = config.CollectionResources[c]
 
 						log.Println("Starting TAXII Collection service of:", resourceCollectionIDPath)
 
@@ -190,6 +199,8 @@ func main() {
 						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
 						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
 						objectsSrv.LogLevel = config.Logging.LogLevel
+						objectsSrv.CollectionID = config.CollectionResources[c].ID
+						objectsSrv.DS = ds
 
 						// --------------------------------------------------
 						// Start a Objects and Object by ID handlers
@@ -203,9 +214,9 @@ func main() {
 						config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
 					} // End for loop api.Collections.Members
 				} // End if Collections.Enabled == true
-			}
-		}
-	}
+			} // End if api.Enabled == true
+		} // End for loop API Root Services
+	} // End if APIRootServer.Enabled == true
 
 	// --------------------------------------------------
 	// Fail if no services are running
