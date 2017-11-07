@@ -7,9 +7,10 @@
 package server
 
 import (
-	"github.com/freetaxii/freetaxii-server/defs"
 	"github.com/freetaxii/freetaxii-server/lib/headers"
+	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects"
+	"github.com/freetaxii/libstix2/resources"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
@@ -53,17 +54,32 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		// Get a list of objects that are in the collection
 		allObjects := ezt.DS.GetObjectsInCollection(ezt.CollectionID)
 		for _, stixid := range allObjects {
-			i := ezt.DS.GetObject(stixid)
+			i, _ := ezt.DS.GetObject(stixid)
 			stixBundle.AddObject(i)
 		}
+		// Add resource to object so we can pass it in to the JSON processor
+		ezt.Resource = stixBundle
+		w.WriteHeader(http.StatusOK)
 	} else {
+		// If we are looking for just a single object do this part of the if statement
 		// TODO make sure this object is in the collection first.
-		i := ezt.DS.GetObject(urlObjectID)
-		stixBundle.AddObject(i)
+		i, err := ezt.DS.GetObject(urlObjectID)
+		if err != nil {
+			taxiiError := resources.NewError()
+			title := "ERROR: " + err.Error()
+			taxiiError.SetTitle(title)
+			desc := "The following requested object resource does not exist: " + urlObjectID
+			taxiiError.SetDescription(desc)
+			taxiiError.SetHTTPStatus("404")
+			ezt.Resource = taxiiError
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			stixBundle.AddObject(i)
+			// Add resource to object so we can pass it in to the JSON processor
+			ezt.Resource = stixBundle
+			w.WriteHeader(http.StatusOK)
+		}
 	}
-
-	// Add resource to object so we can pass it in to the JSON processor
-	ezt.Resource = stixBundle
 
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
@@ -79,19 +95,16 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
 		jsondata = ezt.createSTIXResponse(formatpretty)
-		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
 		jsondata = ezt.createSTIXResponse(formatpretty)
-		w.WriteHeader(http.StatusOK)
 		w.Write(jsondata)
 	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		w.WriteHeader(http.StatusOK)
 
 		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.

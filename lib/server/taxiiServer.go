@@ -7,8 +7,8 @@
 package server
 
 import (
-	"github.com/freetaxii/freetaxii-server/defs"
 	"github.com/freetaxii/freetaxii-server/lib/headers"
+	"github.com/freetaxii/libstix2/defs"
 	"html/template"
 	"log"
 	"net/http"
