@@ -33,7 +33,7 @@ func (ezt *STIXServerHandlerType) createSTIXResponse(formatPretty bool) []byte {
 	if err != nil {
 		// If we can not create a status message then there is something
 		// wrong with the APIs and nothing is going to work.
-		log.Fatal("Unable to create Discovery Response Message")
+		log.Fatal("Unable to create JSON Message")
 	}
 	return jsondata
 }
@@ -56,7 +56,7 @@ func (ezt *TAXIIServerHandlerType) createTAXIIResponse(formatPretty bool) []byte
 	if err != nil {
 		// If we can not create a status message then there is something
 		// wrong with the APIs and nothing is going to work.
-		log.Fatal("Unable to create Discovery Response Message")
+		log.Fatal("Unable to create JSON Message")
 	}
 	return jsondata
 }

@@ -26,6 +26,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	var jsondata []byte
 	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
+	var objectNotFound = false
 
 	urlvars := mux.Vars(r)
 	urlObjectID := urlvars["objectid"]
@@ -33,7 +34,9 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	// Setup a STIX Bundle to be used for response
 	stixBundle := objects.NewBundle()
 
-	// Setup HTML template only if HTMLEnabled is true
+	// ----------------------------------------------------------------------
+	// Setup HTML Template - only if HTMLEnabled is true
+	// ----------------------------------------------------------------------
 	var htmlTemplateResource *template.Template
 	if ezt.HTMLEnabled == true {
 		var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
@@ -50,6 +53,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
+	// Is this a request for a specific object ID /objects/{objectid}?
 	if urlObjectID == "" {
 		// Get a list of objects that are in the collection
 		allObjects := ezt.DS.GetObjectsInCollection(ezt.CollectionID)
@@ -59,7 +63,6 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		}
 		// Add resource to object so we can pass it in to the JSON processor
 		ezt.Resource = stixBundle
-		w.WriteHeader(http.StatusOK)
 	} else {
 		// If we are looking for just a single object do this part of the if statement
 		// TODO make sure this object is in the collection first.
@@ -72,22 +75,23 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 			taxiiError.SetDescription(desc)
 			taxiiError.SetHTTPStatus("404")
 			ezt.Resource = taxiiError
-			w.WriteHeader(http.StatusNotFound)
+			objectNotFound = true
 		} else {
 			stixBundle.AddObject(i)
 			// Add resource to object so we can pass it in to the JSON processor
 			ezt.Resource = stixBundle
-			w.WriteHeader(http.StatusOK)
 		}
 	}
 
+	// --------------------------------------------------
+	//
+	// Encode outgoing response message
+	//
+	// --------------------------------------------------
+
+	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
-	// --------------------------------------------------
-	//
-	// Decode incoming request message
-	//
-	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 
 	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
@@ -95,16 +99,33 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = false
 		jsondata = ezt.createSTIXResponse(formatpretty)
+		if objectNotFound == true {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 		w.Write(jsondata)
+
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		formatpretty = true
 		jsondata = ezt.createSTIXResponse(formatpretty)
+		if objectNotFound == true {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 		w.Write(jsondata)
+
 	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
+		if objectNotFound == true {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
 
 		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
 		// I would get the string output of a Golang struct which is not the same.
@@ -112,6 +133,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		jsondata = ezt.createSTIXResponse(formatpretty)
 		ezt.Resource = string(jsondata)
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
