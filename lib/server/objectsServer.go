@@ -54,18 +54,11 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 
 	// Is this a request for a specific object ID /objects/{objectid}?
 	if urlObjectID == "" {
-		// Get a list of objects that are in the collection
-		allObjects := ezt.DS.GetObjectsInCollection(ezt.CollectionID)
-		for _, stixid := range allObjects {
-			i, _ := ezt.DS.GetObject(stixid)
-			stixBundle.AddObject(i)
-		}
-		// Add resource to object so we can pass it in to the JSON processor
-		ezt.Resource = stixBundle
+		ezt.Resource = ezt.DS.GetObjectsInCollection(ezt.CollectionID)
 	} else {
 		// If we are looking for just a single object do this part of the if statement
 		// TODO make sure this object is in the collection first.
-		i, err := ezt.DS.GetObject(urlObjectID)
+		obj, err := ezt.DS.GetObject(urlObjectID)
 		if err != nil {
 			taxiiError := resources.NewError()
 			title := "ERROR: " + err.Error()
@@ -76,7 +69,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 			ezt.Resource = taxiiError
 			objectNotFound = true
 		} else {
-			stixBundle.AddObject(i)
+			stixBundle.AddObject(obj)
 			// Add resource to object so we can pass it in to the JSON processor
 			ezt.Resource = stixBundle
 		}
