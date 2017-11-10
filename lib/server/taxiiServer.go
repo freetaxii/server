@@ -7,6 +7,7 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
 	"html/template"
@@ -21,8 +22,6 @@ import (
 func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
-	var jsondata []byte
-	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 
 	// Setup HTML template only if HTMLEnabled is true
@@ -42,32 +41,39 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
+	// --------------------------------------------------
+	//
+	// Encode outgoing response message
+	//
+	// --------------------------------------------------
+
+	// Setup JSON stream encoder
+	j := json.NewEncoder(w)
+
+	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
-	// --------------------------------------------------
-	// Decode incoming request message
-	// --------------------------------------------------
 	httpHeaderAccept = r.Header.Get("Accept")
 
 	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		formatpretty = false
-		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsondata)
+		j.Encode(ezt.Resource)
+
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		formatpretty = true
-		jsondata = ezt.createTAXIIResponse(formatpretty)
 		w.WriteHeader(http.StatusOK)
-		w.Write(jsondata)
+		j.SetIndent("", "    ")
+		j.Encode(ezt.Resource)
+
 	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}

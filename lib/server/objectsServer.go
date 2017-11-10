@@ -7,6 +7,7 @@
 package server
 
 import (
+	"encoding/json"
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects"
@@ -23,8 +24,6 @@ import (
 func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
-	var jsondata []byte
-	var formatpretty = false
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
 
@@ -89,6 +88,9 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	//
 	// --------------------------------------------------
 
+	// Setup JSON stream encoder
+	j := json.NewEncoder(w)
+
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
@@ -97,26 +99,25 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
 		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		formatpretty = false
-		jsondata = ezt.createSTIXResponse(formatpretty)
+
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
-		w.Write(jsondata)
+		j.Encode(ezt.Resource)
 
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
-		formatpretty = true
-		jsondata = ezt.createSTIXResponse(formatpretty)
+
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
-		w.Write(jsondata)
+		j.SetIndent("", "    ")
+		j.Encode(ezt.Resource)
 
 	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
@@ -127,10 +128,15 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 			w.WriteHeader(http.StatusOK)
 		}
 
-		// I needed to convert this to actual JSON since if I just used this.Resource like in other handlers
-		// I would get the string output of a Golang struct which is not the same.
-		formatpretty = true
-		jsondata = ezt.createSTIXResponse(formatpretty)
+		// I needed to convert this to actual JSON since if I just used
+		// ezt.Resource like in other handlers I would get the string output of
+		// a Golang struct which is not the same. The reason it works else where
+		// is I am not printing the whole object, but rather, referencing the
+		// parts as I need them.
+		jsondata, err := json.MarshalIndent(ezt.Resource, "", "    ")
+		if err != nil {
+			log.Fatal("Unable to create JSON Message")
+		}
 		ezt.Resource = string(jsondata)
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
 
