@@ -200,7 +200,7 @@ func main() {
 						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
 						objectsSrv.LogLevel = config.Logging.LogLevel
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
-						objectsSrv.DS = ds
+						objectsSrv.DS = &ds
 
 						// --------------------------------------------------
 						// Start a Objects and Object by ID handlers

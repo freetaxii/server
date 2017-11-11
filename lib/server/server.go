@@ -8,7 +8,7 @@ package server
 
 import (
 	"github.com/freetaxii/freetaxii-server/lib/config"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/datastore"
 )
 
 // --------------------------------------------------
@@ -19,7 +19,7 @@ import (
 // process all TAXII media type requests. Since we are using a single handler
 // for multiple taxii messages, we need to know the resource type.
 type TAXIIServerHandlerType struct {
-	Type             string
+	Type             string // Used in log messages
 	ResourcePath     string // This is used in the HTML output
 	HTMLEnabled      bool
 	HTMLTemplateFile string
@@ -32,14 +32,14 @@ type TAXIIServerHandlerType struct {
 // process all STIX media type requests. Since we are using a single handler
 // for multiple stix messages, we need to know the resource type.
 type STIXServerHandlerType struct {
-	Type             string
+	Type             string // Used in log messages
 	ResourcePath     string // This is used in the HTML output
 	HTMLEnabled      bool
 	HTMLTemplateFile string
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
 	LogLevel         int
 	CollectionID     string
-	DS               sqlite3.Sqlite3DatastoreType
+	DS               datastore.Datastorer
 	Resource         interface{}
 }
 
