@@ -21,26 +21,33 @@
 <hr width="100%"></p>
 
 <table style="width: 100%; float: left;" cellspacing="3" cellpadding="3">
-<thead>
-<tr style="text-align: left">
-	<th style="width: 275px;">ID</th>
-	<th>Title</th>
-	<th>Description</th>
-	<th>Read</th>
-	<th>Write</th>
-	<th>Media Types</th>
-</tr>
-</thead>
-{{ range .Resource.Collections }}
 <tbody>
-<tr>
-	<td style="vertical-align: top;"><a href="{{ .ID }}/">{{ .ID }}</a></td>
-	<td style="vertical-align: top;">{{ .Title }}</td>
-	<td style="vertical-align: top;">{{ .Description }}</td>
-	<td style="vertical-align: top;">{{ .CanRead }}</td>
-	<td style="vertical-align: top;">{{ .CanWrite }}</td>
-	<td style="vertical-align: top;">{{ range .MediaTypes }} {{ . }}<br> {{ end }}</td>
+{{ range .Resource.Collections }}
+
+
+
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>Title:</b> {{ .Title }}</td>
 </tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>ID:</b> <a href="{{ .ID }}/">{{ .ID }}</a></td>
+</tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>Read:</b> {{ .CanRead }}</td>
+</tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>Write:</b> {{ .CanWrite }}</td>
+</tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>Media Types:</b><br>{{ range .MediaTypes }} {{ . }}<br> {{ end }}</td>
+</tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><b>Description:</b><br>{{ .Description }}</td>
+</tr>
+<tr style="text-align: left">
+	<td style="vertical-align: top;"><hr width="100%"></td>
+</tr>
+
 {{ end }}
 </tbody>
 </table>
