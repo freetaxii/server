@@ -1,14 +1,12 @@
 # FreeTAXII/libstix2/db/tests/labels.md #
 
-This documents the various unit tests that should be performed on your implementation 
-of STIX labels 
+This documents the various unit tests that should be performed on your implementation of STIX labels 
 
 ## Unit Tests ##
 
 ### Test 1 ###
 
-This test will verify that you are not accidentally duplicating records and thus 
-you get back the right labels based on various conditions.
+This test will verify that you are not accidentally duplicating records and thus you get back the right labels based on various conditions.
 
 1. Start with a new SDO, version 0 with NO lables
 2. Revision the SDO to version 1 and add 1 label "a"
@@ -23,8 +21,6 @@ Now you need to query the database for certain versions:
 3. If you query for version 2 of the SDO you should get an object with 3 labels "a", "b", and "c"
 4. If you query for version 3 of the SDO you should get an object with 3 labels "a", "b", and "c"
 5. If you query for version 4 of the SDO you should get an object with 3 labels "a", "b", and "d"
-
-
 
 ## License ##
 
