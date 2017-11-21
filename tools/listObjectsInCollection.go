@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
+	"log"
 	"os"
 )
 
@@ -23,20 +24,31 @@ var (
 
 func main() {
 	databaseFilename, collectionID := processCommandLineFlags()
+
+	if collectionID == "" {
+		log.Fatalln("Collection ID must not be empty.")
+	}
+
 	ds := sqlite3.New(databaseFilename)
-	allObjects := ds.GetObjectsInCollection(collectionID)
+	allObjects, err := ds.GetListOfObjectsInCollection(collectionID)
+	rangeObjects, size, err := ds.GetRangeOfObjects(allObjects, 50, 0, 20)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	fmt.Println("==========================================================================================")
 	fmt.Printf("%s\n", "STIX ID")
 	fmt.Println("==========================================================================================")
 
-	for _, data := range allObjects {
+	for _, data := range rangeObjects {
 		fmt.Printf("%s\n", data)
 	}
 
 	ds.Close()
 
 	fmt.Println("==========================================================================================")
+	fmt.Println("Total Records: ", size)
 }
 
 // --------------------------------------------------
@@ -57,10 +69,6 @@ func processCommandLineFlags() (string, string) {
 	getopt.SetParameters("")
 	getopt.Parse()
 
-	if *sOptCollectionID == "" {
-		os.Exit(1)
-	}
-
 	// Lets check to see if the version command line flag was given. If it is
 	// lets print out the version infomration and exit.
 	if *bOptVer {
@@ -75,6 +83,7 @@ func processCommandLineFlags() (string, string) {
 		getopt.Usage()
 		os.Exit(0)
 	}
+
 	return *sOptDatabaseFilename, *sOptCollectionID
 }
 

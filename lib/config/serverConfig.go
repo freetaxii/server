@@ -24,15 +24,16 @@ import (
 type ServerConfigType struct {
 	Router *mux.Router
 	Global struct {
-		Prefix          string
-		Listen          string
-		Protocol        string
-		TLSKey          string
-		TLSCrt          string
-		DbConfig        bool
-		DbType          string
-		DbFile          string
-		HTMLTemplateDir string
+		Prefix             string
+		Listen             string
+		Protocol           string
+		TLSKey             string
+		TLSCrt             string
+		DbConfig           bool
+		DbType             string
+		DbFile             string
+		HTMLTemplateDir    string
+		MaxNumberOfObjects int
 	}
 	Logging struct {
 		Enabled  bool
