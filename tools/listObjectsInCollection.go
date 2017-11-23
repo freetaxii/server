@@ -8,6 +8,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
 	"log"
@@ -22,16 +23,37 @@ var (
 	Build   string
 )
 
+// These global variables are for dealing with command line options
+var (
+	defaultDatabaseFilename = "freetaxii.db"
+	sOptDatabaseFilename    = getopt.StringLong("filename", 'f', defaultDatabaseFilename, "Database Filename", "string")
+	sOptCollectionID        = getopt.StringLong("collectionid", 'c', "", "Collection ID", "string")
+	sOptSTIXID              = getopt.StringLong("stixid", 's', "", "Object ID", "string")
+	sOptSTIXType            = getopt.StringLong("type", 't', "", "Object Type", "string")
+	sOptVersion             = getopt.StringLong("stixversion", 'v', "", "Version", "string")
+	sOptAddedAfter          = getopt.StringLong("date", 'd', "", "Added After", "string")
+	sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
+	sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
+	bOptHelp                = getopt.BoolLong("help", 0, "Help")
+	bOptVer                 = getopt.BoolLong("version", 0, "Version")
+)
+
 func main() {
-	databaseFilename, collectionID := processCommandLineFlags()
+	processCommandLineFlags()
+	var q datastore.QueryType
 
-	if collectionID == "" {
-		log.Fatalln("Collection ID must not be empty.")
-	}
+	q.CollectionID = *sOptCollectionID
+	q.STIXID = *sOptSTIXID
+	q.STIXType = *sOptSTIXType
+	q.Version = *sOptVersion
+	q.AddedAfter = *sOptAddedAfter
+	q.RangeBegin = *sOptRangeBegin
+	q.RangeEnd = *sOptRangeEnd
 
-	ds := sqlite3.New(databaseFilename)
-	allObjects, err := ds.GetListOfObjectsInCollection(collectionID)
-	rangeObjects, size, err := ds.GetRangeOfObjects(allObjects, 50, 0, 20)
+	ds := sqlite3.New(*sOptDatabaseFilename)
+	allObjects, size, err := ds.GetListOfObjectsInCollection(q)
+	//rangeObjects, size, err := ds.GetRangeOfObjects(allObjects, 5, 0, 2)
+	rangeObjects := allObjects
 
 	if err != nil {
 		log.Fatalln(err)
@@ -57,13 +79,7 @@ func main() {
 
 // processCommandLineFlags - This function will process the command line flags
 // and will print the version or help information as needed.
-func processCommandLineFlags() (string, string) {
-	defaultDatabaseFilename := "freetaxii.db"
-	sOptDatabaseFilename := getopt.StringLong("filename", 'f', defaultDatabaseFilename, "Database Filename", "string")
-	sOptCollectionID := getopt.StringLong("collection", 'c', "", "Collection ID", "string")
-	bOptHelp := getopt.BoolLong("help", 0, "Help")
-	bOptVer := getopt.BoolLong("version", 0, "Version")
-
+func processCommandLineFlags() {
 	getopt.HelpColumn = 35
 	getopt.DisplayWidth = 120
 	getopt.SetParameters("")
@@ -84,7 +100,10 @@ func processCommandLineFlags() (string, string) {
 		os.Exit(0)
 	}
 
-	return *sOptDatabaseFilename, *sOptCollectionID
+	if *sOptCollectionID == "" {
+		log.Fatalln("Collection ID must not be empty.")
+	}
+
 }
 
 // printOutputHeader - This function will print a header for all console output
