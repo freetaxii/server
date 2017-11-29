@@ -7,6 +7,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
@@ -52,31 +53,14 @@ func main() {
 	q.RangeMax = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	allObjects, err := ds.GetListOfObjectsInCollection(q)
+	o, err := ds.GetManifestFromCollection(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	rangeObjects, err := ds.GetRangeOfObjects(allObjects, q)
-	size := len(allObjects)
-	//rangeObjects := allObjects
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	fmt.Println("==========================================================================================")
-	fmt.Printf("%s\n", "STIX ID")
-	fmt.Println("==========================================================================================")
-
-	for _, data := range rangeObjects {
-		fmt.Printf("%s\n", data)
-	}
-
-	ds.Close()
-
-	fmt.Println("==========================================================================================")
-	fmt.Println("Total Records: ", size)
+	var data []byte
+	data, _ = json.MarshalIndent(*o, "", "    ")
+	fmt.Println(string(data))
 }
 
 // --------------------------------------------------
