@@ -49,18 +49,10 @@ func main() {
 	q.AddedAfter = *sOptAddedAfter
 	q.RangeBegin = *sOptRangeBegin
 	q.RangeEnd = *sOptRangeEnd
-	q.RangeMax = 5
+	q.RangeMax = 10
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	allObjects, err := ds.GetListOfObjectsInCollection(q)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	rangeObjects, err := ds.GetRangeOfObjects(allObjects, q)
-	size := len(allObjects)
-	//rangeObjects := allObjects
-
+	rangeObjects, size, err := ds.GetListOfObjectsInCollection(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -69,7 +61,7 @@ func main() {
 	fmt.Printf("%s\n", "STIX ID")
 	fmt.Println("==========================================================================================")
 
-	for _, data := range rangeObjects {
+	for _, data := range *rangeObjects {
 		fmt.Printf("%s\n", data)
 	}
 
