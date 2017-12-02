@@ -13,6 +13,7 @@ import (
 	"github.com/pborman/getopt"
 	"log"
 	"os"
+	"strings"
 )
 
 // These global variables hold build information. The Build variable will be
@@ -43,32 +44,47 @@ func main() {
 	var q datastore.QueryType
 
 	q.CollectionID = *sOptCollectionID
-	q.STIXID = *sOptSTIXID
-	q.STIXType = *sOptSTIXType
-	q.STIXVersion = *sOptVersion
-	q.AddedAfter = *sOptAddedAfter
+
+	if *sOptSTIXID != "" {
+		q.STIXID = strings.Split(*sOptSTIXID, ",")
+	}
+
+	if *sOptSTIXType != "" {
+		q.STIXType = strings.Split(*sOptSTIXType, ",")
+	}
+
+	if *sOptVersion != "" {
+		q.STIXVersion = strings.Split(*sOptVersion, ",")
+	}
+
+	if *sOptAddedAfter != "" {
+		q.AddedAfter = strings.Split(*sOptAddedAfter, ",")
+	}
+
 	q.RangeBegin = *sOptRangeBegin
 	q.RangeEnd = *sOptRangeEnd
-	q.RangeMax = 10
+	q.RangeMax = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	rangeObjects, size, err := ds.GetListOfObjectsInCollection(q)
+	rangeObjects, meta, err := ds.GetListOfObjectsFromCollection(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	fmt.Println("==========================================================================================")
-	fmt.Printf("%s\n", "STIX ID")
+	fmt.Printf("%s\t\t\t%s\t\t%s\n", "Date Added", "STIX ID", "Version")
 	fmt.Println("==========================================================================================")
 
 	for _, data := range *rangeObjects {
-		fmt.Printf("%s\n", data)
+		fmt.Printf("%s\t%s\t%s\n", data.DateAdded, data.STIXID, data.STIXVersion)
 	}
 
 	ds.Close()
 
 	fmt.Println("==========================================================================================")
-	fmt.Println("Total Records: ", size)
+	fmt.Println("Total Records: ", meta.Size)
+	fmt.Println("X Header Date Added First: ", meta.DateAddedFirst)
+	fmt.Println("X Header Date Added Last:  ", meta.DateAddedLast)
 }
 
 // --------------------------------------------------

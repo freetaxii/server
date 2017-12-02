@@ -39,6 +39,7 @@ type STIXServerHandlerType struct {
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
 	LogLevel         int
 	CollectionID     string
+	RangeMax         int
 	DS               datastore.Datastorer
 	Resource         interface{}
 }

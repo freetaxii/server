@@ -200,6 +200,7 @@ func main() {
 						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
 						objectsSrv.LogLevel = config.Logging.LogLevel
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
+						objectsSrv.RangeMax = config.Global.MaxNumberOfObjects
 						objectsSrv.DS = &ds
 
 						// --------------------------------------------------
