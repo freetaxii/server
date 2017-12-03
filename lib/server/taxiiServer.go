@@ -16,20 +16,14 @@ import (
 	"strings"
 )
 
-// TAXIIServerHandler - This method takes in two parameters and handles all requests for TAXII media type responses
-// param: w - http.ResponseWriter
-// param: r - *http.Request
+/*
+TAXIIServerHandler - This method takes in two parameters and handles all
+requests for TAXII media type responses
+*/
 func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var taxiiHeader headers.HttpHeaderType
-
-	// Setup HTML template only if HTMLEnabled is true
-	var htmlTemplateResource *template.Template
-	if ezt.HTMLEnabled == true {
-		var htmlFullPath = ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
-		htmlTemplateResource = template.Must(template.ParseFiles(htmlFullPath))
-	}
 
 	if ezt.LogLevel >= 3 {
 		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
@@ -72,6 +66,12 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
+
+		// ----------------------------------------------------------------------
+		// Setup HTML Template
+		// ----------------------------------------------------------------------
+		htmlFullPath := ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+		htmlTemplateResource := template.Must(template.ParseFiles(htmlFullPath))
 		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
 
 	} else {

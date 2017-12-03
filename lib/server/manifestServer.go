@@ -21,10 +21,10 @@ import (
 )
 
 /*
-ObjectsServerHandler - This method will handle all of the requests for STIX
+ManifestServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
-func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *STIXServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
@@ -32,7 +32,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	var addedFirst, addedLast string
 
 	if ezt.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", ezt.CollectionID)
+		log.Println("DEBUG-3: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", ezt.CollectionID)
 	}
 
 	if ezt.LogLevel >= 5 {
@@ -81,7 +81,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 
 	q.RangeMax = ezt.RangeMax
 
-	objectsInCollection, metaData, err := ezt.DS.GetObjectsFromCollection(q)
+	objectsInCollection, metaData, err := ezt.DS.GetManifestFromCollection(q)
 
 	if err != nil {
 		taxiiError := resources.NewError()

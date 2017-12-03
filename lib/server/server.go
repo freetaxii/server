@@ -32,7 +32,6 @@ type TAXIIServerHandlerType struct {
 // process all STIX media type requests. Since we are using a single handler
 // for multiple stix messages, we need to know the resource type.
 type STIXServerHandlerType struct {
-	Type             string // Used in log messages
 	ResourcePath     string // This is used in the HTML output
 	HTMLEnabled      bool
 	HTMLTemplateFile string

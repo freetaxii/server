@@ -193,7 +193,6 @@ func main() {
 						// Make a copy of just the elements that we need to process the request and nothing more.
 						// This is done to prevent sending the entire server config in to each handler
 						var objectsSrv server.STIXServerHandlerType
-						objectsSrv.Type = "Objects"
 						objectsSrv.ResourcePath = resourceCollectionIDPath + "objects/"
 						objectsSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
 						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
@@ -212,7 +211,31 @@ func main() {
 
 						log.Println("Starting TAXII Object service of:", objectsSrv.ResourcePath)
 						objectsSrv.ResourcePath = resourceCollectionIDPath + "objects/" + "{objectid}/"
-						config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsServerHandler).Methods("GET")
+						config.Router.HandleFunc(objectsSrv.ResourcePath, objectsSrv.ObjectsByIDServerHandler).Methods("GET")
+
+						// --------------------------------------------------
+						// Start a Manigest handler
+						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
+						// --------------------------------------------------
+
+						// Make a copy of just the elements that we need to process the request and nothing more.
+						// This is done to prevent sending the entire server config in to each handler
+						var manifestSrv server.STIXServerHandlerType
+						manifestSrv.ResourcePath = resourceCollectionIDPath + "manifest/"
+						manifestSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
+						manifestSrv.HTMLTemplateFile = api.HTMLBranding.Manifest
+						manifestSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
+						manifestSrv.LogLevel = config.Logging.LogLevel
+						manifestSrv.CollectionID = config.CollectionResources[c].ID
+						manifestSrv.RangeMax = config.Global.MaxNumberOfObjects
+						manifestSrv.DS = &ds
+
+						// --------------------------------------------------
+						// Start a Manifest handlers
+						// --------------------------------------------------
+						log.Println("Starting TAXII Manifest service of:", manifestSrv.ResourcePath)
+						config.Router.HandleFunc(manifestSrv.ResourcePath, manifestSrv.ManifestServerHandler).Methods("GET")
+
 					} // End for loop api.Collections.Members
 				} // End if Collections.Enabled == true
 			} // End if api.Enabled == true

@@ -12,6 +12,7 @@ import (
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net/http"
@@ -21,10 +22,10 @@ import (
 )
 
 /*
-ObjectsServerHandler - This method will handle all of the requests for STIX
+ObjectsByIDServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
-func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
+func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
@@ -56,6 +57,9 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		}
 	}
 
+	urlvars := mux.Vars(r)
+	urlObjectID := urlvars["objectid"]
+
 	urlParameters := r.URL.Query()
 	if ezt.LogLevel >= 3 {
 		log.Println("DEBUG-3: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
@@ -63,23 +67,12 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 
 	q.CollectionID = ezt.CollectionID
 
-	if urlParameters["match[id]"] != nil {
-		q.STIXID = urlParameters["match[id]"]
-	}
-
-	if urlParameters["match[type]"] != nil {
-		q.STIXType = urlParameters["match[type]"]
-	}
-
 	if urlParameters["match[version]"] != nil {
 		q.STIXVersion = urlParameters["match[version]"]
 	}
 
-	if urlParameters["added_after"] != nil {
-		q.AddedAfter = urlParameters["added_after"]
-	}
-
 	q.RangeMax = ezt.RangeMax
+	q.STIXID = append(q.STIXID, urlObjectID)
 
 	objectsInCollection, metaData, err := ezt.DS.GetObjectsFromCollection(q)
 

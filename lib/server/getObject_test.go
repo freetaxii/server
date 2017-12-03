@@ -22,7 +22,7 @@ type dummydb struct {
 func (db *dummydb) GetObject(stixid string) (interface{}, error) {
 	return objects.NewIndicator("2.0"), nil
 }
-func (db *dummydb) GetObjectsInCollection(collectionid string) objects.BundleType {
+func (db *dummydb) GetObjectsFromCollection(collectionid string) objects.BundleType {
 	b := objects.NewBundle()
 	b.SetID("bundle--1234")
 	return b

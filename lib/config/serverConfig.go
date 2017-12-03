@@ -96,6 +96,7 @@ type HTMLTemplateFilesType struct {
 	Collections string
 	Collection  string
 	Objects     string
+	Manifest    string
 }
 
 // --------------------------------------------------

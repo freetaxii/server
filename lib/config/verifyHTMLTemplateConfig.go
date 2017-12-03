@@ -103,6 +103,13 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Objects)
 	}
 
+	if config.APIRootServer.HTMLBranding.Manifest == "" {
+		log.Println("CONFIG: The API Root Service is missing the 'manifest' directive from the `htmlbranding.objects` directive in the configuration file")
+		problemsFound++
+	} else {
+		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Manifest)
+	}
+
 	// Lets check to see if any of the HTML template files have been redefined at the service level
 	for i, s := range config.APIRootServer.Services {
 
@@ -153,6 +160,16 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 			// Only test if the file was redefined at this level. No need to
 			// retest the inherited filename since it was already checked
 			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Objects)
+		}
+
+		// If it is not defined at the service level, lets copy in the parent,
+		// this will make it easier to work with later on
+		if s.HTMLBranding.Manifest == "" {
+			config.APIRootServer.Services[i].HTMLBranding.Manifest = config.APIRootServer.HTMLBranding.Manifest
+		} else {
+			// Only test if the file was redefined at this level. No need to
+			// retest the inherited filename since it was already checked
+			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Manifest)
 		}
 
 	} // End for loop
