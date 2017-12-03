@@ -117,6 +117,8 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 	w.Header().Add("X-TAXII-Date-Added-First", addedFirst)
 	w.Header().Add("X-TAXII-Date-Added-Last", addedLast)
+	contentRangeHeaderValue := "items " + strconv.Itoa(metaData.RangeBegin) + "-" + strconv.Itoa(metaData.RangeEnd) + "/" + strconv.Itoa(metaData.Size)
+	w.Header().Add("Content-Range", contentRangeHeaderValue)
 
 	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
 		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
@@ -125,7 +127,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusPartialContent)
 		}
 		j.Encode(ezt.Resource)
 
@@ -136,7 +138,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusPartialContent)
 		}
 		j.SetIndent("", "    ")
 		j.Encode(ezt.Resource)
@@ -147,7 +149,7 @@ func (ezt *STIXServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusPartialContent)
 		}
 
 		// I needed to convert this to actual JSON since if I just used
