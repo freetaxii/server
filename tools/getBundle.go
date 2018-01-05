@@ -67,7 +67,7 @@ func main() {
 	q.RangeMax = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	o, meta, err := ds.GetObjectsFromCollection(q)
+	o, meta, err := ds.GetBundle(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
