@@ -120,8 +120,8 @@ func (ezt *STIXServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r
 	contentRangeHeaderValue := "items " + strconv.Itoa(metaData.RangeBegin) + "-" + strconv.Itoa(metaData.RangeEnd) + "/" + strconv.Itoa(metaData.Size)
 	w.Header().Add("Content-Range", contentRangeHeaderValue)
 
-	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
-		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
+	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
+		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 
 		if objectNotFound == true {

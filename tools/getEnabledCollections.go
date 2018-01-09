@@ -25,14 +25,14 @@ var (
 func main() {
 	databaseFilename := processCommandLineFlags()
 	ds := sqlite3.New(databaseFilename)
-	allCollections := ds.GetEnabledCollections()
+	allCollections, _ := ds.GetCollections()
 
 	fmt.Println("==========================================================================================")
-	fmt.Printf("%s \t\t\t\t %s\n", "Collection ID", "Title")
+	fmt.Printf("%s\t %s\t %s\t\t\t\t %s\n", "Enabled", "Hidden", "Collection ID", "Title")
 	fmt.Println("==========================================================================================")
 
 	for _, data := range allCollections.Collections {
-		fmt.Printf("%s \t %s\n", data.ID, data.Title)
+		fmt.Printf("%t\t %t\t %s \t %s\n", data.Enabled, data.Hidden, data.ID, data.Title)
 	}
 
 	ds.Close()
