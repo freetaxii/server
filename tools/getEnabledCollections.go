@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
+	"log"
 	"os"
 )
 
@@ -25,7 +26,11 @@ var (
 func main() {
 	databaseFilename := processCommandLineFlags()
 	ds := sqlite3.New(databaseFilename)
-	allCollections, _ := ds.GetCollections()
+	allCollections, err := ds.GetCollections()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	fmt.Println("==========================================================================================")
 	fmt.Printf("%s\t %s\t %s\t\t\t\t %s\n", "Enabled", "Hidden", "Collection ID", "Title")
