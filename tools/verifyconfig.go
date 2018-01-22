@@ -22,6 +22,14 @@ var (
 	Build   string
 )
 
+// These global variables are for dealing with command line options
+var (
+	defaultServerConfigFilename = "../etc/freetaxii.conf"
+	sOptServerConfigFilename    = getopt.StringLong("config", 'c', defaultServerConfigFilename, "System Configuration File", "string")
+	bOptHelp                    = getopt.BoolLong("help", 0, "Help")
+	bOptVer                     = getopt.BoolLong("version", 0, "Version")
+)
+
 func main() {
 	configFileName := processCommandLineFlags()
 
@@ -49,12 +57,7 @@ func main() {
 
 // processCommandLineFlags - This function will process the command line flags
 // and will print the version or help information as needed.
-func processCommandLineFlags() string {
-	defaultServerConfigFilename := "../etc/freetaxii.conf"
-	sOptServerConfigFilename := getopt.StringLong("config", 'c', defaultServerConfigFilename, "System Configuration File", "string")
-	bOptHelp := getopt.BoolLong("help", 0, "Help")
-	bOptVer := getopt.BoolLong("version", 0, "Version")
-
+func processCommandLineFlags() {
 	getopt.HelpColumn = 35
 	getopt.DisplayWidth = 120
 	getopt.SetParameters("")
@@ -74,7 +77,6 @@ func processCommandLineFlags() string {
 		getopt.Usage()
 		os.Exit(0)
 	}
-	return *sOptServerConfigFilename
 }
 
 // printOutputHeader - This function will print a header for all console output

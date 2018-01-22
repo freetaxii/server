@@ -27,34 +27,27 @@ var (
 var (
 	defaultDatabaseFilename = "freetaxii.db"
 	sOptDatabaseFilename    = getopt.StringLong("filename", 'f', defaultDatabaseFilename, "Database Filename", "string")
+	sOptSTIXID              = getopt.StringLong("stixid", 's', "", "Object ID", "string")
+	sOptVersion             = getopt.StringLong("stixversion", 'v', "", "Version", "string")
 	bOptHelp                = getopt.BoolLong("help", 0, "Help")
 	bOptVer                 = getopt.BoolLong("version", 0, "Version")
 )
 
 func main() {
 	processCommandLineFlags()
-	ds := sqlite3.New(databaseFilename)
-	allCollections, err := ds.GetCollections()
+	var stixid, version string
 
+	stixid = *sOptSTIXID
+	version = *sOptVersion
+
+	ds := sqlite3.New(*sOptDatabaseFilename)
+	o, err := ds.GetSTIXObject(stixid, version)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("==========================================================================================")
-	fmt.Printf("%s\t %s\t %s\t\t\t\t %s\n", "Enabled", "Hidden", "Collection ID", "Title")
-	fmt.Println("==========================================================================================")
-
-	for _, data := range allCollections.Collections {
-		fmt.Printf("%t\t %t\t %s \t %s\n", data.Enabled, data.Hidden, data.ID, data.Title)
-	}
-
-	ds.Close()
-
-	fmt.Println("==========================================================================================")
-
-	// Print JSON version of object
 	var data []byte
-	data, _ = json.MarshalIndent(allCollections, "", "    ")
+	data, _ = json.MarshalIndent(o, "", "    ")
 	fmt.Println(string(data))
 }
 
@@ -84,6 +77,15 @@ func processCommandLineFlags() {
 		getopt.Usage()
 		os.Exit(0)
 	}
+
+	if *sOptSTIXID == "" {
+		log.Fatalln("STIX ID must not be empty")
+	}
+
+	if *sOptVersion == "" {
+		log.Fatalln("STIX Version must not be empty")
+	}
+
 }
 
 // printOutputHeader - This function will print a header for all console output
