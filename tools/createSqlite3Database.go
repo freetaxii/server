@@ -31,12 +31,12 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	ds := sqlite3.New(databaseFilename)
+	ds := sqlite3.New(*sOptDatabaseFilename)
 
-	ds.CreateAllSTIXTables()
-	ds.CreateAllVocabTables()
-	ds.PopulateAllVocabTables()
-	ds.CreateAllTAXIITables()
+	ds.CreateSTIXTables()
+	ds.CreateVocabTables()
+	ds.PopulateVocabTables()
+	ds.CreateTAXIITables()
 
 	ds.Close()
 }
