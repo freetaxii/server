@@ -41,7 +41,7 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	var q datastore.QueryType
+	var q datastore.CollectionQueryType
 
 	q.CollectionID = *sOptCollectionID
 

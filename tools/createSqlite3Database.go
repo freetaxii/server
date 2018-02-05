@@ -7,9 +7,11 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/pborman/getopt"
+	"log"
 	"os"
 )
 
@@ -31,7 +33,17 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	ds := sqlite3.New(*sOptDatabaseFilename)
+
+	// We are not using the sqlite New() function as it looks for tables that do
+	// not yet exist
+	var ds sqlite3.DatastoreType
+	ds.Filename = *sOptDatabaseFilename
+
+	db, sqlerr := sql.Open("sqlite3", ds.Filename)
+	if sqlerr != nil {
+		log.Fatalln("Unable to open file %s due to error: %v", ds.Filename, sqlerr)
+	}
+	ds.DB = db
 
 	ds.CreateSTIXTables()
 	ds.CreateVocabTables()

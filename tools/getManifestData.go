@@ -42,7 +42,7 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	var q datastore.QueryType
+	var q datastore.CollectionQueryType
 
 	q.CollectionID = *sOptCollectionID
 
@@ -64,22 +64,22 @@ func main() {
 
 	q.RangeBegin = *sOptRangeBegin
 	q.RangeEnd = *sOptRangeEnd
-	q.RangeMax = 5
+	q.ServerRecordLimit = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	o, meta, err := ds.GetManifestData(q)
+	results, err := ds.GetManifestData(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	var data []byte
-	data, _ = json.MarshalIndent(*o, "", "    ")
+	data, _ = json.MarshalIndent(results.ManifestData, "", "    ")
 	fmt.Println(string(data))
 
 	fmt.Println("==========================================================================================")
-	fmt.Println("Total Records: ", meta.Size)
-	fmt.Println("X Header Date Added First: ", meta.DateAddedFirst)
-	fmt.Println("X Header Date Added Last:  ", meta.DateAddedLast)
+	fmt.Println("Total Records: ", results.Size)
+	fmt.Println("X Header Date Added First: ", results.DateAddedFirst)
+	fmt.Println("X Header Date Added Last:  ", results.DateAddedLast)
 }
 
 // --------------------------------------------------

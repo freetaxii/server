@@ -76,7 +76,7 @@ func main() {
 
 	c.AddMediaType("application/vnd.oasis.stix+json")
 
-	ds.Put(c)
+	ds.AddTAXIIObject(c)
 	ds.Close()
 }
 

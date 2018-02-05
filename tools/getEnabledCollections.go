@@ -33,7 +33,7 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	ds := sqlite3.New(databaseFilename)
+	ds := sqlite3.New(*sOptDatabaseFilename)
 	allCollections, err := ds.GetCollections()
 
 	if err != nil {
