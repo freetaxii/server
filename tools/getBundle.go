@@ -34,10 +34,10 @@ var (
 	sOptSTIXType            = getopt.StringLong("type", 't', "", "Object Type", "string")
 	sOptVersion             = getopt.StringLong("stixversion", 'v', "", "Version", "string")
 	sOptAddedAfter          = getopt.StringLong("date", 'd', "", "Added After", "string")
-	sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
-	sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
-	bOptHelp                = getopt.BoolLong("help", 0, "Help")
-	bOptVer                 = getopt.BoolLong("version", 0, "Version")
+	// sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
+	// sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
+	bOptHelp = getopt.BoolLong("help", 0, "Help")
+	bOptVer  = getopt.BoolLong("version", 0, "Version")
 )
 
 func main() {
@@ -62,24 +62,24 @@ func main() {
 		q.AddedAfter = strings.Split(*sOptAddedAfter, ",")
 	}
 
-	q.RangeBegin = *sOptRangeBegin
-	q.RangeEnd = *sOptRangeEnd
-	q.RangeMax = 5
+	// q.RangeBegin = *sOptRangeBegin
+	// q.RangeEnd = *sOptRangeEnd
+	q.ServerRecordLimit = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	o, meta, err := ds.GetBundle(q)
+	results, err := ds.GetBundle(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	var data []byte
-	data, _ = json.MarshalIndent(*o, "", "    ")
+	data, _ = json.MarshalIndent(results.BundleData, "", "    ")
 	fmt.Println(string(data))
 
 	fmt.Println("==========================================================================================")
-	fmt.Println("Total Records: ", meta.Size)
-	fmt.Println("X Header Date Added First: ", meta.DateAddedFirst)
-	fmt.Println("X Header Date Added Last:  ", meta.DateAddedLast)
+	fmt.Println("Total Records: ", results.Size)
+	fmt.Println("X Header Date Added First: ", results.DateAddedFirst)
+	fmt.Println("X Header Date Added Last:  ", results.DateAddedLast)
 }
 
 // --------------------------------------------------
