@@ -34,10 +34,10 @@ var (
 	sOptSTIXType            = getopt.StringLong("type", 't', "", "Object Type", "string")
 	sOptVersion             = getopt.StringLong("stixversion", 'v', "", "Version", "string")
 	sOptAddedAfter          = getopt.StringLong("date", 'd', "", "Added After", "string")
-	sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
-	sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
-	bOptHelp                = getopt.BoolLong("help", 0, "Help")
-	bOptVer                 = getopt.BoolLong("version", 0, "Version")
+	// sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
+	// sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
+	bOptHelp = getopt.BoolLong("help", 0, "Help")
+	bOptVer  = getopt.BoolLong("version", 0, "Version")
 )
 
 func main() {
@@ -62,8 +62,8 @@ func main() {
 		q.AddedAfter = strings.Split(*sOptAddedAfter, ",")
 	}
 
-	q.RangeBegin = *sOptRangeBegin
-	q.RangeEnd = *sOptRangeEnd
+	// q.RangeBegin = *sOptRangeBegin
+	// q.RangeEnd = *sOptRangeEnd
 	q.ServerRecordLimit = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)

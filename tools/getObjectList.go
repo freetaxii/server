@@ -33,10 +33,10 @@ var (
 	sOptSTIXType            = getopt.StringLong("type", 't', "", "Object Type", "string")
 	sOptVersion             = getopt.StringLong("stixversion", 'v', "", "Version", "string")
 	sOptAddedAfter          = getopt.StringLong("date", 'd', "", "Added After", "string")
-	sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
-	sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
-	bOptHelp                = getopt.BoolLong("help", 0, "Help")
-	bOptVer                 = getopt.BoolLong("version", 0, "Version")
+	// sOptRangeBegin          = getopt.IntLong("begin", 'b', 0, "Range Begin", "int")
+	// sOptRangeEnd            = getopt.IntLong("end", 'e', 0, "Range End", "int")
+	bOptHelp = getopt.BoolLong("help", 0, "Help")
+	bOptVer  = getopt.BoolLong("version", 0, "Version")
 )
 
 func main() {
@@ -61,12 +61,12 @@ func main() {
 		q.AddedAfter = strings.Split(*sOptAddedAfter, ",")
 	}
 
-	q.RangeBegin = *sOptRangeBegin
-	q.RangeEnd = *sOptRangeEnd
-	q.RangeMax = 5
+	// q.RangeBegin = *sOptRangeBegin
+	// q.RangeEnd = *sOptRangeEnd
+	q.ServerRecordLimit = 5
 
 	ds := sqlite3.New(*sOptDatabaseFilename)
-	rangeObjects, meta, err := ds.GetObjectList(q)
+	results, err := ds.GetManifestData(q)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -75,16 +75,16 @@ func main() {
 	fmt.Printf("%s\t\t\t%s\t\t%s\n", "Date Added", "STIX ID", "Version")
 	fmt.Println("==========================================================================================")
 
-	for _, data := range *rangeObjects {
-		fmt.Printf("%s\t%s\t%s\n", data.DateAdded, data.STIXID, data.STIXVersion)
+	for _, data := range results.ManifestData.Objects {
+		fmt.Printf("%s\t%s\t%s\n", data.DateAdded, data.ID, data.Version)
 	}
 
 	ds.Close()
 
 	fmt.Println("==========================================================================================")
-	fmt.Println("Total Records: ", meta.Size)
-	fmt.Println("X Header Date Added First: ", meta.DateAddedFirst)
-	fmt.Println("X Header Date Added Last:  ", meta.DateAddedLast)
+	fmt.Println("Total Records: ", results.Size)
+	fmt.Println("X Header Date Added First: ", results.DateAddedFirst)
+	fmt.Println("X Header Date Added Last:  ", results.DateAddedLast)
 }
 
 // --------------------------------------------------
