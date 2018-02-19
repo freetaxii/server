@@ -8,17 +8,15 @@ package server
 
 import (
 	"encoding/json"
+	"html/template"
+	"net/http"
+	"strings"
+
 	"github.com/freetaxii/freetaxii-server/lib/headers"
-	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/gologme/log"
 	"github.com/gorilla/mux"
-	"html/template"
-	"log"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
 )
 
 /*
@@ -29,52 +27,52 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 	var mediaType string
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
-	var q datastore.QueryType
+	var q resources.CollectionQueryType
 	var addedFirst, addedLast string
 
-	if ezt.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", ezt.CollectionID)
-	}
+	log.Infoln("INFO: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", ezt.CollectionID)
 
-	if ezt.LogLevel >= 5 {
+	// If trace is enabled in the logger, than lets decode the HTTP Request and
+	// dump it to the logs
+	if log.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
 	httpHeaderAccept := r.Header.Get("Accept")
-	httpHeaderRange := r.Header.Get("Range")
+	// httpHeaderRange := r.Header.Get("Range")
 
-	myregexp := regexp.MustCompile(`^items \d+-\d+$`)
-	if myregexp.MatchString(httpHeaderRange) {
-		rangeData := strings.Split(httpHeaderRange, " ")
-		if rangeData[0] == "items" {
-			values := strings.Split(rangeData[1], "-")
-			q.RangeBegin, _ = strconv.Atoi(values[0])
-			q.RangeEnd, _ = strconv.Atoi(values[1])
+	// myregexp := regexp.MustCompile(`^items \d+-\d+$`)
+	// if myregexp.MatchString(httpHeaderRange) {
+	// 	rangeData := strings.Split(httpHeaderRange, " ")
+	// 	if rangeData[0] == "items" {
+	// 		values := strings.Split(rangeData[1], "-")
+	// 		q.RangeBegin, _ = strconv.Atoi(values[0])
+	// 		q.RangeEnd, _ = strconv.Atoi(values[1])
 
-			if ezt.LogLevel >= 3 {
-				log.Println("DEBUG-3: Client", r.RemoteAddr, "sent the following range parameters:", values[0], values[1])
-			}
-		}
-	}
+	// 		log.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following range parameters:", values[0], values[1])
+	// 	}
+	// }
 
 	urlvars := mux.Vars(r)
 	urlObjectID := urlvars["objectid"]
-
-	urlParameters := r.URL.Query()
-	if ezt.LogLevel >= 3 {
-		log.Println("DEBUG-3: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
-	}
-
-	q.CollectionID = ezt.CollectionID
-
-	if urlParameters["match[version]"] != nil {
-		q.STIXVersion = urlParameters["match[version]"]
-	}
-
-	q.RangeMax = ezt.RangeMax
 	q.STIXID = append(q.STIXID, urlObjectID)
 
-	objectsInCollection, metaData, err := ezt.DS.GetObjectsFromCollection(q)
+	// ----------------------------------------------------------------------
+	//
+	// Handle URL Parameters
+	//
+	// ----------------------------------------------------------------------
+
+	urlParameters := r.URL.Query()
+	log.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
+
+	q.CollectionID = ezt.CollectionID
+	errURLParameters := q.ProcessURLParameters(urlParameters)
+	if errURLParameters != nil {
+		log.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
+	}
+
+	results, err := ezt.DS.GetBundle(q)
 
 	if err != nil {
 		taxiiError := resources.NewError()
@@ -85,16 +83,14 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 		taxiiError.SetHTTPStatus("404")
 		ezt.Resource = taxiiError
 		objectNotFound = true
-		if ezt.LogLevel >= 3 {
-			log.Println("DEBUG-3: Sending error response to", r.RemoteAddr, "due to:", err.Error())
-		}
+		log.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+
 	} else {
-		ezt.Resource = *objectsInCollection
-		addedFirst = metaData.DateAddedFirst
-		addedLast = metaData.DateAddedLast
-		if ezt.LogLevel >= 3 {
-			log.Println("DEBUG-3: Sending response to", r.RemoteAddr)
-		}
+		ezt.Resource = results.BundleData
+		addedFirst = results.DateAddedFirst
+		addedLast = results.DateAddedLast
+		log.Infoln("INFO: Sending response to", r.RemoteAddr)
+
 	}
 
 	// --------------------------------------------------

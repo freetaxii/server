@@ -24,9 +24,6 @@ func (config *ServerConfigType) verifyDiscoveryConfig() error {
 	// Loop through each Discovery Service and verify its configuration
 	for i, value := range config.DiscoveryServer.Services {
 
-		// Copy in logging level to make it easier to use in a handler
-		config.DiscoveryServer.Services[i].LogLevel = config.Logging.LogLevel
-
 		// Check to see if this service instance is enabled.
 		if value.Enabled == true {
 			isServiceEnabled = true

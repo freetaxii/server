@@ -77,12 +77,6 @@ func (config *ServerConfigType) verifyGlobalConfig() error {
 		}
 	}
 
-	// Logging Config
-	if config.Logging.Enabled == false && config.Logging.LogLevel > 0 {
-		log.Println("CONFIG: The logging service is disabled. Setting loglevel to 0.")
-		config.Logging.LogLevel = 0
-	}
-
 	// Logging File
 	if config.Logging.Enabled == true && config.Logging.LogFile == "" {
 		log.Println("CONFIG: The logging.logfile directive is missing from the configuration file")

@@ -8,12 +8,13 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/freetaxii/freetaxii-server/lib/headers"
-	"github.com/freetaxii/libstix2/defs"
 	"html/template"
-	"log"
 	"net/http"
 	"strings"
+
+	"github.com/freetaxii/freetaxii-server/lib/headers"
+	"github.com/freetaxii/libstix2/defs"
+	"github.com/gologme/log"
 )
 
 /*
@@ -25,13 +26,11 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 	var httpHeaderAccept string
 	var taxiiHeader headers.HttpHeaderType
 
-	if ezt.LogLevel >= 3 {
-		log.Println("DEBUG-3: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
-	}
+	log.Infoln("INFO: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
 
-	// We need to put this first so that during debugging we can see problems
-	// that will generate errors below.
-	if ezt.LogLevel >= 5 {
+	// If trace is enabled in the logger, than lets decode the HTTP Request and
+	// dump it to the logs
+	if log.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -78,7 +77,5 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
-	if ezt.LogLevel >= 3 {
-		log.Println("DEBUG-3: Sending", ezt.Type, "Response to", r.RemoteAddr)
-	}
+	log.Infoln("INFO: Sending", ezt.Type, "Response to", r.RemoteAddr)
 }

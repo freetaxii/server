@@ -9,12 +9,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/freetaxii/libstix2/datastore"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/pborman/getopt"
-	"log"
 	"os"
 	"strings"
+
+	"github.com/freetaxii/libstix2/datastore"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/resources"
+	"github.com/gologme/log"
+	"github.com/pborman/getopt"
 )
 
 // These global variables hold build information. The Build variable will be
@@ -42,7 +44,9 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	var q datastore.CollectionQueryType
+	log.EnableLevel("debug")
+	log.EnableLevel("trace")
+	var q resources.CollectionQueryType
 
 	q.CollectionID = *sOptCollectionID
 
@@ -66,7 +70,9 @@ func main() {
 	// q.RangeEnd = *sOptRangeEnd
 	q.ServerRecordLimit = 5
 
-	ds := sqlite3.New(*sOptDatabaseFilename)
+	var ds datastore.Datastorer
+
+	ds = sqlite3.New(*sOptDatabaseFilename)
 	results, err := ds.GetManifestData(q)
 	if err != nil {
 		log.Fatalln(err)

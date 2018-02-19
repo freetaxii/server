@@ -9,10 +9,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/pborman/getopt"
-	"log"
 	"os"
+
+	"github.com/freetaxii/libstix2/datastore"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/gologme/log"
+	"github.com/pborman/getopt"
 )
 
 // These global variables hold build information. The Build variable will be
@@ -40,7 +42,9 @@ func main() {
 	stixid = *sOptSTIXID
 	version = *sOptVersion
 
-	ds := sqlite3.New(*sOptDatabaseFilename)
+	var ds datastore.Datastorer
+
+	ds = sqlite3.New(*sOptDatabaseFilename)
 	o, err := ds.GetSTIXObject(stixid, version)
 	if err != nil {
 		log.Fatalln(err)

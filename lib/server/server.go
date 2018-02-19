@@ -24,7 +24,6 @@ type TAXIIServerHandlerType struct {
 	HTMLEnabled      bool
 	HTMLTemplateFile string
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
-	LogLevel         int
 	Resource         interface{}
 }
 
@@ -36,7 +35,6 @@ type STIXServerHandlerType struct {
 	HTMLEnabled      bool
 	HTMLTemplateFile string
 	HTMLTemplatePath string // Prefix + HTMLTemplateDir
-	LogLevel         int
 	CollectionID     string
 	RangeMax         int
 	DS               datastore.Datastorer
@@ -57,7 +55,6 @@ func (ezt *TAXIIServerHandlerType) NewDiscoveryHandler(c config.DiscoveryService
 	ezt.HTMLEnabled = c.HTMLEnabled
 	ezt.HTMLTemplateFile = c.HTMLBranding.Discovery
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
-	ezt.LogLevel = c.LogLevel
 }
 
 // NewAPIRootHandler - This method will make a copy of the elements found in
@@ -68,7 +65,6 @@ func (ezt *TAXIIServerHandlerType) NewAPIRootHandler(c config.APIRootServiceType
 	ezt.HTMLEnabled = c.HTMLEnabled
 	ezt.HTMLTemplateFile = c.HTMLBranding.APIRoot
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
-	ezt.LogLevel = c.LogLevel
 }
 
 // NewCollectionsHandler - This method will make a copy of the elements found in
@@ -79,7 +75,6 @@ func (ezt *TAXIIServerHandlerType) NewCollectionsHandler(c config.APIRootService
 	ezt.HTMLEnabled = c.HTMLEnabled
 	ezt.HTMLTemplateFile = c.HTMLBranding.Collections
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
-	ezt.LogLevel = c.LogLevel
 }
 
 // NewCollectionHandler - This method will make a copy of the elements found in
@@ -90,5 +85,4 @@ func (ezt *TAXIIServerHandlerType) NewCollectionHandler(c config.APIRootServiceT
 	ezt.HTMLEnabled = c.HTMLEnabled
 	ezt.HTMLTemplateFile = c.HTMLBranding.Collection
 	ezt.HTMLTemplatePath = c.HTMLTemplatePath
-	ezt.LogLevel = c.LogLevel
 }

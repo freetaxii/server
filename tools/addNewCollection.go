@@ -9,12 +9,14 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/freetaxii/libstix2/objects"
-	"github.com/pborman/getopt"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/freetaxii/libstix2/datastore"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/objects"
+	"github.com/pborman/getopt"
 )
 
 // These global variables hold build information. The Build variable will be
@@ -35,7 +37,9 @@ var (
 
 func main() {
 	processCommandLineFlags()
-	ds := sqlite3.New(databaseFilename)
+
+	var ds datastore.Datastorer
+	ds = sqlite3.New(databaseFilename)
 	c := objects.NewCollection()
 	c.NewID()
 

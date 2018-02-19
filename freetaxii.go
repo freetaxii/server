@@ -9,43 +9,48 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/freetaxii/freetaxii-server/lib/config"
-	"github.com/freetaxii/freetaxii-server/lib/server"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/freetaxii/libstix2/resources"
-	"github.com/gorilla/mux"
-	"github.com/pborman/getopt"
-	"log"
 	"net/http"
 	"os"
+
+	"github.com/freetaxii/freetaxii-server/lib/config"
+	"github.com/freetaxii/freetaxii-server/lib/server"
+	"github.com/freetaxii/libstix2/datastore"
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/freetaxii/libstix2/resources"
+	"github.com/gologme/log"
+	"github.com/gorilla/mux"
+	"github.com/pborman/getopt"
 )
 
-// These global variables hold build information. The Build variable will be
-// populated by the Makefile and uses the Git Head hash as its identifier.
-// These variables are used in the console output for --version and --help.
+/*
+These global variables hold build information. The Build variable will be
+populated by the Makefile and uses the Git Head hash as its identifier.
+These variables are used in the console output for --version and --help.
+*/
 var (
-	Version = "0.0.2"
+	Version = "0.2.1"
 	Build   string
 )
 
 func main() {
 	configFileName := processCommandLineFlags()
 
-	// --------------------------------------------------
-	// Define variables
-	// --------------------------------------------------
-
-	router := mux.NewRouter()
+	/*
+		Keep track of the number of services that are started
+	*/
 	serviceCounter := 0
-	var config config.ServerConfigType
-	config.Router = router
 
 	// --------------------------------------------------
+	//
 	// Load System and Server Configuration
+	//
 	// --------------------------------------------------
 
-	// In addition to checking the configuration for completeness the verify
-	// process will also populate some of the values.
+	/*
+		In addition to checking the configuration for completeness the verify
+		process will also populate some of the helper values.
+	*/
+	var config config.ServerConfigType
 	config.LoadServerConfig(configFileName)
 	configError := config.VerifyServerConfig()
 	if configError != nil {
@@ -53,15 +58,25 @@ func main() {
 	}
 
 	// --------------------------------------------------
+	//
 	// Setup Database Connection
+	//
 	// --------------------------------------------------
 
-	databaseFilename := config.Global.Prefix + config.Global.DbFile
-	ds := sqlite3.New(databaseFilename)
+	var ds datastore.Datastorer
+	switch config.Global.DbType {
+	case "sqlite3":
+		databaseFilename := config.Global.Prefix + config.Global.DbFile
+		ds = sqlite3.New(databaseFilename)
+	default:
+		log.Fatalln("CONFIG: unknown database type, or no database type defined in the server global configuration")
+	}
 	defer ds.Close()
 
 	// --------------------------------------------------
+	//
 	// Setup Logging File
+	//
 	// --------------------------------------------------
 	// TODO
 	// Need to make the directory if it does not already exist
@@ -80,18 +95,34 @@ func main() {
 	}
 
 	// --------------------------------------------------
-	// Start Server
+	//
+	// Configure HTTP Router
+	//
 	// --------------------------------------------------
+
+	router := mux.NewRouter()
+	config.Router = router
+
+	// --------------------------------------------------
+	//
+	// Start Server
+	//
+	// --------------------------------------------------
+
 	log.Println("Starting FreeTAXII Server")
 
 	// --------------------------------------------------
+	//
 	// Start a Discovery Service handler
+	//
 	// --------------------------------------------------
-	// This will look to see if there are any Discovery services
-	// defined in the config file. If there are, it will loop through the list and setup
-	// handlers for each one of them. The HandleFunc passes in copy of the Discovery Resource
-	// and the extra meta data that it needs to process the request.
 
+	/*
+		This will look to see if there are any Discovery services defined in the
+		config file. If there are, it will loop through the list and setup handlers
+		for each one of them. The HandleFunc passes in a copy of the Discovery Resource
+		and the extra meta data that it needs to process the request.
+	*/
 	if config.DiscoveryServer.Enabled == true {
 		for _, s := range config.DiscoveryServer.Services {
 			if s.Enabled == true {
@@ -150,7 +181,8 @@ func main() {
 
 						// If enabled, only add the collection to the list if the collection can either be read or written to
 						if config.CollectionResources[c].CanRead == true || config.CollectionResources[c].CanWrite == true {
-							collections.AddCollection(config.CollectionResources[c])
+							col := config.CollectionResources[c]
+							collections.AddCollection(&col)
 						}
 					}
 					collectionsSrv.Resource = collections
@@ -197,10 +229,9 @@ func main() {
 						objectsSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
 						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
 						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
-						objectsSrv.LogLevel = config.Logging.LogLevel
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
 						objectsSrv.RangeMax = config.Global.MaxNumberOfObjects
-						objectsSrv.DS = &ds
+						objectsSrv.DS = ds
 
 						// --------------------------------------------------
 						// Start a Objects and Object by ID handlers
@@ -225,10 +256,9 @@ func main() {
 						manifestSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
 						manifestSrv.HTMLTemplateFile = api.HTMLBranding.Manifest
 						manifestSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
-						manifestSrv.LogLevel = config.Logging.LogLevel
 						manifestSrv.CollectionID = config.CollectionResources[c].ID
 						manifestSrv.RangeMax = config.Global.MaxNumberOfObjects
-						manifestSrv.DS = &ds
+						manifestSrv.DS = ds
 
 						// --------------------------------------------------
 						// Start a Manifest handlers
@@ -243,15 +273,21 @@ func main() {
 	} // End if APIRootServer.Enabled == true
 
 	// --------------------------------------------------
+	//
 	// Fail if no services are running
+	//
 	// --------------------------------------------------
+
 	if serviceCounter == 0 {
 		log.Fatalln("No TAXII services defined")
 	}
 
 	// --------------------------------------------------
+	//
 	// Listen for Incoming Connections
+	//
 	// --------------------------------------------------
+
 	if config.Global.Protocol == "http" {
 		log.Println("Listening on:", config.Global.Listen)
 		log.Fatalln(http.ListenAndServe(config.Global.Listen, router))
@@ -283,15 +319,19 @@ func main() {
 		log.Fatalln(tlsServer.ListenAndServeTLS(tlsCrtPath, tlsKeyPath))
 	} else {
 		log.Fatalln("No valid protocol was defined in the configuration file")
-	} // end else
+	} // end if statement
 }
 
 // --------------------------------------------------
+//
 // Private functions
+//
 // --------------------------------------------------
 
-// processCommandLineFlags - This function will process the command line flags
-// and will print the version or help information as needed.
+/*
+processCommandLineFlags - This function will process the command line flags
+and will print the version or help information as needed.
+*/
 func processCommandLineFlags() string {
 	defaultServerConfigFilename := "etc/freetaxii.conf"
 	sOptServerConfigFilename := getopt.StringLong("config", 'c', defaultServerConfigFilename, "System Configuration File", "string")
@@ -320,7 +360,9 @@ func processCommandLineFlags() string {
 	return *sOptServerConfigFilename
 }
 
-// printOutputHeader - This function will print a header for all console output
+/*
+printOutputHeader - This function will print a header for all console output
+*/
 func printOutputHeader() {
 	fmt.Println("")
 	fmt.Println("FreeTAXII Server")

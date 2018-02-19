@@ -9,10 +9,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/pborman/getopt"
 	"log"
 	"os"
+
+	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/pborman/getopt"
 )
 
 // These global variables hold build information. The Build variable will be

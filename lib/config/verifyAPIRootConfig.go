@@ -24,9 +24,6 @@ func (config *ServerConfigType) verifyAPIRootConfig() error {
 	// API Service Directives
 	for i, value := range config.APIRootServer.Services {
 
-		// Copy in logging level to make it easier to use in a handler
-		config.APIRootServer.Services[i].LogLevel = config.Logging.LogLevel
-
 		// If this service instance is enabled
 		if value.Enabled == true {
 			isServiceEnabled = true
