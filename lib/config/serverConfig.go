@@ -8,6 +8,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/freetaxii/libstix2/resources"
@@ -101,22 +102,50 @@ type HTMLTemplateFilesType struct {
 	Manifest    string
 }
 
+// ----------------------------------------------------------------------
+//
+// Public Create Functions
+//
+// ----------------------------------------------------------------------
+
+/*
+New - This function will return a ServerConfigType, load the current configuration
+from a file, and verify that the configuration is correct.
+*/
+func New(filename string) (ServerConfigType, error) {
+	var c ServerConfigType
+	err1 := c.loadServerConfig(filename)
+	if err1 != nil {
+		return c, err1
+	}
+
+	// In addition to checking the configuration for completeness the verify
+	// process will also populate some of the helper values.
+	err2 := c.verifyServerConfig()
+	if err2 != nil {
+		return c, err2
+	}
+	return c, nil
+}
+
 // --------------------------------------------------
 //
-// Load Configuration File and Parse JSON
+// Load Configuration File, Parse JSON, and Verify
 //
 // --------------------------------------------------
 
-// LoadServerConfig - This methods takes in a string value representing a
-// filename of the configuration file and loads the configuration into memory.
-func (config *ServerConfigType) LoadServerConfig(filename string) {
+/*
+loadServerConfig - This methods takes in a string value representing a
+filename of the configuration file and loads the configuration into memory.
+*/
+func (c *ServerConfigType) loadServerConfig(filename string) error {
 	// TODO - Need to make make a validation check for the configuration file
 
 	// Open and read configuration file
-	sysConfigFileData, err := os.Open(filename)
+	sysConfigFileData, err1 := os.Open(filename)
 	defer sysConfigFileData.Close()
-	if err != nil {
-		log.Fatalf("ERROR: A problem occurred opening the configuration file: %v", err)
+	if err1 != nil {
+		return fmt.Errorf("error opening configuration file: %v", err1)
 	}
 
 	// --------------------------------------------------
@@ -124,12 +153,74 @@ func (config *ServerConfigType) LoadServerConfig(filename string) {
 	// --------------------------------------------------
 	// Use decoder instead of unmarshal so we can handle stream data
 	decoder := json.NewDecoder(sysConfigFileData)
-	err = decoder.Decode(config)
+	err2 := decoder.Decode(c)
 
-	if err != nil {
-		log.Fatalf("ERROR: A problem occurred parsing the configuration file %v", err)
+	if err2 != nil {
+		return fmt.Errorf("error parsing the configuration file: %v", err2)
 	}
 
 	log.Debugln("DEBUG LoadServerConfig(): System Configuration Dump")
-	log.Debugf("%+v\n", config)
+	log.Debugf("%+v\n", c)
+	return nil
+}
+
+/*
+verifyServerConfig - This method will verify that the configuration file has
+what it needs.
+TODO finish fleshing this out
+*/
+func (c *ServerConfigType) verifyServerConfig() error {
+	var err error
+
+	// --------------------------------------------------
+	// Discovery Server
+	// --------------------------------------------------
+
+	err = c.verifyGlobalConfig()
+	if err != nil {
+		return err
+	}
+
+	// --------------------------------------------------
+	// Discovery Server
+	// --------------------------------------------------
+
+	// Only verify the Discovery server configuration if it is enabled.
+	if c.DiscoveryServer.Enabled == true {
+		err = c.verifyDiscoveryConfig()
+	} else {
+		log.Infoln("CONFIG: The Discovery Server is not enabled in the configuration file")
+	}
+
+	if c.DiscoveryServer.HTMLEnabled == true {
+		err = c.verifyDiscoveryHTMLConfig()
+	} else {
+		log.Infoln("CONFIG: The Discovery Server is not configured to use HTML output")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// --------------------------------------------------
+	// API Root Server
+	// --------------------------------------------------
+
+	// Only verify the API Root server configuration if it is enabled.
+	if c.APIRootServer.Enabled == true {
+		err = c.verifyAPIRootConfig()
+	} else {
+		log.Infoln("CONFIG: The API Root Server is not enabled in the configuration file")
+	}
+
+	if c.APIRootServer.HTMLEnabled == true {
+		err = c.verifyAPIRootHTMLConfig()
+	} else {
+		log.Infoln("CONFIG: The API Root Server is not configured to use HTML output")
+	}
+
+	if err != nil {
+		return err
+	}
+	return nil
 }

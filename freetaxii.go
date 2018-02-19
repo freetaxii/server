@@ -35,9 +35,7 @@ var (
 func main() {
 	configFileName := processCommandLineFlags()
 
-	/*
-		Keep track of the number of services that are started
-	*/
+	// Keep track of the number of services that are started
 	serviceCounter := 0
 
 	// --------------------------------------------------
@@ -45,16 +43,9 @@ func main() {
 	// Load System and Server Configuration
 	//
 	// --------------------------------------------------
-
-	/*
-		In addition to checking the configuration for completeness the verify
-		process will also populate some of the helper values.
-	*/
-	var config config.ServerConfigType
-	config.LoadServerConfig(configFileName)
-	configError := config.VerifyServerConfig()
+	config, configError := config.New(configFileName)
 	if configError != nil {
-		log.Fatalln(configError)
+		log.Fatalln("ERROR:", configError)
 	}
 
 	// --------------------------------------------------
@@ -69,7 +60,7 @@ func main() {
 		databaseFilename := config.Global.Prefix + config.Global.DbFile
 		ds = sqlite3.New(databaseFilename)
 	default:
-		log.Fatalln("CONFIG: unknown database type, or no database type defined in the server global configuration")
+		log.Fatalln("ERROR: unknown database type, or no database type defined in the server global configuration")
 	}
 	defer ds.Close()
 
@@ -87,7 +78,7 @@ func main() {
 	if config.Logging.Enabled == true {
 		logFile, err := os.OpenFile(config.Logging.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatalf("error opening file: %v", err)
+			log.Fatalf("ERROR: can not open file: %v", err)
 		}
 		defer logFile.Close()
 
