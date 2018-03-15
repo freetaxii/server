@@ -25,33 +25,50 @@ type ServerConfigType struct {
 		Prefix             string
 		Listen             string
 		Protocol           string
+		TLSDir             string
 		TLSKey             string
 		TLSCrt             string
 		DbConfig           bool
 		DbType             string
 		DbFile             string
-		HTMLTemplateDir    string
 		MaxNumberOfObjects int
+	}
+	HTML struct {
+		HTMLConfigType
 	}
 	Logging struct {
 		Enabled bool
 		LogFile string
 	}
 	DiscoveryServer struct {
-		Enabled      bool
-		HTMLEnabled  bool
-		HTMLBranding HTMLTemplateFilesType
-		Services     []DiscoveryServiceType
+		Enabled  bool
+		Services []DiscoveryServiceType
 	}
 	APIRootServer struct {
-		Enabled      bool
-		HTMLEnabled  bool
-		HTMLBranding HTMLTemplateFilesType
-		Services     []APIRootServiceType
+		Enabled  bool
+		Services []APIRootServiceType
 	}
-	DiscoveryResources  map[string]resources.DiscoveryType
-	APIRootResources    map[string]resources.APIRootType
-	CollectionResources map[string]resources.CollectionType
+	DiscoveryResources  map[string]resources.DiscoveryType  // The key in the map is the ResourceID
+	APIRootResources    map[string]resources.APIRootType    // The key in the map is the ResourceID
+	CollectionResources map[string]resources.CollectionType // The key in the map is the ResourceID
+}
+
+/*
+BaseServiceType - This struct represents the common properties between the
+Discovery and API-Root services.
+
+Name          - A name for this service, this is used as part of the URL Path
+Enabled       - Is this service enabled
+ResourceID    - A unique ID for the resource that this service is using
+ResourcePath  - The actual full URL path for the resource
+HTML          - The configuration for generating HTML output
+*/
+type BaseServiceType struct {
+	Name         string         // User defined in configuration file
+	Enabled      bool           // User defined in configuration file
+	ResourceID   string         // User defined in configuration file
+	ResourcePath string         // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
+	HTML         HTMLConfigType // User defined in configuration file or set in the verify scripts.
 }
 
 /*
@@ -60,13 +77,7 @@ If someone tries to set the 'resourcepath' directive in the configuration file i
 will get overwritten in code.
 */
 type DiscoveryServiceType struct {
-	Enabled          bool                  // User defined in configuration file
-	Name             string                // User defined in configuration file
-	ResourcePath     string                // Set in verifyDiscoveryConfig()
-	HTMLEnabled      bool                  // Set in verifyDiscoveryHTMLConfig()
-	HTMLBranding     HTMLTemplateFilesType // User defined in configuration file or set to DiscoveryServer value in verifyDiscoveryHTMLConfig()
-	HTMLTemplatePath string                // Set in verifyDiscoveryHTMLConfig() = Prefix + HTMLTemplateDir
-	ResourceID       string                // User defined in configuration file
+	BaseServiceType
 }
 
 /*
@@ -75,31 +86,37 @@ If someone tries to set the 'path' directive in the configuration file it
 will just get overwritten in code.
 */
 type APIRootServiceType struct {
-	Enabled          bool                  // User defined in configuration file
-	Name             string                // User defined in configuration file
-	ResourcePath     string                // Set in verifyAPIRootConfig()
-	HTMLEnabled      bool                  // Set in verifyAPIRootHTMLConfig()
-	HTMLBranding     HTMLTemplateFilesType // User defined in configuration file or set to APIRootServer value in verifyAPIRootHTMLConfig()
-	HTMLTemplatePath string                // Set in verifyAPIRootHTMLConfig() = Prefix + HTMLTemplateDir
-	ResourceID       string                // User defined in configuration file
-	Collections      struct {
-		Enabled      bool
-		ResourcePath string // Set in verifyAPIRootConfig()
-		Members      []string
+	BaseServiceType
+	Collections struct {
+		ResourceIDs  []string // User defined in configuration file. A list of collections that are members of this API Root
+		Enabled      bool     // User defined in configuration file
+		ResourcePath string   // Set in verifyAPIRootConfig()
 	}
 }
 
 /*
-HTMLTemplateFilesType - This struct holds the individual template filenames for
-each type of resource.
+HTMLConfigType - This struct holds the configuration elements for generating HTML
+output. This is used at the top level of the configuration file as well as in
+each individual service. This means individual services can have a different
+HTML configuration.
+
+Enabled       - Is HTML enabled for this service
+TemplateDir   - The location of the template files relative to the base of the application (prefix)
+TemplatePath  - The full path of the template directory (prefix + TemplateDir)
+TemplateFiles - The HTML template filenames in the template directory for the following services
 */
-type HTMLTemplateFilesType struct {
-	Discovery   string
-	APIRoot     string
-	Collections string
-	Collection  string
-	Objects     string
-	Manifest    string
+type HTMLConfigType struct {
+	Enabled       bool   // User defined in configuration file or set in verifyHTMLConfig()
+	TemplateDir   string // User defined in configuration file or set in verifyHTMLConfig()
+	TemplatePath  string // Set in verifyHTMLConfig()
+	TemplateFiles struct {
+		Discovery   string // User defined in configuration file or set in verifyHTMLConfig()
+		APIRoot     string
+		Collections string
+		Collection  string
+		Objects     string
+		Manifest    string
+	}
 }
 
 // ----------------------------------------------------------------------
@@ -173,10 +190,17 @@ func (c *ServerConfigType) verifyServerConfig() error {
 	var err error
 
 	// --------------------------------------------------
-	// Discovery Server
+	//
+	// Global Configuration
+	//
 	// --------------------------------------------------
 
 	err = c.verifyGlobalConfig()
+	if err != nil {
+		return err
+	}
+
+	err = c.verifyHTMLConfig()
 	if err != nil {
 		return err
 	}
@@ -190,12 +214,6 @@ func (c *ServerConfigType) verifyServerConfig() error {
 		err = c.verifyDiscoveryConfig()
 	} else {
 		log.Infoln("CONFIG: The Discovery Server is not enabled in the configuration file")
-	}
-
-	if c.DiscoveryServer.HTMLEnabled == true {
-		err = c.verifyDiscoveryHTMLConfig()
-	} else {
-		log.Infoln("CONFIG: The Discovery Server is not configured to use HTML output")
 	}
 
 	if err != nil {
@@ -213,14 +231,18 @@ func (c *ServerConfigType) verifyServerConfig() error {
 		log.Infoln("CONFIG: The API Root Server is not enabled in the configuration file")
 	}
 
-	if c.APIRootServer.HTMLEnabled == true {
-		err = c.verifyAPIRootHTMLConfig()
-	} else {
-		log.Infoln("CONFIG: The API Root Server is not configured to use HTML output")
-	}
-
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (config *ServerConfigType) exists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		return false
+	}
+	return true
 }

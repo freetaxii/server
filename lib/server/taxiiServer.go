@@ -21,12 +21,12 @@ import (
 TAXIIServerHandler - This method takes in two parameters and handles all
 requests for TAXII media type responses
 */
-func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var httpHeaderAccept string
 	var taxiiHeader headers.HttpHeaderType
 
-	log.Infoln("INFO: Found Request on the", ezt.Type, "Server Handler from", r.RemoteAddr)
+	log.Infoln("INFO: Found", s.Type, "request from", r.RemoteAddr, "at", r.RequestURI)
 
 	// If trace is enabled in the logger, than lets decode the HTTP Request and
 	// dump it to the logs
@@ -52,16 +52,16 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
-		j.Encode(ezt.Resource)
+		j.Encode(s.Resource)
 
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
 		j.SetIndent("", "    ")
-		j.Encode(ezt.Resource)
+		j.Encode(s.Resource)
 
-	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
+	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		w.WriteHeader(http.StatusOK)
@@ -69,13 +69,12 @@ func (ezt *TAXIIServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		htmlFullPath := ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
-		htmlTemplateResource := template.Must(template.ParseFiles(htmlFullPath))
-		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+		htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
+		htmlTemplateResource.Execute(w, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
 
-	log.Infoln("INFO: Sending", ezt.Type, "Response to", r.RemoteAddr)
+	log.Infoln("INFO: Sending", s.Type, "response to", r.RemoteAddr)
 }

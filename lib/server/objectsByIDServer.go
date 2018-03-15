@@ -23,14 +23,14 @@ import (
 ObjectsByIDServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
-func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
 	var q resources.CollectionQueryType
 	var addedFirst, addedLast string
 
-	log.Infoln("INFO: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", ezt.CollectionID)
+	log.Infoln("INFO: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than lets decode the HTTP Request and
 	// dump it to the logs
@@ -66,13 +66,13 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 	urlParameters := r.URL.Query()
 	log.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
-	q.CollectionID = ezt.CollectionID
+	q.CollectionID = s.CollectionID
 	errURLParameters := q.ProcessURLParameters(urlParameters)
 	if errURLParameters != nil {
 		log.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
 
-	results, err := ezt.DS.GetBundle(q)
+	results, err := s.DS.GetBundle(q)
 
 	if err != nil {
 		taxiiError := resources.NewError()
@@ -81,12 +81,12 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 		desc := "The requested had the following problem: " + err.Error()
 		taxiiError.SetDescription(desc)
 		taxiiError.SetHTTPStatus("404")
-		ezt.Resource = taxiiError
+		s.Resource = taxiiError
 		objectNotFound = true
 		log.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
 
 	} else {
-		ezt.Resource = results.BundleData
+		s.Resource = results.BundleData
 		addedFirst = results.DateAddedFirst
 		addedLast = results.DateAddedLast
 		log.Infoln("INFO: Sending response to", r.RemoteAddr)
@@ -116,7 +116,7 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
-		j.Encode(ezt.Resource)
+		j.Encode(s.Resource)
 
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
 		mediaType = "application/json; charset=utf-8"
@@ -128,9 +128,9 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 			w.WriteHeader(http.StatusOK)
 		}
 		j.SetIndent("", "    ")
-		j.Encode(ezt.Resource)
+		j.Encode(s.Resource)
 
-	} else if ezt.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
+	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
 		mediaType = "text/html; charset=utf-8"
 		w.Header().Set("Content-Type", mediaType)
 		if objectNotFound == true {
@@ -140,22 +140,22 @@ func (ezt *STIXServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter
 		}
 
 		// I needed to convert this to actual JSON since if I just used
-		// ezt.Resource like in other handlers I would get the string output of
+		// s.Resource like in other handlers I would get the string output of
 		// a Golang struct which is not the same. The reason it works else where
 		// is I am not printing the whole object, but rather, referencing the
 		// parts as I need them.
-		jsondata, err := json.MarshalIndent(ezt.Resource, "", "    ")
+		jsondata, err := json.MarshalIndent(s.Resource, "", "    ")
 		if err != nil {
 			log.Fatal("Unable to create JSON Message")
 		}
-		ezt.Resource = string(jsondata)
+		s.Resource = string(jsondata)
 
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		htmlFullPath := ezt.HTMLTemplatePath + "/" + ezt.HTMLTemplateFile
+		htmlFullPath := s.HTMLTemplatePath + "/" + s.HTMLTemplateFile
 		htmlTemplateResource := template.Must(template.ParseFiles(htmlFullPath))
-		htmlTemplateResource.ExecuteTemplate(w, ezt.HTMLTemplateFile, ezt)
+		htmlTemplateResource.ExecuteTemplate(w, s.HTMLTemplateFile, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)

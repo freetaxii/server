@@ -1,20 +1,121 @@
 // Copyright 2017 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
-// that can be found in the LICENSE file in the root of the source
-// tree.
+// that can be found in the LICENSE file in the root of the source tree.
 
 package config
 
 import (
 	"errors"
-	"log"
-	"os"
+	"strings"
+
+	"github.com/gologme/log"
 )
 
 // ----------------------------------------
 // Verify Discovery HTML Files
 // ----------------------------------------
+
+/*
+verifyHTMLConfig - This method will verify the configuration settings for the
+system level HTML configuration options.
+*/
+func (config *ServerConfigType) verifyHTMLConfig() error {
+
+	// If HTML output is turned off globally, then there no need to check the
+	// configuration and verify everything is present and valid.
+	if config.HTML.Enabled == false {
+		log.Infoln("CONFIG: The global configuration is not configured to use HTML output")
+		return nil
+	}
+
+	var problemsFound = 0
+
+	// ----------------------------------------------------------------------
+	//
+	// Verify TemplateDir is defined and exists on the file system
+	// If everything is okay, then lets assign the full path to the
+	// TemplatePath directive.
+	//
+	// ----------------------------------------------------------------------
+
+	if config.HTML.TemplateDir == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing from the html.templatedir directive in the configuration file")
+		problemsFound++
+	} else {
+		filepath := config.Global.Prefix + config.HTML.TemplateDir
+
+		if !strings.HasSuffix(config.HTML.TemplateDir, "/") {
+			log.Println("CONFIG: The html.templatedir directive is missing the ending slash '/'")
+			problemsFound++
+		}
+
+		if !config.exists(filepath) {
+			log.Infoln("CONFIG: The HTML template path", filepath, "can not be opened")
+			problemsFound++
+		} else {
+			// Prefix + Template Directory
+			config.HTML.TemplatePath = filepath
+		}
+	}
+
+	// ----------------------------------------------------------------------
+	//
+	// Verify actual template files are defined and exist on the file system
+	//
+	// ----------------------------------------------------------------------
+
+	if config.HTML.TemplateFiles.Discovery == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing the html.templatefiles.discovery directive in the configuration file")
+		problemsFound++
+	} else {
+		// Lets check to make sure the file exists.
+		problemsFound += config.verifyHTMLTemplateFileExists(config.HTML.TemplateFiles.Discovery)
+	}
+
+	if config.HTML.TemplateFiles.APIRoot == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing the html.templatefiles.apiroot directive in the configuration file")
+		problemsFound++
+	} else {
+		// Lets check to make sure the file exists.
+		problemsFound += config.verifyHTMLTemplateFileExists(config.HTML.TemplateFiles.APIRoot)
+	}
+
+	if config.HTML.TemplateFiles.Collections == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing the html.templatefiles.collections directive in the configuration file")
+		problemsFound++
+	} else {
+		// Lets check to make sure the file exists.
+		problemsFound += config.verifyHTMLTemplateFileExists(config.HTML.TemplateFiles.Collections)
+	}
+
+	if config.HTML.TemplateFiles.Collection == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing the html.templatefiles.collection directive in the configuration file")
+		problemsFound++
+	} else {
+		// Lets check to make sure the file exists.
+		problemsFound += config.verifyHTMLTemplateFileExists(config.HTML.TemplateFiles.Collection)
+	}
+
+	if config.HTML.TemplateFiles.Objects == "" {
+		log.Infoln("CONFIG: The HTML configuration is missing the html.templatefiles.objects directive in the configuration file")
+		problemsFound++
+	} else {
+		// Lets check to make sure the file exists.
+		problemsFound += config.verifyHTMLTemplateFileExists(config.HTML.TemplateFiles.Objects)
+	}
+
+	// ----------------------------------------------------------------------
+	//
+	// Return errors if there are any
+	//
+	// ----------------------------------------------------------------------
+
+	if problemsFound > 0 {
+		log.Println("ERROR: The system level HTML configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
+	}
+}
 
 // verifyDiscoveryHTMLConfig - This method will check each of the defined HTML
 // template files and make sure they exist. It will also check to see if any of
@@ -23,37 +124,35 @@ import (
 // This method will only be called from VerifyServerConfig() if
 // DiscoveryServer.HTMLEnabled == true
 func (config *ServerConfigType) verifyDiscoveryHTMLConfig() error {
+
+	// If HTML output is not enabled globally, then skip these tests
+	if config.HTML.Enabled == false {
+		return nil
+	}
+
 	var problemsFound = 0
 
-	if config.DiscoveryServer.HTMLBranding.Discovery == "" {
-		log.Println("CONFIG: The Discovery Server is missing the htmlbranding.discovery directive in the configuration file")
-		problemsFound++
-	} else {
-		// Lets check to make sure the file exists.
-		problemsFound += config.verifyHTMLFileExists(config.DiscoveryServer.HTMLBranding.Discovery)
+	// Check to see if any of the HTML configurations were redefined at each service level
+	for i, s := range config.DiscoveryServer.Services {
+		// Set the HTMLEnabled to true at the service level since it is true
+		// at the parent level. We do not allow this to be redefined in the
+		// configuration file.
+		config.DiscoveryServer.Services[i].HTMLEnabled = true
 
-		// Need to check to see if the HTML resource file was redefined at each service level
-		for i, s := range config.DiscoveryServer.Services {
-			// Set the HTMLEnabled to true at the service level since it is true
-			// at the parent level. We do not allow this to be redefined in the
-			// configuration file.
-			config.DiscoveryServer.Services[i].HTMLEnabled = true
+		// Set the HTMLTemplatePath to the prefix + HTMLTemplateDir from the
+		// global config. This will make it easier for us to use later on.
+		config.DiscoveryServer.Services[i].HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
 
-			// Set the HTMLTemplatePath to the prefix + HTMLTemplateDir from the
-			// global config. This will make it easier for us to use later on.
-			config.DiscoveryServer.Services[i].HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
-
-			// If it is not defined at the service level, lets copy from the
-			// parent, this will make it easier to work with later on.
-			if s.HTMLBranding.Discovery == "" {
-				config.DiscoveryServer.Services[i].HTMLBranding.Discovery = config.DiscoveryServer.HTMLBranding.Discovery
-			} else {
-				// Only test if the file was redefined at this level. No need to
-				// retest the inherited filename since it was already checked
-				problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Discovery)
-			}
-		} // End for loop
-	}
+		// If it is not defined at the service level, lets copy from the
+		// parent, this will make it easier to work with later on.
+		if s.HTMLBranding.Discovery == "" {
+			config.DiscoveryServer.Services[i].HTMLBranding.Discovery = config.DiscoveryServer.HTMLBranding.Discovery
+		} else {
+			// Only test if the file was redefined at this level. No need to
+			// retest the inherited filename since it was already checked
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.Discovery)
+		}
+	} // End for loop
 
 	// Return errors if there were any
 	if problemsFound > 0 {
@@ -75,39 +174,11 @@ func (config *ServerConfigType) verifyDiscoveryHTMLConfig() error {
 func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 	var problemsFound = 0
 
-	if config.APIRootServer.HTMLBranding.APIRoot == "" {
-		log.Println("CONFIG: The API Root Service is missing the 'apiroot' directive from the `htmlbranding.apiroot` directive in the configuration file")
-		problemsFound++
-	} else {
-		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.APIRoot)
-	}
-
-	if config.APIRootServer.HTMLBranding.Collections == "" {
-		log.Println("CONFIG: The API Root Service is missing the 'collections' directive from the `htmlbranding.collections` directive in the configuration file")
-		problemsFound++
-	} else {
-		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Collections)
-	}
-
-	if config.APIRootServer.HTMLBranding.Collection == "" {
-		log.Println("CONFIG: The API Root Service is missing the 'collection' directive from the `htmlbranding.collection` directive in the configuration file")
-		problemsFound++
-	} else {
-		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Collection)
-	}
-
-	if config.APIRootServer.HTMLBranding.Objects == "" {
-		log.Println("CONFIG: The API Root Service is missing the 'objects' directive from the `htmlbranding.objects` directive in the configuration file")
-		problemsFound++
-	} else {
-		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Objects)
-	}
-
 	if config.APIRootServer.HTMLBranding.Manifest == "" {
-		log.Println("CONFIG: The API Root Service is missing the 'manifest' directive from the `htmlbranding.objects` directive in the configuration file")
+		log.Infoln("CONFIG: The API Root Service is missing the 'manifest' directive from the `htmlbranding.objects` directive in the configuration file")
 		problemsFound++
 	} else {
-		problemsFound += config.verifyHTMLFileExists(config.APIRootServer.HTMLBranding.Manifest)
+		problemsFound += config.verifyHTMLTemplateFileExists(config.APIRootServer.HTMLBranding.Manifest)
 	}
 
 	// Lets check to see if any of the HTML template files have been redefined at the service level
@@ -129,7 +200,7 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		} else {
 			// Only test if the file was redefined at config level. No need to
 			// retest the inherited filename since it was already checked
-			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.APIRoot)
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.APIRoot)
 		}
 
 		// If it is not defined at the service level, lets copy in the parent,
@@ -139,7 +210,7 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		} else {
 			// Only test if the file was redefined at config level. No need to
 			// retest the inherited filename since it was already checked
-			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Collections)
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.Collections)
 		}
 
 		// If it is not defined at the service level, lets copy in the parent,
@@ -149,7 +220,7 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		} else {
 			// Only test if the file was redefined at this level. No need to
 			// retest the inherited filename since it was already checked
-			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Collection)
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.Collection)
 		}
 
 		// If it is not defined at the service level, lets copy in the parent,
@@ -159,7 +230,7 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		} else {
 			// Only test if the file was redefined at this level. No need to
 			// retest the inherited filename since it was already checked
-			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Objects)
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.Objects)
 		}
 
 		// If it is not defined at the service level, lets copy in the parent,
@@ -169,7 +240,7 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 		} else {
 			// Only test if the file was redefined at this level. No need to
 			// retest the inherited filename since it was already checked
-			problemsFound += config.verifyHTMLFileExists(s.HTMLBranding.Manifest)
+			problemsFound += config.verifyHTMLTemplateFileExists(s.HTMLBranding.Manifest)
 		}
 
 	} // End for loop
@@ -183,13 +254,14 @@ func (config *ServerConfigType) verifyAPIRootHTMLConfig() error {
 }
 
 // -----------------------------------------------------------------------------
-// verifyHTMLFileExists - This method will take in a string representing the
+// verifyHTMLTemplateFileExists - This method will take in a string representing the
 // filename of the HTML resource file and check to make sure that HTML resource
 // file is found on the filesystem
-func (config *ServerConfigType) verifyHTMLFileExists(filename string) int {
+func (config *ServerConfigType) verifyHTMLTemplateFileExists(filename string) int {
 	filepath := config.Global.Prefix + config.Global.HTMLTemplateDir + filename
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
-		log.Println("CONFIG: The HTML template file", filename, "can not be opened:", err)
+
+	if !config.exists(filepath) {
+		log.Infoln("CONFIG: The HTML template file", filename, "can not be opened")
 		return 1
 	}
 	return 0
