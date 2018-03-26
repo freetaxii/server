@@ -17,6 +17,74 @@ import (
 )
 
 /*
+JSONbool - A boolean type for use with JSON that will track if a value is
+undefined or set to null.
+*/
+type JSONbool struct {
+	Value bool
+	Valid bool
+	Set   bool
+}
+
+/*
+JSONstring - A string type for use with JSON that will track if a value is
+undefined or set to null.
+*/
+type JSONstring struct {
+	Value string
+	Valid bool
+	Set   bool
+}
+
+/*
+UnmarshalJSON - This method will handle the unmarshalling of content for the
+JSONbool type
+*/
+func (b *JSONbool) UnmarshalJSON(data []byte) error {
+	// If this method was called, the value was set.
+	b.Set = true
+
+	if string(data) == "null" {
+		// The key was set to null
+		b.Valid = false
+		return nil
+	}
+
+	// The key isn't set to null
+	var temp bool
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	b.Value = temp
+	b.Valid = true
+	return nil
+}
+
+/*
+UnmarshalJSON - This method will handle the unmarshalling of content for the
+JSONbool type
+*/
+func (s *JSONstring) UnmarshalJSON(data []byte) error {
+	// If this method was called, the value was set.
+	s.Set = true
+
+	if string(data) == "null" {
+		// The key was set to null
+		s.Valid = false
+		return nil
+	}
+
+	// The key isn't set to null
+	var temp bool
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	s.Value = temp
+	s.Valid = true
+	return nil
+}
+
+/*
 ServerConfigType - This type defines the configuration for the entire server.
 */
 type ServerConfigType struct {
@@ -106,16 +174,16 @@ TemplatePath  - The full path of the template directory (prefix + TemplateDir)
 TemplateFiles - The HTML template filenames in the template directory for the following services
 */
 type HTMLConfigType struct {
-	Enabled       bool   // User defined in configuration file or set in verifyHTMLConfig()
-	TemplateDir   string // User defined in configuration file or set in verifyHTMLConfig()
-	TemplatePath  string // Set in verifyHTMLConfig()
+	Enabled       JSONbool   // User defined in configuration file or set in verifyHTMLConfig()
+	TemplateDir   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
+	TemplatePath  JSONstring // Set in verifyHTMLConfig()
 	TemplateFiles struct {
-		Discovery   string // User defined in configuration file or set in verifyHTMLConfig()
-		APIRoot     string
-		Collections string
-		Collection  string
-		Objects     string
-		Manifest    string
+		Discovery   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
+		APIRoot     JSONstring
+		Collections JSONstring
+		Collection  JSONstring
+		Objects     JSONstring
+		Manifest    JSONstring
 	}
 }
 
