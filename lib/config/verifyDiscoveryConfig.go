@@ -6,13 +6,12 @@
 package config
 
 import (
-	"errors"
 	"log"
 )
 
 // verifyDisocveryConfig - This method will verify all of the configuration
 // directives for the TAXII Discovery Service
-func (config *ServerConfigType) verifyDiscoveryConfig() error {
+func (config *ServerConfigType) verifyDiscoveryConfig() int {
 	var problemsFound = 0
 
 	// This variable will track if any of the actual discovery services are
@@ -52,7 +51,6 @@ func (config *ServerConfigType) verifyDiscoveryConfig() error {
 	// Return errors if there were any
 	if problemsFound > 0 {
 		log.Println("ERROR: The Discovery configuration has", problemsFound, "error(s)")
-		return errors.New("ERROR: Configuration errors found")
 	}
-	return nil
+	return problemsFound
 }

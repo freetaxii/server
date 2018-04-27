@@ -36,41 +36,47 @@ type ServerHandlerType struct {
 // be in a consistent and correct from.
 
 /*
-NewDiscoveryHandler - This method will copy some of the configuration elements
+NewDiscoveryHandler - This function will copy some of the configuration elements
 in to the server handler type.
 */
-func NewDiscoveryHandler(cfg config.DiscoveryServiceType) (ServerHandlerType, error) {
+func NewDiscoveryHandler(c config.DiscoveryServiceType) (ServerHandlerType, error) {
 	var s ServerHandlerType
 	s.Type = "Discovery"
-	s.ResourcePath = cfg.ResourcePath
-	s.HTMLEnabled = cfg.HTML.Enabled
-	s.HTMLTemplate = cfg.HTML.TemplatePath + "/" + cfg.HTML.TemplateFiles.Discovery
+	s.ResourcePath = c.ResourcePath
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Discovery.Value
 	return s, nil
 }
 
-// NewAPIRootHandler - This method will make a copy of the elements found in
+// NewAPIRootHandler - This function will make a copy of the elements found in
 // the main configuration for this API Root Service and copy them here.
-func (s *ServerHandlerType) NewAPIRootHandler(c config.APIRootServiceType) {
+func NewAPIRootHandler(c config.APIRootServiceType) (ServerHandlerType, error) {
+	var s ServerHandlerType
 	s.Type = "API-Root"
 	s.ResourcePath = c.ResourcePath
-	s.HTMLEnabled = cfg.HTML.Enabled
-	s.HTMLTemplate = cfg.HTML.TemplatePath + "/" + cfg.HTML.TemplateFiles.APIRoot
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.APIRoot.Value
+	return s, nil
 }
 
-// NewCollectionsHandler - This method will make a copy of the elements found in
+// NewCollectionsHandler - This function will make a copy of the elements found in
 // the main configuration for this Collections Service and copy them here.
-func (s *ServerHandlerType) NewCollectionsHandler(c config.APIRootServiceType) {
+func NewCollectionsHandler(c config.APIRootServiceType) (ServerHandlerType, error) {
+	var s ServerHandlerType
 	s.Type = "Collections"
 	s.ResourcePath = c.Collections.ResourcePath
-	s.HTMLEnabled = cfg.HTML.Enabled
-	s.HTMLTemplate = cfg.HTML.TemplatePath + "/" + cfg.HTML.TemplateFiles.Collections
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Collections.Value
+	return s, nil
 }
 
-// NewCollectionHandler - This method will make a copy of the elements found in
+// NewCollectionHandler - This function will make a copy of the elements found in
 // the main configuration for this Collection Service and copy them here.
-func (s *ServerHandlerType) NewCollectionHandler(c config.APIRootServiceType, path string) {
+func NewCollectionHandler(c config.APIRootServiceType, path string) (ServerHandlerType, error) {
+	var s ServerHandlerType
 	s.Type = "Collection"
 	s.ResourcePath = path
-	s.HTMLEnabled = cfg.HTML.Enabled
-	s.HTMLTemplate = cfg.HTML.TemplatePath + "/" + cfg.HTML.TemplateFiles.Collection
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Collection.Value
+	return s, nil
 }

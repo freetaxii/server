@@ -25,6 +25,7 @@ _testmain.go
 #*
 *~
 *.sublime-workspace
+*.sublime-project
 *.key
 *.crt
 .DS_Store

@@ -8,7 +8,6 @@ package server
 
 import (
 	"encoding/json"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -18,8 +17,7 @@ import (
 )
 
 /*
-TAXIIServerHandler - This method takes in two parameters and handles all
-requests for TAXII media type responses
+TAXIIServerHandler - This method handles all requests for TAXII media type responses
 */
 func (s *ServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
 	var mediaType string
@@ -69,8 +67,8 @@ func (s *ServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Re
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
-		htmlTemplateResource.Execute(w, s)
+		// htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
+		// htmlTemplateResource.Execute(w, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)

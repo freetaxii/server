@@ -8,7 +8,6 @@ package server
 
 import (
 	"encoding/json"
-	"html/template"
 	"net/http"
 	"strings"
 
@@ -153,9 +152,8 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		htmlFullPath := s.HTMLTemplatePath + "/" + s.HTMLTemplateFile
-		htmlTemplateResource := template.Must(template.ParseFiles(htmlFullPath))
-		htmlTemplateResource.ExecuteTemplate(w, s.HTMLTemplateFile, s)
+		// htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
+		// htmlTemplateResource.Execute(w, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)

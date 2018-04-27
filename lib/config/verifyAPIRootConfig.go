@@ -6,13 +6,12 @@
 package config
 
 import (
-	"errors"
 	"log"
 )
 
 // verifyDisocveryConfig - This method will verify all of the configuration
 // directives for the TAXII Discovery Service
-func (config *ServerConfigType) verifyAPIRootConfig() error {
+func (config *ServerConfigType) verifyAPIRootConfig() int {
 	var problemsFound = 0
 
 	// This variable will track if any of the actual api root services are
@@ -55,7 +54,6 @@ func (config *ServerConfigType) verifyAPIRootConfig() error {
 	// Return errors if there were any
 	if problemsFound > 0 {
 		log.Println("ERROR: The API Root configuration has", problemsFound, "error(s)")
-		return errors.New("ERROR: Configuration errors found")
 	}
-	return nil
+	return problemsFound
 }

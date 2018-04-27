@@ -8,6 +8,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -15,74 +16,6 @@ import (
 	"github.com/gologme/log"
 	"github.com/gorilla/mux"
 )
-
-/*
-JSONbool - A boolean type for use with JSON that will track if a value is
-undefined or set to null.
-*/
-type JSONbool struct {
-	Value bool
-	Valid bool
-	Set   bool
-}
-
-/*
-JSONstring - A string type for use with JSON that will track if a value is
-undefined or set to null.
-*/
-type JSONstring struct {
-	Value string
-	Valid bool
-	Set   bool
-}
-
-/*
-UnmarshalJSON - This method will handle the unmarshalling of content for the
-JSONbool type
-*/
-func (b *JSONbool) UnmarshalJSON(data []byte) error {
-	// If this method was called, the value was set.
-	b.Set = true
-
-	if string(data) == "null" {
-		// The key was set to null
-		b.Valid = false
-		return nil
-	}
-
-	// The key isn't set to null
-	var temp bool
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-	b.Value = temp
-	b.Valid = true
-	return nil
-}
-
-/*
-UnmarshalJSON - This method will handle the unmarshalling of content for the
-JSONbool type
-*/
-func (s *JSONstring) UnmarshalJSON(data []byte) error {
-	// If this method was called, the value was set.
-	s.Set = true
-
-	if string(data) == "null" {
-		// The key was set to null
-		s.Valid = false
-		return nil
-	}
-
-	// The key isn't set to null
-	var temp bool
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-	s.Value = temp
-	s.Valid = true
-	return nil
-}
 
 /*
 ServerConfigType - This type defines the configuration for the entire server.
@@ -132,8 +65,8 @@ ResourcePath  - The actual full URL path for the resource
 HTML          - The configuration for generating HTML output
 */
 type BaseServiceType struct {
-	Name         string         // User defined in configuration file
 	Enabled      bool           // User defined in configuration file
+	Name         string         // User defined in configuration file
 	ResourceID   string         // User defined in configuration file
 	ResourcePath string         // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
 	HTML         HTMLConfigType // User defined in configuration file or set in the verify scripts.
@@ -156,8 +89,8 @@ will just get overwritten in code.
 type APIRootServiceType struct {
 	BaseServiceType
 	Collections struct {
-		ResourceIDs  []string // User defined in configuration file. A list of collections that are members of this API Root
 		Enabled      bool     // User defined in configuration file
+		ResourceIDs  []string // User defined in configuration file. A list of collections that are members of this API Root
 		ResourcePath string   // Set in verifyAPIRootConfig()
 	}
 }
@@ -166,7 +99,11 @@ type APIRootServiceType struct {
 HTMLConfigType - This struct holds the configuration elements for generating HTML
 output. This is used at the top level of the configuration file as well as in
 each individual service. This means individual services can have a different
-HTML configuration.
+HTML configuration. I needed to setup my own types for JSON boolean and strings
+since leaving it blank at a child level, would have equaled "false" or "". This
+would have been equivalent to turning it off, which is not what is wanted. Leaving
+it blank would mean to inherit from the parent. But since Go is a strictly typed
+language, you need to create a type that can handle that case.
 
 Enabled       - Is HTML enabled for this service
 TemplateDir   - The location of the template files relative to the base of the application (prefix)
@@ -176,7 +113,7 @@ TemplateFiles - The HTML template filenames in the template directory for the fo
 type HTMLConfigType struct {
 	Enabled       JSONbool   // User defined in configuration file or set in verifyHTMLConfig()
 	TemplateDir   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
-	TemplatePath  JSONstring // Set in verifyHTMLConfig()
+	TemplatePath  string     // Set in verifyHTMLConfig(), this is the full path to template files
 	TemplateFiles struct {
 		Discovery   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
 		APIRoot     JSONstring
@@ -244,7 +181,7 @@ func (c *ServerConfigType) loadServerConfig(filename string) error {
 		return fmt.Errorf("error parsing the configuration file: %v", err2)
 	}
 
-	log.Debugln("DEBUG LoadServerConfig(): System Configuration Dump")
+	log.Debugln("DEBUG loadServerConfig(): System Configuration Dump")
 	log.Debugf("%+v\n", c)
 	return nil
 }
@@ -255,57 +192,67 @@ what it needs.
 TODO finish fleshing this out
 */
 func (c *ServerConfigType) verifyServerConfig() error {
-	var err error
+	var problemsFound = 0
 
 	// --------------------------------------------------
-	//
 	// Global Configuration
-	//
 	// --------------------------------------------------
+	problemsFound += c.verifyGlobalConfig()
 
-	err = c.verifyGlobalConfig()
-	if err != nil {
-		return err
-	}
-
-	err = c.verifyHTMLConfig()
-	if err != nil {
-		return err
+	// --------------------------------------------------
+	// Global HTML Configuration
+	// --------------------------------------------------
+	// If HTML output is turned off globally, then there no need to check the
+	// configuration and verify everything is present and valid.
+	if c.HTML.Enabled.Value == true {
+		problemsFound += c.verifyGlobalHTMLConfig()
+	} else {
+		log.Infoln("CONFIG: HTML output is disabled in the global configuration")
 	}
 
 	// --------------------------------------------------
 	// Discovery Server
 	// --------------------------------------------------
-
 	// Only verify the Discovery server configuration if it is enabled.
 	if c.DiscoveryServer.Enabled == true {
-		err = c.verifyDiscoveryConfig()
+		problemsFound += c.verifyDiscoveryConfig()
 	} else {
 		log.Infoln("CONFIG: The Discovery Server is not enabled in the configuration file")
 	}
 
-	if err != nil {
-		return err
+	if c.DiscoveryServer.Enabled == true && c.HTML.Enabled.Value == true {
+		problemsFound += c.verifyDiscoveryHTMLConfig()
+	} else {
+		log.Infoln("CONFIG: The Discovery Server is enabled in the configuration file but HTML output is not")
 	}
 
 	// --------------------------------------------------
 	// API Root Server
 	// --------------------------------------------------
-
 	// Only verify the API Root server configuration if it is enabled.
 	if c.APIRootServer.Enabled == true {
-		err = c.verifyAPIRootConfig()
+		problemsFound += c.verifyAPIRootConfig()
 	} else {
 		log.Infoln("CONFIG: The API Root Server is not enabled in the configuration file")
 	}
 
-	if err != nil {
-		return err
+	if c.APIRootServer.Enabled == true && c.HTML.Enabled.Value == true {
+		problemsFound += c.verifyAPIRootHTMLConfig()
+	} else {
+		log.Infoln("CONFIG: The API Root Server is enabled in the configuration file but HTML output is not")
+	}
+
+	if problemsFound > 0 {
+		log.Println("ERROR: The configuration has", problemsFound, "error(s)")
+		return errors.New("ERROR: Configuration errors found")
 	}
 	return nil
 }
 
-func (config *ServerConfigType) exists(name string) bool {
+/*
+exists - This method checks to see if the filename exists on the file system
+*/
+func (c *ServerConfigType) exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false

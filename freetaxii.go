@@ -143,11 +143,9 @@ func main() {
 		for _, api := range config.APIRootServer.Services {
 			if api.Enabled == true {
 
-				var ts server.ServerHandlerType
-				ts.NewAPIRootHandler(api)
-				ts.Resource = config.APIRootResources[api.ResourceID]
-
 				log.Infoln("Starting TAXII API Root service at:", api.ResourcePath)
+				ts, _ := server.NewAPIRootHandler(api)
+				ts.Resource = config.APIRootResources[api.ResourceID]
 				router.HandleFunc(ts.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
 				serviceCounter++
 
@@ -163,8 +161,7 @@ func main() {
 
 				if api.Collections.Enabled == true {
 
-					var collectionsSrv server.ServerHandlerType
-					collectionsSrv.NewCollectionsHandler(api)
+					collectionsSrv, _ := server.NewCollectionsHandler(api)
 					collections := resources.NewCollections()
 
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
@@ -198,8 +195,7 @@ func main() {
 
 						// Make a copy of just the elements that we need to process the request and nothing more.
 						// This is done to prevent sending the entire server config in to each handler
-						var collectionSrv server.ServerHandlerType
-						collectionSrv.NewCollectionHandler(api, resourceCollectionIDPath)
+						collectionSrv, _ := server.NewCollectionHandler(api, resourceCollectionIDPath)
 						collectionSrv.Resource = config.CollectionResources[c]
 
 						log.Infoln("Starting TAXII Collection service of:", resourceCollectionIDPath)
@@ -218,9 +214,8 @@ func main() {
 						// This is done to prevent sending the entire server config in to each handler
 						var objectsSrv server.ServerHandlerType
 						objectsSrv.ResourcePath = resourceCollectionIDPath + "objects/"
-						objectsSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
-						objectsSrv.HTMLTemplateFile = api.HTMLBranding.Objects
-						objectsSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
+						objectsSrv.HTMLEnabled = api.HTML.Enabled.Value
+						objectsSrv.HTMLTemplate = api.HTML.TemplatePath + api.HTML.TemplateFiles.Objects.Value
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
 						objectsSrv.RangeMax = config.Global.MaxNumberOfObjects
 						objectsSrv.DS = ds
@@ -245,9 +240,8 @@ func main() {
 						// This is done to prevent sending the entire server config in to each handler
 						var manifestSrv server.ServerHandlerType
 						manifestSrv.ResourcePath = resourceCollectionIDPath + "manifest/"
-						manifestSrv.HTMLEnabled = config.APIRootServer.HTMLEnabled
-						manifestSrv.HTMLTemplateFile = api.HTMLBranding.Manifest
-						manifestSrv.HTMLTemplatePath = config.Global.Prefix + config.Global.HTMLTemplateDir
+						manifestSrv.HTMLEnabled = api.HTML.Enabled.Value
+						manifestSrv.HTMLTemplate = api.HTML.TemplatePath + api.HTML.TemplateFiles.Manifest.Value
 						manifestSrv.CollectionID = config.CollectionResources[c].ID
 						manifestSrv.RangeMax = config.Global.MaxNumberOfObjects
 						manifestSrv.DS = ds

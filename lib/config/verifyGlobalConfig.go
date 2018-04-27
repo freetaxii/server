@@ -6,105 +6,108 @@
 package config
 
 import (
-	"errors"
-	"log"
 	"strings"
+
+	"github.com/gologme/log"
 )
 
-// verifyGlobalDirectives - This method will verify that each required
-// configuration directive is present. If an error is found it will be returned.
-func (config *ServerConfigType) verifyGlobalConfig() error {
+/*
+verifyGlobalDirectives - This method will verify that each required
+configuration directive is present and will return the number of errors found.
+*/
+func (c *ServerConfigType) verifyGlobalConfig() int {
 	var problemsFound = 0
 
 	// Protocol Directive
-	if config.Global.Protocol != "https" && config.Global.Protocol != "http" {
+	if c.Global.Protocol != "https" && c.Global.Protocol != "http" {
 		log.Infoln("CONFIG: The global.protocol directive must be either https or http")
 		problemsFound++
 	}
 
 	// TLS Files - only needed if https is defined
-	if config.Global.Protocol == "https" {
-		problemsFound += config.verifyTLSConfig()
+	if c.Global.Protocol == "https" {
+		problemsFound += c.verifyTLSConfig()
 	}
 
 	// Listen Directive
-	if config.Global.Listen == "" {
+	if c.Global.Listen == "" {
 		log.Infoln("CONFIG: The global.listen directive is missing from the configuration file")
 		problemsFound++
 	}
 
 	// Prefix Directive
-	if config.Global.Prefix == "" {
+	if c.Global.Prefix == "" {
 		log.Infoln("CONFIG: The global.prefix directive is missing from the configuration file")
 		problemsFound++
 	} else {
-		if !strings.HasSuffix(config.Global.Prefix, "/") {
+		if !strings.HasSuffix(c.Global.Prefix, "/") {
 			log.Infoln("CONFIG: The global.prefix directive is missing the ending slash '/'")
 			problemsFound++
 		}
 	}
 
 	// Database Configuration Directive
-	if config.Global.DbConfig == true && config.Global.DbFile == "" {
+	if c.Global.DbConfig == true && c.Global.DbFile == "" {
 		log.Infoln("CONFIG: The global.dbconfig directive is set to true, however, the global.dbfile directive is missing from the configuration file")
 		problemsFound++
 	}
 
 	// Logging File
-	if config.Logging.Enabled == true && config.Logging.LogFile == "" {
+	if c.Logging.Enabled == true && c.Logging.LogFile == "" {
 		log.Infoln("CONFIG: The logging.logfile directive is missing from the configuration file")
 		problemsFound++
 	}
 
-	// Return errors if there were any
+	// ----------------------------------------------------------------------
+	// Return number of errors if there are any
+	// ----------------------------------------------------------------------
 	if problemsFound > 0 {
 		log.Println("ERROR: The Global configuration has", problemsFound, "error(s)")
-		return errors.New("ERROR: Configuration errors found")
 	}
-	return nil
+	return problemsFound
 }
 
 /*
 verifyTLSConfig - This method will verify that each required TLS configuration
 directive are present.
 */
-func (config *ServerConfigType) verifyTLSConfig() int {
+func (c *ServerConfigType) verifyTLSConfig() int {
 	var problemsFound = 0
 
-	if config.Global.TLSDir == "" {
+	if c.Global.TLSDir == "" {
 		log.Infoln("CONFIG: The global.tlsdir directive is missing from the configuration file")
 		problemsFound++
 	} else {
-		filepath := config.Global.Prefix + config.Global.TLSDir
+		filepath := c.Global.Prefix + c.Global.TLSDir
 
-		if !strings.HasSuffix(config.Global.TLSDir, "/") {
+		if !strings.HasSuffix(c.Global.TLSDir, "/") {
 			log.Infoln("CONFIG: The global.tlsdir directive is missing the ending slash '/'")
 			problemsFound++
 		}
 
-		if !config.exists(filepath) {
+		if !c.exists(filepath) {
 			log.Infoln("CONFIG: The TLS path", filepath, "can not be opened")
 			problemsFound++
 		}
 	}
 
-	if config.Global.TLSCrt == "" {
+	if c.Global.TLSCrt == "" {
 		log.Infoln("CONFIG: The global.tlscrt directive is missing from the configuration file")
 		problemsFound++
 	} else {
-		file := config.Global.Prefix + config.Global.TLSDir + config.Global.TLSCrt
-		if !config.exists(file) {
+		file := c.Global.Prefix + c.Global.TLSDir + c.Global.TLSCrt
+		if !c.exists(file) {
 			log.Infoln("CONFIG: The TLS Cert file", file, "can not be opened")
 			problemsFound++
 		}
 	}
 
-	if config.Global.TLSKey == "" {
+	if c.Global.TLSKey == "" {
 		log.Infoln("CONFIG: The global.tlskey directive is missing from the configuration file")
 		problemsFound++
 	} else {
-		file := config.Global.Prefix + config.Global.TLSDir + config.Global.TLSKey
-		if !config.exists(file) {
+		file := c.Global.Prefix + c.Global.TLSDir + c.Global.TLSKey
+		if !c.exists(file) {
 			log.Infoln("CONFIG: The TLS Key file", file, "can not be opened")
 			problemsFound++
 		}
