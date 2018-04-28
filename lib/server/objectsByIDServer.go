@@ -8,6 +8,7 @@ package server
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -23,7 +24,6 @@ ObjectsByIDServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
 func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *http.Request) {
-	var mediaType string
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
 	var q resources.CollectionQueryType
@@ -31,8 +31,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 
 	log.Infoln("INFO: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
-	// If trace is enabled in the logger, than lets decode the HTTP Request and
-	// dump it to the logs
+	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if log.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
@@ -57,9 +56,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 	q.STIXID = append(q.STIXID, urlObjectID)
 
 	// ----------------------------------------------------------------------
-	//
 	// Handle URL Parameters
-	//
 	// ----------------------------------------------------------------------
 
 	urlParameters := r.URL.Query()
@@ -93,9 +90,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 	}
 
 	// --------------------------------------------------
-	//
 	// Encode outgoing response message
-	//
 	// --------------------------------------------------
 
 	// Setup JSON stream encoder
@@ -107,8 +102,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 	w.Header().Add("X-TAXII-Date-Added-Last", addedLast)
 
 	if strings.Contains(httpHeaderAccept, defs.STIX_MEDIA_TYPE) {
-		mediaType = defs.STIX_MEDIA_TYPE + "; " + defs.STIX_VERSION + "; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_STIX)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -118,8 +112,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		j.Encode(s.Resource)
 
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
-		mediaType = "application/json; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -130,8 +123,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		j.Encode(s.Resource)
 
 	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
-		mediaType = "text/html; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_HTML)
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
@@ -152,8 +144,8 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		// htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
-		// htmlTemplateResource.Execute(w, s)
+		htmlTemplateResource := template.Must(template.ParseFiles(s.HTMLTemplate))
+		htmlTemplateResource.Execute(w, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)

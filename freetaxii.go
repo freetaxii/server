@@ -124,7 +124,7 @@ func main() {
 				ts.Resource = config.DiscoveryResources[s.ResourceID]
 
 				log.Infoln("Starting TAXII Discovery service at:", s.ResourcePath)
-				router.HandleFunc(s.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
+				router.HandleFunc(s.ResourcePath, ts.DiscoveryHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
@@ -146,7 +146,7 @@ func main() {
 				log.Infoln("Starting TAXII API Root service at:", api.ResourcePath)
 				ts, _ := server.NewAPIRootHandler(api)
 				ts.Resource = config.APIRootResources[api.ResourceID]
-				router.HandleFunc(ts.ResourcePath, ts.TAXIIServerHandler).Methods("GET")
+				router.HandleFunc(ts.ResourcePath, ts.APIRootHandler).Methods("GET")
 				serviceCounter++
 
 				// --------------------------------------------------
@@ -177,7 +177,7 @@ func main() {
 					collectionsSrv.Resource = collections
 
 					log.Infoln("Starting TAXII Collections service of:", api.Collections.ResourcePath)
-					router.HandleFunc(collectionsSrv.ResourcePath, collectionsSrv.TAXIIServerHandler).Methods("GET")
+					router.HandleFunc(collectionsSrv.ResourcePath, collectionsSrv.CollectionsHandler).Methods("GET")
 
 					// --------------------------------------------------
 					// Start a Collection handler
@@ -203,7 +203,7 @@ func main() {
 						// We do not need to check to see if the collection is enabled
 						// and readable/writable because that was already done
 						// TODO add support for post if the collection is writable
-						router.HandleFunc(collectionSrv.ResourcePath, collectionSrv.TAXIIServerHandler).Methods("GET")
+						router.HandleFunc(collectionSrv.ResourcePath, collectionSrv.CollectionHandler).Methods("GET")
 
 						// --------------------------------------------------
 						// Start an Objects handler
@@ -217,7 +217,6 @@ func main() {
 						objectsSrv.HTMLEnabled = api.HTML.Enabled.Value
 						objectsSrv.HTMLTemplate = api.HTML.TemplatePath + api.HTML.TemplateFiles.Objects.Value
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
-						objectsSrv.RangeMax = config.Global.MaxNumberOfObjects
 						objectsSrv.DS = ds
 
 						// --------------------------------------------------
@@ -243,7 +242,6 @@ func main() {
 						manifestSrv.HTMLEnabled = api.HTML.Enabled.Value
 						manifestSrv.HTMLTemplate = api.HTML.TemplatePath + api.HTML.TemplateFiles.Manifest.Value
 						manifestSrv.CollectionID = config.CollectionResources[c].ID
-						manifestSrv.RangeMax = config.Global.MaxNumberOfObjects
 						manifestSrv.DS = ds
 
 						// --------------------------------------------------

@@ -8,6 +8,7 @@ package server
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -17,26 +18,55 @@ import (
 )
 
 /*
-TAXIIServerHandler - This method handles all requests for TAXII media type responses
+DiscoveryHandler - This method will handle all Discovery requests
 */
-func (s *ServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Request) {
-	var mediaType string
+func (s *ServerHandlerType) DiscoveryHandler(w http.ResponseWriter, r *http.Request) {
+	log.Infoln("INFO: Found Discovery request from", r.RemoteAddr, "at", r.RequestURI)
+	s.baseHandler(w, r)
+}
+
+/*
+APIRootHandler - This method will handle all API Root requests
+*/
+func (s *ServerHandlerType) APIRootHandler(w http.ResponseWriter, r *http.Request) {
+	log.Infoln("INFO: Found API Root request from", r.RemoteAddr, "at", r.RequestURI)
+	s.baseHandler(w, r)
+}
+
+/*
+CollectionsHandler - This method will handle all Collections requests
+*/
+func (s *ServerHandlerType) CollectionsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Infoln("INFO: Found Collections request from", r.RemoteAddr, "at", r.RequestURI)
+	s.baseHandler(w, r)
+}
+
+/*
+CollectionHandler - This method will handle all Collection requests
+*/
+func (s *ServerHandlerType) CollectionHandler(w http.ResponseWriter, r *http.Request) {
+	log.Infoln("INFO: Found Collection request from", r.RemoteAddr, "at", r.RequestURI)
+	s.baseHandler(w, r)
+}
+
+/*
+baseHandler - This method handles all requests for the following TAXII
+media type responses: Discovery, API-Root, Collections, and Collection
+*/
+func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) {
 	var httpHeaderAccept string
 	var taxiiHeader headers.HttpHeaderType
 
-	log.Infoln("INFO: Found", s.Type, "request from", r.RemoteAddr, "at", r.RequestURI)
-
-	// If trace is enabled in the logger, than lets decode the HTTP Request and
-	// dump it to the logs
+	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if log.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
 	// --------------------------------------------------
-	//
 	// Encode outgoing response message
-	//
 	// --------------------------------------------------
+
+	httpHeaderAccept = r.Header.Get("Accept")
 
 	// Setup JSON stream encoder
 	j := json.NewEncoder(w)
@@ -44,35 +74,28 @@ func (s *ServerHandlerType) TAXIIServerHandler(w http.ResponseWriter, r *http.Re
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
-	httpHeaderAccept = r.Header.Get("Accept")
-
 	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		mediaType = defs.TAXII_MEDIA_TYPE + "; " + defs.TAXII_VERSION + "; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII)
 		w.WriteHeader(http.StatusOK)
 		j.Encode(s.Resource)
 
 	} else if strings.Contains(httpHeaderAccept, "application/json") {
-		mediaType = "application/json; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 		w.WriteHeader(http.StatusOK)
 		j.SetIndent("", "    ")
 		j.Encode(s.Resource)
 
 	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
-		mediaType = "text/html; charset=utf-8"
-		w.Header().Set("Content-Type", mediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_HTML)
 		w.WriteHeader(http.StatusOK)
 
 		// ----------------------------------------------------------------------
 		// Setup HTML Template
 		// ----------------------------------------------------------------------
-		// htmlTemplateResource := template.Must(template.Parse(s.HTMLTemplate))
-		// htmlTemplateResource.Execute(w, s)
+		htmlTemplateResource := template.Must(template.ParseFiles(s.HTMLTemplate))
+		htmlTemplateResource.Execute(w, s)
 
 	} else {
 		w.WriteHeader(http.StatusUnsupportedMediaType)
 	}
-
-	log.Infoln("INFO: Sending", s.Type, "response to", r.RemoteAddr)
 }
