@@ -8,8 +8,6 @@ package config
 import (
 	"strconv"
 	"strings"
-
-	"github.com/gologme/log"
 )
 
 // ----------------------------------------
@@ -30,7 +28,7 @@ func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
 	// explicitly set to null ("null"). When set explicitly to null that means
 	// it is also invalid.
 	if c.HTML.TemplateDir.Value == "" || c.HTML.TemplateDir.Valid == false {
-		log.Infoln("CONFIG: The global HTML configuration is missing the html.templatedir directive in the configuration file")
+		c.Logger.Infoln("CONFIG: The global HTML configuration is missing the html.templatedir directive in the configuration file")
 		problemsFound++
 	} else {
 		problemsFound += c.verifyHTMLTemplateDir("html.templatedir", c.HTML.TemplateDir)
@@ -50,7 +48,7 @@ func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
 	// Return number of errors if there are any
 	// ----------------------------------------------------------------------
 	if problemsFound > 0 {
-		log.Println("ERROR: The global HTML configuration has", problemsFound, "error(s)")
+		c.Logger.Println("ERROR: The global HTML configuration has", problemsFound, "error(s)")
 	}
 	return problemsFound
 }
@@ -63,13 +61,13 @@ func (c *ServerConfigType) verifyHTMLTemplateDir(configPath string, templateDir 
 	var problemsFound = 0
 
 	if !strings.HasSuffix(templateDir.Value, "/") {
-		log.Println("CONFIG: The" + configPath + "directive is missing the ending slash '/'")
+		c.Logger.Println("CONFIG: The" + configPath + "directive is missing the ending slash '/'")
 		problemsFound++
 	}
 
 	filepath := c.Global.Prefix + templateDir.Value
 	if !c.exists(filepath) {
-		log.Infoln("CONFIG: The HTML template path", filepath, "can not be opened")
+		c.Logger.Infoln("CONFIG: The HTML template path", filepath, "can not be opened")
 		problemsFound++
 	}
 	return problemsFound
@@ -83,13 +81,13 @@ func (c *ServerConfigType) verifyGlobalHTMLTemplateFile(configPath, templatePath
 	var problemsFound = 0
 
 	if templatePath == "" {
-		log.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
+		c.Logger.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
 		problemsFound++
 		return problemsFound
 	}
 
 	if template.Value == "" || template.Valid == false {
-		log.Infoln("CONFIG: The HTML configuration is missing the" + configPath + "directive in the configuration file")
+		c.Logger.Infoln("CONFIG: The HTML configuration is missing the" + configPath + "directive in the configuration file")
 		problemsFound++
 		return problemsFound
 	}
@@ -106,14 +104,14 @@ func (c *ServerConfigType) verifyHTMLTemplateFile(configPath, templatePath strin
 	var problemsFound = 0
 
 	if templatePath == "" {
-		log.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
+		c.Logger.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
 		problemsFound++
 		return problemsFound
 	}
 
 	filepath := templatePath + template.Value
 	if !c.exists(filepath) {
-		log.Infoln("CONFIG: The HTML template path", filepath, "defined at"+configPath+"can not be opened")
+		c.Logger.Infoln("CONFIG: The HTML template path", filepath, "defined at"+configPath+"can not be opened")
 		problemsFound++
 	}
 
@@ -177,7 +175,7 @@ func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
 	// Return number of errors if there are any
 	// ----------------------------------------------------------------------
 	if problemsFound > 0 {
-		log.Println("ERROR: The Discovery HTML configuration has", problemsFound, "error(s)")
+		c.Logger.Println("ERROR: The Discovery HTML configuration has", problemsFound, "error(s)")
 	}
 	return problemsFound
 }
@@ -271,7 +269,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 	// Return number of errors if there are any
 	// ----------------------------------------------------------------------
 	if problemsFound > 0 {
-		log.Println("ERROR: The API Root HTML configuration has", problemsFound, "error(s)")
+		c.Logger.Println("ERROR: The API Root HTML configuration has", problemsFound, "error(s)")
 	}
 	return problemsFound
 }

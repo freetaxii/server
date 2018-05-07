@@ -39,35 +39,24 @@ func main() {
 	serviceCounter := 0
 
 	// --------------------------------------------------
-	//
+	// Setup logger
+	// --------------------------------------------------
+	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger.EnableLevel("info")
+	logger.EnableLevel("debug")
+
+	// --------------------------------------------------
 	// Load System and Server Configuration
-	//
 	// --------------------------------------------------
-	config, configError := config.New(configFileName)
+	config, configError := config.New(logger, configFileName)
 	if configError != nil {
-		log.Fatalln("ERROR:", configError)
+		logger.Fatalln(configError)
 	}
+	logger.Traceln("TRACE: System Configuration Dump")
+	logger.Tracef("%+v\n", config)
 
 	// --------------------------------------------------
-	//
-	// Setup Database Connection
-	//
-	// --------------------------------------------------
-
-	var ds datastore.Datastorer
-	switch config.Global.DbType {
-	case "sqlite3":
-		databaseFilename := config.Global.Prefix + config.Global.DbFile
-		ds = sqlite3.New(databaseFilename)
-	default:
-		log.Fatalln("ERROR: unknown database type, or no database type defined in the server global configuration")
-	}
-	defer ds.Close()
-
-	// --------------------------------------------------
-	//
 	// Setup Logging File
-	//
 	// --------------------------------------------------
 	// TODO
 	// Need to make the directory if it does not already exist
@@ -78,14 +67,24 @@ func main() {
 	if config.Logging.Enabled == true {
 		logFile, err := os.OpenFile(config.Logging.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatalf("ERROR: can not open file: %v", err)
+			logger.Fatalf("ERROR: can not open file: %v", err)
 		}
 		defer logFile.Close()
-
-		log.SetOutput(logFile)
-		log.EnableLevel("info")
-		log.EnableLevel("debug")
+		logger.SetOutput(logFile)
 	}
+
+	// --------------------------------------------------
+	// Setup Database Connection
+	// --------------------------------------------------
+	var ds datastore.Datastorer
+	switch config.Global.DbType {
+	case "sqlite3":
+		databaseFilename := config.Global.Prefix + config.Global.DbFile
+		ds = sqlite3.New(databaseFilename)
+	default:
+		logger.Fatalln("ERROR: unknown database type, or no database type defined in the server global configuration")
+	}
+	defer ds.Close()
 
 	// --------------------------------------------------
 	//
@@ -102,7 +101,7 @@ func main() {
 	//
 	// --------------------------------------------------
 
-	log.Println("Starting FreeTAXII Server")
+	logger.Println("Starting FreeTAXII Server")
 
 	// --------------------------------------------------
 	//
@@ -119,9 +118,9 @@ func main() {
 			if c.Enabled == true {
 
 				// Configuration for this specific instance and its resource
-				ts, _ := server.NewDiscoveryHandler(c, config.DiscoveryResources[c.ResourceID])
+				ts, _ := server.NewDiscoveryHandler(logger, c, config.DiscoveryResources[c.ResourceID])
 
-				log.Infoln("Starting TAXII Discovery service at:", c.FullPath)
+				logger.Infoln("Starting TAXII Discovery service at:", c.FullPath)
 				router.HandleFunc(c.FullPath, ts.DiscoveryHandler).Methods("GET")
 				serviceCounter++
 			}
@@ -133,17 +132,17 @@ func main() {
 	// Example: /api1/
 	// --------------------------------------------------
 	// This will look to see if there are any API Root services defined
-	// in the config file. If there are, it will loop through the list and setup handlers
-	// for each one of them. The HandleFunc passes in copy of the API Root Resource and the
-	// extra meta data that it needs to process the request.
+	// in the config file. If there are, it will loop through the list
+	// and setup handlers for each one of them. The HandleFunc passes in
+	// copy of the API Root Resource and the extra meta data that it
+	// needs to process the request.
 
 	if config.APIRootServer.Enabled == true {
 		for _, api := range config.APIRootServer.Services {
 			if api.Enabled == true {
 
-				log.Infoln("Starting TAXII API Root service at:", api.FullPath)
-				ts, _ := server.NewAPIRootHandler(api)
-				ts.Resource = config.APIRootResources[api.ResourceID]
+				logger.Infoln("Starting TAXII API Root service at:", api.FullPath)
+				ts, _ := server.NewAPIRootHandler(logger, api, config.APIRootResources[api.ResourceID])
 				router.HandleFunc(api.FullPath, ts.APIRootHandler).Methods("GET")
 				serviceCounter++
 
@@ -152,14 +151,11 @@ func main() {
 				// Example: /api1/collections/
 				// --------------------------------------------------
 				// This will look to see if the Collections service is enabled
-				// in the configuration file for a given API Root. If it is, it
-				// will setup handlers for it.
-				// The HandleFunc passes in copy of the Collections Resource and
-				// the extra meta data that it needs to process the request.
+				// in the configuration file for a given API Root.
 
 				if api.Collections.Enabled == true {
 
-					collectionsSrv, _ := server.NewCollectionsHandler(api)
+					collectionsSrv, _ := server.NewCollectionsHandler(logger, api)
 					collections := resources.NewCollections()
 
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
@@ -174,7 +170,7 @@ func main() {
 					}
 					collectionsSrv.Resource = collections
 
-					log.Infoln("Starting TAXII Collections service of:", api.Collections.FullPath)
+					logger.Infoln("Starting TAXII Collections service of:", api.Collections.FullPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
 					// --------------------------------------------------
@@ -191,10 +187,10 @@ func main() {
 
 						resourceCollectionIDPath := collectionsSrv.URLPath + config.CollectionResources[c].ID + "/"
 
-						collectionSrv, _ := server.NewCollectionHandler(api, resourceCollectionIDPath)
+						collectionSrv, _ := server.NewCollectionHandler(logger, api, resourceCollectionIDPath)
 						collectionSrv.Resource = config.CollectionResources[c]
 
-						log.Infoln("Starting TAXII Collection service of:", resourceCollectionIDPath)
+						logger.Infoln("Starting TAXII Collection service of:", resourceCollectionIDPath)
 
 						// We do not need to check to see if the collection is enabled
 						// and readable/writable because that was already done
@@ -216,10 +212,10 @@ func main() {
 						// Start a Objects and Object by ID handlers
 						// --------------------------------------------------
 
-						log.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
+						logger.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
 						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsServerHandler).Methods("GET")
 
-						log.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
+						logger.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
 						objectsSrv.URLPath = resourceCollectionIDPath + "objects/" + "{objectid}/"
 						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsByIDServerHandler).Methods("GET")
 
@@ -237,7 +233,7 @@ func main() {
 						// --------------------------------------------------
 						// Start a Manifest handlers
 						// --------------------------------------------------
-						log.Infoln("Starting TAXII Manifest service of:", manifestSrv.URLPath)
+						logger.Infoln("Starting TAXII Manifest service of:", manifestSrv.URLPath)
 						config.Router.HandleFunc(manifestSrv.URLPath, manifestSrv.ManifestServerHandler).Methods("GET")
 
 					} // End for loop api.Collections.ResourceIDs
@@ -253,7 +249,7 @@ func main() {
 	// --------------------------------------------------
 
 	if serviceCounter == 0 {
-		log.Fatalln("No TAXII services defined")
+		logger.Fatalln("No TAXII services defined")
 	}
 
 	// --------------------------------------------------
@@ -263,8 +259,8 @@ func main() {
 	// --------------------------------------------------
 
 	if config.Global.Protocol == "http" {
-		log.Infoln("Listening on:", config.Global.Listen)
-		log.Fatalln(http.ListenAndServe(config.Global.Listen, router))
+		logger.Infoln("Listening on:", config.Global.Listen)
+		logger.Fatalln(http.ListenAndServe(config.Global.Listen, router))
 	} else if config.Global.Protocol == "https" {
 		// --------------------------------------------------
 		// Configure TLS settings
@@ -290,9 +286,9 @@ func main() {
 
 		tlsKeyPath := "etc/tls/" + config.Global.TLSKey
 		tlsCrtPath := "etc/tls/" + config.Global.TLSCrt
-		log.Fatalln(tlsServer.ListenAndServeTLS(tlsCrtPath, tlsKeyPath))
+		logger.Fatalln(tlsServer.ListenAndServeTLS(tlsCrtPath, tlsKeyPath))
 	} else {
-		log.Fatalln("No valid protocol was defined in the configuration file")
+		logger.Fatalln("No valid protocol was defined in the configuration file")
 	} // end if statement
 }
 
@@ -301,6 +297,10 @@ func main() {
 // Private functions
 //
 // --------------------------------------------------
+
+func startAPIRootServer() {
+
+}
 
 /*
 processCommandLineFlags - This function will process the command line flags

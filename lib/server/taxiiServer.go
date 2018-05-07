@@ -14,14 +14,13 @@ import (
 
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
-	"github.com/gologme/log"
 )
 
 /*
 DiscoveryHandler - This method will handle all Discovery requests
 */
 func (s *ServerHandlerType) DiscoveryHandler(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("INFO: Found Discovery request from", r.RemoteAddr, "at", r.RequestURI)
+	s.Logger.Infoln("INFO: Found Discovery request from", r.RemoteAddr, "at", r.RequestURI)
 	s.baseHandler(w, r)
 }
 
@@ -29,7 +28,7 @@ func (s *ServerHandlerType) DiscoveryHandler(w http.ResponseWriter, r *http.Requ
 APIRootHandler - This method will handle all API Root requests
 */
 func (s *ServerHandlerType) APIRootHandler(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("INFO: Found API Root request from", r.RemoteAddr, "at", r.RequestURI)
+	s.Logger.Infoln("INFO: Found API Root request from", r.RemoteAddr, "at", r.RequestURI)
 	s.baseHandler(w, r)
 }
 
@@ -37,7 +36,7 @@ func (s *ServerHandlerType) APIRootHandler(w http.ResponseWriter, r *http.Reques
 CollectionsHandler - This method will handle all Collections requests
 */
 func (s *ServerHandlerType) CollectionsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("INFO: Found Collections request from", r.RemoteAddr, "at", r.RequestURI)
+	s.Logger.Infoln("INFO: Found Collections request from", r.RemoteAddr, "at", r.RequestURI)
 	s.baseHandler(w, r)
 }
 
@@ -45,7 +44,7 @@ func (s *ServerHandlerType) CollectionsHandler(w http.ResponseWriter, r *http.Re
 CollectionHandler - This method will handle all Collection requests
 */
 func (s *ServerHandlerType) CollectionHandler(w http.ResponseWriter, r *http.Request) {
-	log.Infoln("INFO: Found Collection request from", r.RemoteAddr, "at", r.RequestURI)
+	s.Logger.Infoln("INFO: Found Collection request from", r.RemoteAddr, "at", r.RequestURI)
 	s.baseHandler(w, r)
 }
 
@@ -58,7 +57,7 @@ func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) 
 	var taxiiHeader headers.HttpHeaderType
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
-	if log.GetLevel("trace") {
+	if s.Logger.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/resources"
-	"github.com/gologme/log"
 )
 
 /*
@@ -27,10 +26,10 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	var q resources.CollectionQueryType
 	var addedFirst, addedLast string
 
-	log.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
+	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
-	if log.GetLevel("trace") {
+	if s.Logger.GetLevel("trace") {
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
@@ -45,7 +44,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// 		q.RangeBegin, _ = strconv.Atoi(values[0])
 	// 		q.RangeEnd, _ = strconv.Atoi(values[1])
 
-	// 		log.Debugln("DEBUG-3: Client", r.RemoteAddr, "sent the following range parameters:", values[0], values[1])
+	// 		s.Logger.Debugln("DEBUG-3: Client", r.RemoteAddr, "sent the following range parameters:", values[0], values[1])
 	// 	}
 	// }
 
@@ -54,12 +53,12 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// ----------------------------------------------------------------------
 
 	urlParameters := r.URL.Query()
-	log.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
+	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
 	q.CollectionID = s.CollectionID
 	errURLParameters := q.ProcessURLParameters(urlParameters)
 	if errURLParameters != nil {
-		log.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
+		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
 
 	results, err := s.DS.GetManifestData(q)
@@ -73,13 +72,13 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		taxiiError.SetHTTPStatus("404")
 		s.Resource = taxiiError
 		objectNotFound = true
-		log.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+		s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
 
 	} else {
 		s.Resource = results.ManifestData
 		addedFirst = results.DateAddedFirst
 		addedLast = results.DateAddedLast
-		log.Infoln("INFO: Sending response to", r.RemoteAddr)
+		s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
 
 	}
 
@@ -133,7 +132,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		// parts as I need them.
 		jsondata, err := json.MarshalIndent(s.Resource, "", "    ")
 		if err != nil {
-			log.Fatal("Unable to create JSON Message")
+			s.Logger.Fatal("Unable to create JSON Message")
 		}
 		s.Resource = string(jsondata)
 
