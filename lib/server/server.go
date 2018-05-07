@@ -9,6 +9,7 @@ package server
 import (
 	"github.com/freetaxii/freetaxii-server/lib/config"
 	"github.com/freetaxii/libstix2/datastore"
+	"github.com/freetaxii/libstix2/resources"
 )
 
 // --------------------------------------------------
@@ -20,7 +21,7 @@ ServerHandlerType - This type will hold the data elements required to process
 all TAXII requests.
 */
 type ServerHandlerType struct {
-	ResourcePath string // This is used in the HTML output and to build the URL for the next resource
+	URLPath      string // Used in HTML output and to build the URL for the next resource.
 	HTMLEnabled  bool   // Is HTML output enabled for this service
 	HTMLTemplate string // The full file path (prefix + HTML template directory + template filename)
 	CollectionID string
@@ -39,11 +40,12 @@ type ServerHandlerType struct {
 /*
 NewDiscoveryHandler - This function will prepare the data for the Discovery handler.
 */
-func NewDiscoveryHandler(c config.DiscoveryServiceType) (ServerHandlerType, error) {
+func NewDiscoveryHandler(c config.DiscoveryServiceType, r resources.DiscoveryType) (ServerHandlerType, error) {
 	var s ServerHandlerType
-	s.ResourcePath = c.ResourcePath
+	s.URLPath = c.FullPath
 	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Discovery.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Discovery.Value
+	s.Resource = r
 	return s, nil
 }
 
@@ -52,9 +54,9 @@ NewAPIRootHandler - This function will prepare the data for the API Root handler
 */
 func NewAPIRootHandler(c config.APIRootServiceType) (ServerHandlerType, error) {
 	var s ServerHandlerType
-	s.ResourcePath = c.ResourcePath
+	s.URLPath = c.FullPath
 	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.APIRoot.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.APIRoot.Value
 	return s, nil
 }
 
@@ -63,9 +65,9 @@ NewCollectionsHandler - This function will prepare the data for the Collections 
 */
 func NewCollectionsHandler(c config.APIRootServiceType) (ServerHandlerType, error) {
 	var s ServerHandlerType
-	s.ResourcePath = c.Collections.ResourcePath
+	s.URLPath = c.Collections.FullPath
 	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Collections.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collections.Value
 	return s, nil
 }
 
@@ -74,8 +76,8 @@ NewCollectionHandler - This function will prepare the data for the Collection ha
 */
 func NewCollectionHandler(c config.APIRootServiceType, path string) (ServerHandlerType, error) {
 	var s ServerHandlerType
-	s.ResourcePath = path
+	s.URLPath = path
 	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.TemplatePath + c.HTML.TemplateFiles.Collection.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collection.Value
 	return s, nil
 }

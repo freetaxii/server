@@ -7,6 +7,7 @@ package config
 
 import (
 	"log"
+	"strings"
 )
 
 // verifyDisocveryConfig - This method will verify all of the configuration
@@ -27,16 +28,24 @@ func (config *ServerConfigType) verifyAPIRootConfig() int {
 			isServiceEnabled = true
 		}
 
-		// Verify the API Name is defined in the configuration file. This is used as the path name
-		if value.Name == "" {
-			log.Println("CONFIG: One or more API Root Services is missing the 'name' directive in the configuration file")
+		// Verify the API Path is defined in the configuration file.
+		if value.Path == "" {
+			log.Println("CONFIG: One or more API Root Services is missing the 'path' directive in the configuration file")
 			problemsFound++
 		} else {
-			config.APIRootServer.Services[i].ResourcePath = "/" + value.Name + "/"
+			if !strings.HasSuffix(value.Path, "/") {
+				log.Println("CONFIG: The path in one or more API Roots is missing the ending slash '/'")
+				problemsFound++
+			}
+			if !strings.HasPrefix(value.Path, "/") {
+				log.Println("CONFIG: The path in one or more API Roots is missing the starting slash '/'")
+				problemsFound++
+			}
+			config.APIRootServer.Services[i].FullPath = value.Path
 		}
 
 		// Set the collections resource path
-		config.APIRootServer.Services[i].Collections.ResourcePath = config.APIRootServer.Services[i].ResourcePath + "collections/"
+		config.APIRootServer.Services[i].Collections.FullPath = config.APIRootServer.Services[i].FullPath + "collections/"
 
 		// Verify the API Resource is found
 		if _, ok := config.APIRootResources[value.ResourceID]; !ok {

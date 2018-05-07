@@ -58,18 +58,18 @@ type ServerConfigType struct {
 BaseServiceType - This struct represents the common properties between the
 Discovery and API-Root services.
 
-Name          - A name for this service, this is used as part of the URL Path
+Path          - The URL path for this service
 Enabled       - Is this service enabled
 ResourceID    - A unique ID for the resource that this service is using
-ResourcePath  - The actual full URL path for the resource
+ResourcePath  - The actual full URL path for the resource, used for the handler to know where to listen.
 HTML          - The configuration for generating HTML output
 */
 type BaseServiceType struct {
-	Enabled      bool           // User defined in configuration file
-	Name         string         // User defined in configuration file
-	ResourceID   string         // User defined in configuration file
-	ResourcePath string         // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
-	HTML         HTMLConfigType // User defined in configuration file or set in the verify scripts.
+	Enabled    bool           // User defined in configuration file
+	Path       string         // User defined in configuration file
+	ResourceID string         // User defined in configuration file
+	HTML       HTMLConfigType // User defined in configuration file or set in the verify scripts.
+	FullPath   string         // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
 }
 
 /*
@@ -89,9 +89,9 @@ will just get overwritten in code.
 type APIRootServiceType struct {
 	BaseServiceType
 	Collections struct {
-		Enabled      bool     // User defined in configuration file
-		ResourceIDs  []string // User defined in configuration file. A list of collections that are members of this API Root
-		ResourcePath string   // Set in verifyAPIRootConfig()
+		Enabled     bool     // User defined in configuration file
+		ResourceIDs []string // User defined in configuration file. A list of collections that are members of this API Root
+		FullPath    string   // Set in verifyAPIRootConfig()
 	}
 }
 
@@ -113,7 +113,6 @@ TemplateFiles - The HTML template filenames in the template directory for the fo
 type HTMLConfigType struct {
 	Enabled       JSONbool   // User defined in configuration file or set in verifyHTMLConfig()
 	TemplateDir   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
-	TemplatePath  string     // Set in verifyHTMLConfig(), this is the full path to template files
 	TemplateFiles struct {
 		Discovery   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
 		APIRoot     JSONstring
@@ -122,6 +121,7 @@ type HTMLConfigType struct {
 		Objects     JSONstring
 		Manifest    JSONstring
 	}
+	FullTemplatePath string // Set in verifyHTMLConfig(), this is the full path to template files
 }
 
 // ----------------------------------------------------------------------
@@ -244,7 +244,7 @@ func (c *ServerConfigType) verifyServerConfig() error {
 
 	if problemsFound > 0 {
 		log.Println("ERROR: The configuration has", problemsFound, "error(s)")
-		return errors.New("ERROR: Configuration errors found")
+		return errors.New("Configuration errors found")
 	}
 	return nil
 }

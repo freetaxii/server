@@ -7,6 +7,7 @@ package config
 
 import (
 	"log"
+	"strings"
 )
 
 // verifyDisocveryConfig - This method will verify all of the configuration
@@ -27,12 +28,21 @@ func (config *ServerConfigType) verifyDiscoveryConfig() int {
 			isServiceEnabled = true
 		}
 
-		// Verify the Discovery Name is defined in the configuration file. This is used as the path name
-		if value.Name == "" {
-			log.Println("CONFIG: One or more Discovery Services is missing the 'name' directive in the configuration file")
+		// Verify the Discovery Path is defined in the configuration file and set
+		// the "full path" value
+		if value.Path == "" {
+			log.Println("CONFIG: One or more Discovery Services is missing the 'path' directive in the configuration file")
 			problemsFound++
 		} else {
-			config.DiscoveryServer.Services[i].ResourcePath = "/" + value.Name + "/"
+			if !strings.HasSuffix(value.Path, "/") {
+				log.Println("CONFIG: The path in one or more Discovery Services is missing the ending slash '/'")
+				problemsFound++
+			}
+			if !strings.HasPrefix(value.Path, "/") {
+				log.Println("CONFIG: The path in one or more Discovery Services is missing the starting slash '/'")
+				problemsFound++
+			}
+			config.DiscoveryServer.Services[i].FullPath = value.Path
 		}
 
 		// Verify the Discovery Resource that is referenced actually exists

@@ -34,17 +34,17 @@ func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
 		problemsFound++
 	} else {
 		problemsFound += c.verifyHTMLTemplateDir("html.templatedir", c.HTML.TemplateDir)
-		c.HTML.TemplatePath = c.Global.Prefix + c.HTML.TemplateDir.Value
+		c.HTML.FullTemplatePath = c.Global.Prefix + c.HTML.TemplateDir.Value
 	}
 
 	// ----------------------------------------------------------------------
 	// Verify actual template files are defined and exist on the file system
 	// ----------------------------------------------------------------------
-	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.discovery", c.HTML.TemplatePath, c.HTML.TemplateFiles.Discovery)
-	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.apiroot", c.HTML.TemplatePath, c.HTML.TemplateFiles.APIRoot)
-	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collections", c.HTML.TemplatePath, c.HTML.TemplateFiles.Collections)
-	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collection", c.HTML.TemplatePath, c.HTML.TemplateFiles.Collection)
-	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.objects", c.HTML.TemplatePath, c.HTML.TemplateFiles.Objects)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.discovery", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Discovery)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.apiroot", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.APIRoot)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collections", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Collections)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collection", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Collection)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.objects", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Objects)
 
 	// ----------------------------------------------------------------------
 	// Return number of errors if there are any
@@ -152,7 +152,7 @@ func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
 
 		if s.HTML.TemplateDir.Set == false || s.HTML.TemplateDir.Valid == false {
 			c.DiscoveryServer.Services[i].HTML.TemplateDir = c.HTML.TemplateDir
-			c.DiscoveryServer.Services[i].HTML.TemplatePath = c.HTML.TemplatePath
+			c.DiscoveryServer.Services[i].HTML.FullTemplatePath = c.HTML.FullTemplatePath
 		} else {
 			// If it was redefined we need to update the TemplatePath, first lets
 			// verify that the template directory is found on the file system,
@@ -160,8 +160,8 @@ func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
 			// then update the actual value.
 			text := "discoveryserver.services[" + indexString + "].html.templatedir"
 			problemsFound += c.verifyHTMLTemplateDir(text, s.HTML.TemplateDir)
-			c.DiscoveryServer.Services[i].HTML.TemplatePath = c.HTML.TemplatePath
-			c.DiscoveryServer.Services[i].HTML.TemplatePath = c.Global.Prefix + s.HTML.TemplateDir.Value
+			c.DiscoveryServer.Services[i].HTML.FullTemplatePath = c.HTML.FullTemplatePath
+			c.DiscoveryServer.Services[i].HTML.FullTemplatePath = c.Global.Prefix + s.HTML.TemplateDir.Value
 		}
 
 		if s.HTML.TemplateFiles.Discovery.Set == false || s.HTML.TemplateFiles.Discovery.Valid == false {
@@ -169,7 +169,7 @@ func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "discoveryserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.Discovery)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Discovery)
 		}
 	} // End for loop
 
@@ -214,7 +214,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 
 		if s.HTML.TemplateDir.Set == false || s.HTML.TemplateDir.Valid == false {
 			c.APIRootServer.Services[i].HTML.TemplateDir = c.HTML.TemplateDir
-			c.APIRootServer.Services[i].HTML.TemplatePath = c.HTML.TemplatePath
+			c.APIRootServer.Services[i].HTML.FullTemplatePath = c.HTML.FullTemplatePath
 		} else {
 			// If it was redefined we need to update the TemplatePath, first lets
 			// verify that the template directory is found on the file system,
@@ -222,8 +222,8 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 			// then update the actual value.
 			text := "apirootserver.services[" + indexString + "].html.templatedir"
 			problemsFound += c.verifyHTMLTemplateDir(text, s.HTML.TemplateDir)
-			c.APIRootServer.Services[i].HTML.TemplatePath = c.HTML.TemplatePath
-			c.APIRootServer.Services[i].HTML.TemplatePath = c.Global.Prefix + s.HTML.TemplateDir.Value
+			c.APIRootServer.Services[i].HTML.FullTemplatePath = c.HTML.FullTemplatePath
+			c.APIRootServer.Services[i].HTML.FullTemplatePath = c.Global.Prefix + s.HTML.TemplateDir.Value
 		}
 
 		if s.HTML.TemplateFiles.APIRoot.Set == false || s.HTML.TemplateFiles.APIRoot.Valid == false {
@@ -231,7 +231,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.APIRoot)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.APIRoot)
 		}
 
 		if s.HTML.TemplateFiles.Collections.Set == false || s.HTML.TemplateFiles.Collections.Valid == false {
@@ -239,7 +239,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.Collections)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Collections)
 		}
 
 		if s.HTML.TemplateFiles.Collection.Set == false || s.HTML.TemplateFiles.Collection.Valid == false {
@@ -247,7 +247,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.Collection)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Collection)
 		}
 
 		if s.HTML.TemplateFiles.Objects.Set == false || s.HTML.TemplateFiles.Objects.Valid == false {
@@ -255,7 +255,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.Objects)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Objects)
 		}
 
 		if s.HTML.TemplateFiles.Manifest.Set == false || s.HTML.TemplateFiles.Manifest.Valid == false {
@@ -263,7 +263,7 @@ func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
 			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
-			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.TemplatePath, s.HTML.TemplateFiles.Manifest)
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Manifest)
 		}
 	} // End for loop
 
