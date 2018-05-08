@@ -114,14 +114,14 @@ func main() {
 	// Resource and the extra meta data that it needs to process the request.
 
 	if config.DiscoveryServer.Enabled == true {
-		for _, c := range config.DiscoveryServer.Services {
-			if c.Enabled == true {
+		for _, s := range config.DiscoveryServer.Services {
+			if s.Enabled == true {
 
 				// Configuration for this specific instance and its resource
-				ts, _ := server.NewDiscoveryHandler(logger, c, config.DiscoveryResources[c.ResourceID])
+				ts, _ := server.NewDiscoveryHandler(logger, s, config.DiscoveryResources[s.ResourceID])
 
-				logger.Infoln("Starting TAXII Discovery service at:", c.FullPath)
-				router.HandleFunc(c.FullPath, ts.DiscoveryHandler).Methods("GET")
+				logger.Infoln("Starting TAXII Discovery service at:", s.FullPath)
+				router.HandleFunc(s.FullPath, ts.DiscoveryHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
@@ -150,14 +150,10 @@ func main() {
 				// Start a Collections Service handler
 				// Example: /api1/collections/
 				// --------------------------------------------------
-				// This will look to see if the Collections service is enabled
-				// in the configuration file for a given API Root.
 
 				if api.Collections.Enabled == true {
 
-					collectionsSrv, _ := server.NewCollectionsHandler(logger, api)
 					collections := resources.NewCollections()
-
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
 					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
 					for _, c := range api.Collections.ResourceIDs {
@@ -168,33 +164,22 @@ func main() {
 							collections.AddCollection(&col)
 						}
 					}
-					collectionsSrv.Resource = collections
 
-					logger.Infoln("Starting TAXII Collections service of:", api.Collections.FullPath)
+					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections)
+
+					logger.Infoln("Starting TAXII Collections service of:", collectionsSrv.URLPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
 					// --------------------------------------------------
 					// Start a Collection handler
 					// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
 					// --------------------------------------------------
-					// This will look to see which collections are defined for this
-					// Collections group in this API Root. If they are enabled, it
-					// will setup handlers for it.
-					// The HandleFunc passes in copy of the Collection Resource and the extra meta data
-					// that it needs to process the request.
 
 					for _, c := range api.Collections.ResourceIDs {
 
-						resourceCollectionIDPath := collectionsSrv.URLPath + config.CollectionResources[c].ID + "/"
-
-						collectionSrv, _ := server.NewCollectionHandler(logger, api, resourceCollectionIDPath)
-						collectionSrv.Resource = config.CollectionResources[c]
-
-						logger.Infoln("Starting TAXII Collection service of:", resourceCollectionIDPath)
-
-						// We do not need to check to see if the collection is enabled
-						// and readable/writable because that was already done
-						// TODO add support for post if the collection is writable
+						// We do not need to check to see if the collection is enabled because that was already done
+						collectionSrv, _ := server.NewCollectionHandler(logger, api, config.CollectionResources[c])
+						logger.Infoln("Starting TAXII Collection service of:", collectionSrv.URLPath)
 						router.HandleFunc(collectionSrv.URLPath, collectionSrv.CollectionHandler).Methods("GET")
 
 						// --------------------------------------------------
@@ -202,7 +187,7 @@ func main() {
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
 						var objectsSrv server.ServerHandlerType
-						objectsSrv.URLPath = resourceCollectionIDPath + "objects/"
+						objectsSrv.URLPath = collectionSrv.URLPath + "objects/"
 						objectsSrv.HTMLEnabled = api.HTML.Enabled.Value
 						objectsSrv.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
 						objectsSrv.CollectionID = config.CollectionResources[c].ID
@@ -216,15 +201,15 @@ func main() {
 						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsServerHandler).Methods("GET")
 
 						logger.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
-						objectsSrv.URLPath = resourceCollectionIDPath + "objects/" + "{objectid}/"
+						objectsSrv.URLPath = collectionSrv.URLPath + "objects/" + "{objectid}/"
 						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsByIDServerHandler).Methods("GET")
 
 						// --------------------------------------------------
-						// Start a Manigest handler
+						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------
 						var manifestSrv server.ServerHandlerType
-						manifestSrv.URLPath = resourceCollectionIDPath + "manifest/"
+						manifestSrv.URLPath = collectionSrv.URLPath + "manifest/"
 						manifestSrv.HTMLEnabled = api.HTML.Enabled.Value
 						manifestSrv.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Manifest.Value
 						manifestSrv.CollectionID = config.CollectionResources[c].ID
@@ -297,10 +282,6 @@ func main() {
 // Private functions
 //
 // --------------------------------------------------
-
-func startAPIRootServer() {
-
-}
 
 /*
 processCommandLineFlags - This function will process the command line flags

@@ -80,21 +80,23 @@ func NewAPIRootHandler(logger *log.Logger, c config.APIRootServiceType, r resour
 /*
 NewCollectionsHandler - This function will prepare the data for the Collections handler.
 */
-func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType) (ServerHandlerType, error) {
+func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionsType) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.Collections.FullPath
+	s.URLPath = c.FullPath + "collections/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collections.Value
+	s.Resource = r
 	return s, nil
 }
 
 /*
 NewCollectionHandler - This function will prepare the data for the Collection handler.
 */
-func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, path string) (ServerHandlerType, error) {
+func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionType) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = path
+	s.URLPath = c.FullPath + "collections/" + r.ID + "/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collection.Value
+	s.Resource = r
 	return s, nil
 }

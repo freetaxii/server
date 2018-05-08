@@ -92,7 +92,6 @@ type APIRootServiceType struct {
 	Collections struct {
 		Enabled     bool     // User defined in configuration file
 		ResourceIDs []string // User defined in configuration file. A list of collections that are members of this API Root
-		FullPath    string   // Set in verifyAPIRootConfig()
 	}
 }
 
@@ -106,10 +105,10 @@ would have been equivalent to turning it off, which is not what is wanted. Leavi
 it blank would mean to inherit from the parent. But since Go is a strictly typed
 language, you need to create a type that can handle that case.
 
-Enabled       - Is HTML enabled for this service
-TemplateDir   - The location of the template files relative to the base of the application (prefix)
-TemplatePath  - The full path of the template directory (prefix + TemplateDir)
-TemplateFiles - The HTML template filenames in the template directory for the following services
+Enabled           - Is HTML enabled for this service
+TemplateDir       - The location of the template files relative to the base of the application (prefix)
+FullTemplatePath  - The full path of the template directory (prefix + TemplateDir)
+TemplateFiles     - The HTML template filenames in the template directory for the following services
 */
 type HTMLConfigType struct {
 	Enabled       JSONbool   // User defined in configuration file or set in verifyHTMLConfig()

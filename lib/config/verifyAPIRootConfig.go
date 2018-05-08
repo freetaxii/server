@@ -43,9 +43,6 @@ func (c *ServerConfigType) verifyAPIRootConfig() int {
 			c.APIRootServer.Services[i].FullPath = value.Path
 		}
 
-		// Set the collections resource path
-		c.APIRootServer.Services[i].Collections.FullPath = c.APIRootServer.Services[i].FullPath + "collections/"
-
 		// Verify the API Resource is found
 		if _, ok := c.APIRootResources[value.ResourceID]; !ok {
 			value := "CONFIG: The API Root Resource " + value.ResourceID + " is missing from the configuration file"
