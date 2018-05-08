@@ -101,7 +101,7 @@ func main() {
 	//
 	// --------------------------------------------------
 
-	logger.Println("Starting FreeTAXII Server")
+	logger.Println("Starting FreeTAXII Server Version:", Version)
 
 	// --------------------------------------------------
 	//
@@ -170,13 +170,13 @@ func main() {
 					logger.Infoln("Starting TAXII Collections service of:", collectionsSrv.URLPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
-					// --------------------------------------------------
-					// Start a Collection handler
-					// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
-					// --------------------------------------------------
-
+					// Loop through all the collection IDs that are part of this API Root
 					for _, c := range api.Collections.ResourceIDs {
 
+						// --------------------------------------------------
+						// Start a Collection handler
+						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
+						// --------------------------------------------------
 						// We do not need to check to see if the collection is enabled because that was already done
 						collectionSrv, _ := server.NewCollectionHandler(logger, api, config.CollectionResources[c])
 						logger.Infoln("Starting TAXII Collection service of:", collectionSrv.URLPath)
@@ -186,40 +186,31 @@ func main() {
 						// Start an Objects handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
-						var objectsSrv server.ServerHandlerType
-						objectsSrv.URLPath = collectionSrv.URLPath + "objects/"
-						objectsSrv.HTMLEnabled = api.HTML.Enabled.Value
-						objectsSrv.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
-						objectsSrv.CollectionID = config.CollectionResources[c].ID
-						objectsSrv.DS = ds
+						srvObjects, _ := server.NewObjectsHandler(logger, api, config.CollectionResources[c].ID)
+						srvObjects.DS = ds
+
+						logger.Infoln("Starting TAXII Object service of:", srvObjects.URLPath)
+						config.Router.HandleFunc(srvObjects.URLPath, srvObjects.ObjectsServerHandler).Methods("GET")
 
 						// --------------------------------------------------
-						// Start a Objects and Object by ID handlers
+						// Start a Objects by ID handlers
+						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/{objectid}/
 						// --------------------------------------------------
+						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, config.CollectionResources[c].ID)
+						srvObjectsByID.DS = ds
 
-						logger.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
-						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsServerHandler).Methods("GET")
-
-						logger.Infoln("Starting TAXII Object service of:", objectsSrv.URLPath)
-						objectsSrv.URLPath = collectionSrv.URLPath + "objects/" + "{objectid}/"
-						config.Router.HandleFunc(objectsSrv.URLPath, objectsSrv.ObjectsByIDServerHandler).Methods("GET")
+						logger.Infoln("Starting TAXII Object by ID service of:", srvObjectsByID.URLPath)
+						config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsByIDServerHandler).Methods("GET")
 
 						// --------------------------------------------------
 						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------
-						var manifestSrv server.ServerHandlerType
-						manifestSrv.URLPath = collectionSrv.URLPath + "manifest/"
-						manifestSrv.HTMLEnabled = api.HTML.Enabled.Value
-						manifestSrv.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Manifest.Value
-						manifestSrv.CollectionID = config.CollectionResources[c].ID
-						manifestSrv.DS = ds
+						srvManifest, _ := server.NewManifestHandler(logger, api, config.CollectionResources[c].ID)
+						srvManifest.DS = ds
 
-						// --------------------------------------------------
-						// Start a Manifest handlers
-						// --------------------------------------------------
-						logger.Infoln("Starting TAXII Manifest service of:", manifestSrv.URLPath)
-						config.Router.HandleFunc(manifestSrv.URLPath, manifestSrv.ManifestServerHandler).Methods("GET")
+						logger.Infoln("Starting TAXII Manifest service of:", srvManifest.URLPath)
+						config.Router.HandleFunc(srvManifest.URLPath, srvManifest.ManifestServerHandler).Methods("GET")
 
 					} // End for loop api.Collections.ResourceIDs
 				} // End if Collections.Enabled == true

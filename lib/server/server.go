@@ -100,3 +100,39 @@ func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r res
 	s.Resource = r
 	return s, nil
 }
+
+/*
+NewObjectsHandler - This function will prepare the data for the Objects handler.
+*/
+func NewObjectsHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+	s, _ := New(logger)
+	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/"
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
+	s.CollectionID = collectionID
+	return s, nil
+}
+
+/*
+NewObjectsByIDHandler - This function will prepare the data for the Objects by ID handler.
+*/
+func NewObjectsByIDHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+	s, _ := New(logger)
+	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
+	s.CollectionID = collectionID
+	return s, nil
+}
+
+/*
+NewManifestHandler - This function will prepare the data for the Manifest handler.
+*/
+func NewManifestHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+	s, _ := New(logger)
+	s.URLPath = c.FullPath + "collections/" + collectionID + "/manifest/"
+	s.HTMLEnabled = c.HTML.Enabled.Value
+	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Manifest.Value
+	s.CollectionID = collectionID
+	return s, nil
+}
