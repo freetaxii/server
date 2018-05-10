@@ -45,14 +45,14 @@ type ServerConfigType struct {
 	DiscoveryServer struct {
 		Enabled  bool
 		Services []DiscoveryServiceType
-	}
+	} `json:"discovery_server,omitempty"`
 	APIRootServer struct {
 		Enabled  bool
 		Services []APIRootServiceType
-	}
-	DiscoveryResources  map[string]resources.DiscoveryType  // The key in the map is the ResourceID
-	APIRootResources    map[string]resources.APIRootType    // The key in the map is the ResourceID
-	CollectionResources map[string]resources.CollectionType // The key in the map is the ResourceID
+	} `json:"apiroot_server,omitempty"`
+	DiscoveryResources  map[string]resources.DiscoveryType  `json:"discovery_resources,omitempty"`  // The key in the map is the ResourceID
+	APIRootResources    map[string]resources.APIRootType    `json:"apiroot_resources,omitempty"`    // The key in the map is the ResourceID
+	CollectionResources map[string]resources.CollectionType `json:"collection_resources,omitempty"` // The key in the map is the ResourceID
 }
 
 /*
@@ -86,12 +86,17 @@ type DiscoveryServiceType struct {
 APIRootServiceType - This struct represents an instance of an API Root server.
 If someone tries to set the 'path' directive in the configuration file it
 will just get overwritten in code.
+ReadAccess - This is a list of collection resource IDs that may have GET access
+at the API Root level
+WriteAccess - This is a list of collection resource IDs that may have POST access
+at the API Root level
 */
 type APIRootServiceType struct {
 	BaseServiceType
 	Collections struct {
 		Enabled     bool     // User defined in configuration file
-		ResourceIDs []string // User defined in configuration file. A list of collections that are members of this API Root
+		ReadAccess  []string // User defined in configuration file.
+		WriteAccess []string // User defined in configuration file.
 	}
 }
 

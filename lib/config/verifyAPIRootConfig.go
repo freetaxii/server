@@ -28,6 +28,7 @@ func (c *ServerConfigType) verifyAPIRootConfig() int {
 		}
 
 		// Verify the API Path is defined in the configuration file.
+		// Example: "path": "/api1/"
 		if value.Path == "" {
 			c.Logger.Println("CONFIG: One or more API Root Services is missing the 'path' directive in the configuration file")
 			problemsFound++
@@ -49,7 +50,27 @@ func (c *ServerConfigType) verifyAPIRootConfig() int {
 			c.Logger.Println(value)
 			problemsFound++
 		}
-	} // End for loop
+
+		// Verify the Collection Resources are found
+		if value.Collections.Enabled == true {
+			for _, col := range value.Collections.ReadAccess {
+				if _, ok := c.CollectionResources[col]; !ok {
+					value := "CONFIG: One or more API Roots is using a read access collection of " + col + " that is missing from the configuration file"
+					c.Logger.Println(value)
+					problemsFound++
+				}
+			}
+
+			for _, col := range value.Collections.WriteAccess {
+				if _, ok := c.CollectionResources[col]; !ok {
+					value := "CONFIG: One or more API Roots is using a read access collection of " + col + " that is missing from the configuration file"
+					c.Logger.Println(value)
+					problemsFound++
+				}
+			}
+		}
+
+	} // End for loop on services
 
 	if isServiceEnabled == false {
 		c.Logger.Println("CONFIG: While the API Root Server is enabled, there are no API Root Services that are enabled")

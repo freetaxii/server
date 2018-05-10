@@ -156,7 +156,7 @@ func main() {
 					collections := resources.NewCollections()
 					// We need to look in to this instance of the API Root and find out which collections are tied to it
 					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
-					for _, c := range api.Collections.ResourceIDs {
+					for _, c := range api.Collections.ReadAccess {
 
 						// If enabled, only add the collection to the list if the collection can either be read or written to
 						if config.CollectionResources[c].CanRead == true || config.CollectionResources[c].CanWrite == true {
@@ -171,7 +171,7 @@ func main() {
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
 					// Loop through all the collection IDs that are part of this API Root
-					for _, c := range api.Collections.ResourceIDs {
+					for _, c := range api.Collections.ReadAccess {
 
 						// --------------------------------------------------
 						// Start a Collection handler
