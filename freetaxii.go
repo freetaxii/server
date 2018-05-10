@@ -152,17 +152,37 @@ func main() {
 				// --------------------------------------------------
 
 				if api.Collections.Enabled == true {
+					// Make a new map the same size at the collections resource map
+					// to make things more efficient
+					colResources := make(map[string]*resources.CollectionType)
 
 					collections := resources.NewCollections()
-					// We need to look in to this instance of the API Root and find out which collections are tied to it
-					// Then we can use that ID to pull from the collections list and add them to this list of valid collections
-					for _, c := range api.Collections.ReadAccess {
 
-						// If enabled, only add the collection to the list if the collection can either be read or written to
-						if config.CollectionResources[c].CanRead == true || config.CollectionResources[c].CanWrite == true {
-							col := config.CollectionResources[c]
-							collections.AddCollection(&col)
+					// For each collection listed with ReadAccess add it to our local
+					// copy called colResources and set the CanRead to true
+					for _, c := range api.Collections.ReadAccess {
+						a := config.CollectionResources[c]
+						colResources[c] = &a
+						colResources[c].CanRead = true
+					}
+
+					// For each collection listed with WriteAccess add it to our
+					// local copy, only if it is not already found and set the
+					// CanWrite to true
+					for _, c := range api.Collections.WriteAccess {
+						if _, found := colResources[c]; !found {
+							a := config.CollectionResources[c]
+							colResources[c] = &a
 						}
+						colResources[c].CanWrite = true
+					}
+
+					// Loop through all of the possible collections that are part
+					// of this API Root and have either CanRead or CanWrite access
+					// and add them to the Collection.
+					for key, _ := range colResources {
+						col := colResources[key]
+						collections.AddCollection(col)
 					}
 
 					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections)
