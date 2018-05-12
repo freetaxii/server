@@ -25,8 +25,8 @@ objects from the TAXII server.
 func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *http.Request) {
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
-	var q resources.CollectionQueryType
 	var addedFirst, addedLast string
+	q := resources.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	s.Logger.Infoln("INFO: Found Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
@@ -61,13 +61,12 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 	urlParameters := r.URL.Query()
 	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
-	q.CollectionID = s.CollectionID
-	errURLParameters := s.processURLParameters(&q, urlParameters)
+	errURLParameters := s.processURLParameters(q, urlParameters)
 	if errURLParameters != nil {
 		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
 
-	results, err := s.DS.GetBundle(q)
+	results, err := s.DS.GetBundle(*q)
 
 	if err != nil {
 		taxiiError := resources.NewError()

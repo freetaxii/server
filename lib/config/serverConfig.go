@@ -24,16 +24,16 @@ type ServerConfigType struct {
 	Router *mux.Router
 	Logger *log.Logger
 	Global struct {
-		Prefix             string
-		Listen             string
-		Protocol           string
-		TLSDir             string
-		TLSKey             string
-		TLSCrt             string
-		DbConfig           bool
-		DbType             string
-		DbFile             string
-		MaxNumberOfObjects int
+		Prefix            string
+		Listen            string
+		Protocol          string
+		TLSDir            string
+		TLSKey            string
+		TLSCrt            string
+		DbConfig          bool
+		DbType            string
+		DbFile            string
+		ServerRecordLimit int
 	}
 	HTML struct {
 		HTMLConfigType

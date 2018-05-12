@@ -185,7 +185,7 @@ func main() {
 						collections.AddCollection(col)
 					}
 
-					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections)
+					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections, config.Global.ServerRecordLimit)
 
 					logger.Infoln("Starting TAXII Collections service of:", collectionsSrv.URLPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
@@ -198,7 +198,7 @@ func main() {
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
 						// --------------------------------------------------
 						// We do not need to check to see if the collection is enabled because that was already done
-						collectionSrv, _ := server.NewCollectionHandler(logger, api, config.CollectionResources[c])
+						collectionSrv, _ := server.NewCollectionHandler(logger, api, config.CollectionResources[c], config.Global.ServerRecordLimit)
 						logger.Infoln("Starting TAXII Collection service of:", collectionSrv.URLPath)
 						router.HandleFunc(collectionSrv.URLPath, collectionSrv.CollectionHandler).Methods("GET")
 
@@ -206,7 +206,7 @@ func main() {
 						// Start an Objects handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
-						srvObjects, _ := server.NewObjectsHandler(logger, api, config.CollectionResources[c].ID)
+						srvObjects, _ := server.NewObjectsHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
 						srvObjects.DS = ds
 
 						logger.Infoln("Starting TAXII Object service of:", srvObjects.URLPath)
@@ -216,7 +216,7 @@ func main() {
 						// Start a Objects by ID handlers
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/{objectid}/
 						// --------------------------------------------------
-						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, config.CollectionResources[c].ID)
+						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
 						srvObjectsByID.DS = ds
 
 						logger.Infoln("Starting TAXII Object by ID service of:", srvObjectsByID.URLPath)
@@ -226,7 +226,7 @@ func main() {
 						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------
-						srvManifest, _ := server.NewManifestHandler(logger, api, config.CollectionResources[c].ID)
+						srvManifest, _ := server.NewManifestHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
 						srvManifest.DS = ds
 
 						logger.Infoln("Starting TAXII Manifest service of:", srvManifest.URLPath)

@@ -25,13 +25,14 @@ ServerHandlerType - This type will hold the data elements required to process
 all TAXII requests.
 */
 type ServerHandlerType struct {
-	Logger       *log.Logger
-	URLPath      string // Used in HTML output and to build the URL for the next resource.
-	HTMLEnabled  bool   // Is HTML output enabled for this service
-	HTMLTemplate string // The full file path (prefix + HTML template directory + template filename)
-	CollectionID string
-	DS           datastore.Datastorer
-	Resource     interface{} // This holds the actual resource and is populated in the main freetaxii.go
+	Logger            *log.Logger
+	URLPath           string // Used in HTML output and to build the URL for the next resource.
+	HTMLEnabled       bool   // Is HTML output enabled for this service
+	HTMLTemplate      string // The full file path (prefix + HTML template directory + template filename)
+	CollectionID      string
+	ServerRecordLimit int // The maximum number of records that the server will respond with.
+	DS                datastore.Datastorer
+	Resource          interface{} // This holds the actual resource and is populated in the main freetaxii.go
 }
 
 // ----------------------------------------------------------------------
@@ -81,60 +82,65 @@ func NewAPIRootHandler(logger *log.Logger, c config.APIRootServiceType, r resour
 /*
 NewCollectionsHandler - This function will prepare the data for the Collections handler.
 */
-func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionsType) (ServerHandlerType, error) {
+func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionsType, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath + "collections/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collections.Value
 	s.Resource = r
+	s.ServerRecordLimit = limit
 	return s, nil
 }
 
 /*
 NewCollectionHandler - This function will prepare the data for the Collection handler.
 */
-func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionType) (ServerHandlerType, error) {
+func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionType, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath + "collections/" + r.ID + "/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collection.Value
 	s.Resource = r
+	s.ServerRecordLimit = limit
 	return s, nil
 }
 
 /*
 NewObjectsHandler - This function will prepare the data for the Objects handler.
 */
-func NewObjectsHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+func NewObjectsHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
+	s.ServerRecordLimit = limit
 	return s, nil
 }
 
 /*
 NewObjectsByIDHandler - This function will prepare the data for the Objects by ID handler.
 */
-func NewObjectsByIDHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+func NewObjectsByIDHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
+	s.ServerRecordLimit = limit
 	return s, nil
 }
 
 /*
 NewManifestHandler - This function will prepare the data for the Manifest handler.
 */
-func NewManifestHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string) (ServerHandlerType, error) {
+func NewManifestHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath + "collections/" + collectionID + "/manifest/"
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Manifest.Value
 	s.CollectionID = collectionID
+	s.ServerRecordLimit = limit
 	return s, nil
 }
 

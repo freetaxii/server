@@ -23,9 +23,8 @@ objects from the TAXII server.
 func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
-	var q resources.CollectionQueryType
-	q.CollectionID = s.CollectionID
 	var addedFirst, addedLast string
+	q := resources.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
@@ -57,13 +56,13 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	if len(urlParameters) > 0 {
 		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following (", len(urlParameters), ") url parameters:", urlParameters)
 
-		errURLParameters := s.processURLParameters(&q, urlParameters)
+		errURLParameters := s.processURLParameters(q, urlParameters)
 		if errURLParameters != nil {
 			s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 		}
 	}
 
-	results, err := s.DS.GetManifestData(q)
+	results, err := s.DS.GetManifestData(*q)
 
 	if err != nil {
 		taxiiError := resources.NewError()
