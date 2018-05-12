@@ -48,17 +48,19 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// 	}
 	// }
 
+	q.CollectionID = s.CollectionID
+
 	// ----------------------------------------------------------------------
 	// Handle URL Parameters
 	// ----------------------------------------------------------------------
-
 	urlParameters := r.URL.Query()
-	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
+	if len(urlParameters) > 0 {
+		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
-	q.CollectionID = s.CollectionID
-	errURLParameters := q.ProcessURLParameters(urlParameters)
-	if errURLParameters != nil {
-		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
+		errURLParameters := q.ProcessURLParameters(urlParameters)
+		if errURLParameters != nil {
+			s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
+		}
 	}
 
 	results, err := s.DS.GetManifestData(q)
