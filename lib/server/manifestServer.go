@@ -24,6 +24,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	var taxiiHeader headers.HttpHeaderType
 	var objectNotFound = false
 	var q resources.CollectionQueryType
+	q.CollectionID = s.CollectionID
 	var addedFirst, addedLast string
 
 	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
@@ -48,16 +49,15 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// 	}
 	// }
 
-	q.CollectionID = s.CollectionID
-
 	// ----------------------------------------------------------------------
 	// Handle URL Parameters
 	// ----------------------------------------------------------------------
 	urlParameters := r.URL.Query()
-	if len(urlParameters) > 0 {
-		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
-		errURLParameters := q.ProcessURLParameters(urlParameters)
+	if len(urlParameters) > 0 {
+		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following (", len(urlParameters), ") url parameters:", urlParameters)
+
+		errURLParameters := s.processURLParameters(&q, urlParameters)
 		if errURLParameters != nil {
 			s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 		}

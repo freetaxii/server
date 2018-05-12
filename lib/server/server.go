@@ -8,6 +8,7 @@ package server
 
 import (
 	"os"
+	"strings"
 
 	"github.com/freetaxii/freetaxii-server/lib/config"
 	"github.com/freetaxii/libstix2/datastore"
@@ -135,4 +136,47 @@ func NewManifestHandler(logger *log.Logger, c config.APIRootServiceType, collect
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Manifest.Value
 	s.CollectionID = collectionID
 	return s, nil
+}
+
+// ----------------------------------------------------------------------
+// Private Methods - ServerHandlerType
+// ----------------------------------------------------------------------
+
+/*
+processURLParameters - This method will process all of the URL parameters from
+an HTTP request.
+*/
+func (s *ServerHandlerType) processURLParameters(q *resources.CollectionQueryType, values map[string][]string) error {
+
+	if values["id"] != nil {
+		q.STIXID = strings.Split(values["id"][0], ",")
+	}
+
+	if values["type"] != nil {
+		q.STIXType = strings.Split(values["type"][0], ",")
+	}
+
+	if values["version"] != nil {
+		q.STIXVersion = strings.Split(values["version"][0], ",")
+	}
+
+	if values["added_after"] != nil {
+		q.AddedAfter = strings.Split(values["added_after"][0], ",")
+	}
+
+	if values["added_before"] != nil {
+		q.AddedBefore = strings.Split(values["added_before"][0], ",")
+	}
+
+	if values["limit"] != nil {
+		q.Limit = strings.Split(values["limit"][0], ",")
+	}
+
+	s.Logger.Debugln("DEBUG: URL Parameter ID", q.STIXID)
+	s.Logger.Debugln("DEBUG: URL Parameter Type", q.STIXType)
+	s.Logger.Debugln("DEBUG: URL Parameter Version", q.STIXVersion)
+	s.Logger.Debugln("DEBUG: URL Parameter Added After", q.AddedAfter)
+	s.Logger.Debugln("DEBUG: URL Parameter Added Before", q.AddedBefore)
+	s.Logger.Debugln("DEBUG: URL Parameter Limit", q.Limit)
+	return nil
 }

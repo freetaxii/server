@@ -62,7 +62,7 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following url parameters:", urlParameters)
 
 	q.CollectionID = s.CollectionID
-	errURLParameters := q.ProcessURLParameters(urlParameters)
+	errURLParameters := s.processURLParameters(&q, urlParameters)
 	if errURLParameters != nil {
 		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
