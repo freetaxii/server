@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
-	"strings"
 
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
@@ -22,6 +21,9 @@ objects from the TAXII server.
 */
 func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
 	var taxiiHeader headers.HttpHeaderType
+	var acceptHeader headers.AcceptHeaderType
+	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
+
 	var objectNotFound = false
 	var addedFirst, addedLast string
 	q := resources.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
@@ -33,7 +35,6 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		taxiiHeader.DebugHttpRequest(r)
 	}
 
-	httpHeaderAccept := r.Header.Get("Accept")
 	// httpHeaderRange := r.Header.Get("Range")
 
 	// myregexp := regexp.MustCompile(`^items \d+-\d+$`)
@@ -97,8 +98,8 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// contentRangeHeaderValue := "items " + strconv.Itoa(results.RangeBegin) + "-" + strconv.Itoa(results.RangeEnd) + "/" + strconv.Itoa(results.Size)
 	// w.Header().Add("Content-Range", contentRangeHeaderValue)
 
-	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII)
+	if acceptHeader.TAXII21 == true {
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII21)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -107,7 +108,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		}
 		j.Encode(s.Resource)
 
-	} else if strings.Contains(httpHeaderAccept, "application/json") {
+	} else if acceptHeader.JSON == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 
 		if objectNotFound == true {
@@ -118,7 +119,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		j.SetIndent("", "    ")
 		j.Encode(s.Resource)
 
-	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
+	} else if s.HTMLEnabled == true && acceptHeader.HTML == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_HTML)
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)

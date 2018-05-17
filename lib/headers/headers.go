@@ -8,12 +8,56 @@ package headers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gologme/log"
 )
 
 type HttpHeaderType struct {
 	DebugLevel int
+}
+
+type AcceptHeaderType struct {
+	TAXII21 bool
+	TAXII20 bool
+	STIX21  bool
+	STIX20  bool
+	HTML    bool
+	JSON    bool
+}
+
+func (h *AcceptHeaderType) ParseTAXII(accept string) {
+	a := strings.Replace(accept, " ", "", -1)
+	a1 := strings.Split(a, ",")
+
+	for _, v := range a1 {
+		if v == "*" || v == "*/*" || v == "application/taxii+json" || strings.Contains(v, "application/taxii+json;version=2.1") {
+			h.TAXII21 = true
+		} else if v == "application/vnd.oasis.taxii+json" || strings.Contains(v, "application/vnd.oasis.taxii+json;version=2.0") {
+			h.TAXII20 = true
+		} else if strings.Contains(v, "application/json") {
+			h.JSON = true
+		} else if strings.Contains(v, "text/html") {
+			h.HTML = true
+		}
+	}
+}
+
+func (h *AcceptHeaderType) ParseSTIX(accept string) {
+	a := strings.Replace(accept, " ", "", -1)
+	a1 := strings.Split(a, ",")
+
+	for _, v := range a1 {
+		if v == "*" || v == "*/*" || v == "application/stix+json" || strings.Contains(v, "application/stix+json;version=2.1") {
+			h.STIX21 = true
+		} else if v == "application/vnd.oasis.stix+json" || strings.Contains(v, "application/vnd.oasis.stix+json;version=2.0") {
+			h.STIX20 = true
+		} else if strings.Contains(v, "application/json") {
+			h.JSON = true
+		} else if strings.Contains(v, "text/html") {
+			h.HTML = true
+		}
+	}
 }
 
 // --------------------------------------------------

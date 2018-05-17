@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
-	"strings"
 
 	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
@@ -53,8 +52,9 @@ baseHandler - This method handles all requests for the following TAXII
 media type responses: Discovery, API-Root, Collections, and Collection
 */
 func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) {
-	var httpHeaderAccept string
 	var taxiiHeader headers.HttpHeaderType
+	var acceptHeader headers.AcceptHeaderType
+	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -65,26 +65,24 @@ func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) 
 	// Encode outgoing response message
 	// --------------------------------------------------
 
-	httpHeaderAccept = r.Header.Get("Accept")
-
 	// Setup JSON stream encoder
 	j := json.NewEncoder(w)
 
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
-	if strings.Contains(httpHeaderAccept, defs.TAXII_MEDIA_TYPE) {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII)
+	if acceptHeader.TAXII21 == true {
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII21)
 		w.WriteHeader(http.StatusOK)
 		j.Encode(s.Resource)
 
-	} else if strings.Contains(httpHeaderAccept, "application/json") {
+	} else if acceptHeader.JSON == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 		w.WriteHeader(http.StatusOK)
 		j.SetIndent("", "    ")
 		j.Encode(s.Resource)
 
-	} else if s.HTMLEnabled == true && strings.Contains(httpHeaderAccept, "text/html") {
+	} else if s.HTMLEnabled == true && acceptHeader.HTML == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_HTML)
 		w.WriteHeader(http.StatusOK)
 
