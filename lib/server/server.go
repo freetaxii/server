@@ -70,11 +70,11 @@ func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryServiceType, r re
 /*
 NewAPIRootHandler - This function will prepare the data for the API Root handler.
 */
-func NewAPIRootHandler(logger *log.Logger, c config.APIRootServiceType, r resources.APIRootType) (ServerHandlerType, error) {
+func NewAPIRootHandler(logger *log.Logger, api config.APIRootServiceType, r resources.APIRootType) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.APIRoot.Value
+	s.URLPath = api.FullPath
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.APIRoot.Value
 	s.Resource = r
 	return s, nil
 }
@@ -82,11 +82,11 @@ func NewAPIRootHandler(logger *log.Logger, c config.APIRootServiceType, r resour
 /*
 NewCollectionsHandler - This function will prepare the data for the Collections handler.
 */
-func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionsType, limit int) (ServerHandlerType, error) {
+func NewCollectionsHandler(logger *log.Logger, api config.APIRootServiceType, r resources.CollectionsType, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath + "collections/"
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collections.Value
+	s.URLPath = api.FullPath + "collections/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Collections.Value
 	s.Resource = r
 	s.ServerRecordLimit = limit
 	return s, nil
@@ -95,11 +95,11 @@ func NewCollectionsHandler(logger *log.Logger, c config.APIRootServiceType, r re
 /*
 NewCollectionHandler - This function will prepare the data for the Collection handler.
 */
-func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r resources.CollectionType, limit int) (ServerHandlerType, error) {
+func NewCollectionHandler(logger *log.Logger, api config.APIRootServiceType, r resources.CollectionType, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath + "collections/" + r.ID + "/"
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Collection.Value
+	s.URLPath = api.FullPath + "collections/" + r.ID + "/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Collection.Value
 	s.Resource = r
 	s.ServerRecordLimit = limit
 	return s, nil
@@ -108,11 +108,11 @@ func NewCollectionHandler(logger *log.Logger, c config.APIRootServiceType, r res
 /*
 NewObjectsHandler - This function will prepare the data for the Objects handler.
 */
-func NewObjectsHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewObjectsHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/"
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
+	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
 	s.ServerRecordLimit = limit
 	return s, nil
@@ -121,11 +121,11 @@ func NewObjectsHandler(logger *log.Logger, c config.APIRootServiceType, collecti
 /*
 NewObjectsByIDHandler - This function will prepare the data for the Objects by ID handler.
 */
-func NewObjectsByIDHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Objects.Value
+	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
 	s.ServerRecordLimit = limit
 	return s, nil
@@ -134,11 +134,11 @@ func NewObjectsByIDHandler(logger *log.Logger, c config.APIRootServiceType, coll
 /*
 NewManifestHandler - This function will prepare the data for the Manifest handler.
 */
-func NewManifestHandler(logger *log.Logger, c config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewManifestHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath + "collections/" + collectionID + "/manifest/"
-	s.HTMLEnabled = c.HTML.Enabled.Value
-	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Manifest.Value
+	s.URLPath = api.FullPath + "collections/" + collectionID + "/manifest/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Manifest.Value
 	s.CollectionID = collectionID
 	s.ServerRecordLimit = limit
 	return s, nil

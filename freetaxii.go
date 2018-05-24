@@ -120,7 +120,7 @@ func main() {
 				// Configuration for this specific instance and its resource
 				ts, _ := server.NewDiscoveryHandler(logger, s, config.DiscoveryResources[s.ResourceID])
 
-				logger.Infoln("Starting TAXII Discovery service at:", s.FullPath)
+				logger.Infoln("Starting TAXII GET Discovery service at:", s.FullPath)
 				router.HandleFunc(s.FullPath, ts.DiscoveryHandler).Methods("GET")
 				serviceCounter++
 			}
@@ -141,29 +141,25 @@ func main() {
 		for _, api := range config.APIRootServer.Services {
 			if api.Enabled == true {
 
-				logger.Infoln("Starting TAXII API Root service at:", api.FullPath)
+				logger.Infoln("Starting TAXII GET API Root service at:", api.FullPath)
 				ts, _ := server.NewAPIRootHandler(logger, api, config.APIRootResources[api.ResourceID])
 				router.HandleFunc(api.FullPath, ts.APIRootHandler).Methods("GET")
 				serviceCounter++
 
-				// --------------------------------------------------
-				// Start a Collections Service handler
-				// Example: /api1/collections/
-				// --------------------------------------------------
-
+				// Loop through the collections, if enabled and start the endpoints
 				if api.Collections.Enabled == true {
-					// Make a new map the same size at the collections resource map
-					// to make things more efficient
+					// Make a new map so we can work on a copy, this way we can
+					// keep permissions unique per API root.
 					colResources := make(map[string]*resources.CollectionType)
-
-					collections := resources.NewCollections()
 
 					// For each collection listed with ReadAccess add it to our local
 					// copy called colResources and set the CanRead to true
 					for _, c := range api.Collections.ReadAccess {
-						a := config.CollectionResources[c]
-						colResources[c] = &a
-						colResources[c].CanRead = true
+						if _, found := colResources[c]; !found {
+							a := config.CollectionResources[c]
+							colResources[c] = &a
+							colResources[c].CanRead = true
+						}
 					}
 
 					// For each collection listed with WriteAccess add it to our
@@ -179,58 +175,76 @@ func main() {
 
 					// Loop through all of the possible collections that are part
 					// of this API Root and have either CanRead or CanWrite access
-					// and add them to the Collection.
+					// and add them to the Collection. This will prevent any collections
+					// from showing up in the list if they do not have at least
+					// read or write permissions.
+					collections := resources.NewCollections()
 					for key, _ := range colResources {
 						col := colResources[key]
 						collections.AddCollection(col)
 					}
 
+					// --------------------------------------------------
+					// Start a Collections Service handler
+					// Example: /api1/collections/
+					// --------------------------------------------------
 					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections, config.Global.ServerRecordLimit)
-
-					logger.Infoln("Starting TAXII Collections service of:", collectionsSrv.URLPath)
+					logger.Infoln("Starting TAXII GET Collections service of:", collectionsSrv.URLPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
-					// Loop through all the collection IDs that are part of this API Root
-					for _, c := range api.Collections.ReadAccess {
+					// Loop through all the collections that we have identified
+					// that should have basic read or write access.
+					for _, collectionResourse := range colResources {
 
 						// --------------------------------------------------
 						// Start a Collection handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
 						// --------------------------------------------------
 						// We do not need to check to see if the collection is enabled because that was already done
-						collectionSrv, _ := server.NewCollectionHandler(logger, api, config.CollectionResources[c], config.Global.ServerRecordLimit)
-						logger.Infoln("Starting TAXII Collection service of:", collectionSrv.URLPath)
+						collectionSrv, _ := server.NewCollectionHandler(logger, api, *collectionResourse, config.Global.ServerRecordLimit)
+						logger.Infoln("Starting TAXII GET Collection service of:", collectionSrv.URLPath)
 						router.HandleFunc(collectionSrv.URLPath, collectionSrv.CollectionHandler).Methods("GET")
 
 						// --------------------------------------------------
 						// Start an Objects handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
-						srvObjects, _ := server.NewObjectsHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
+						srvObjects, _ := server.NewObjectsHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvObjects.DS = ds
 
-						logger.Infoln("Starting TAXII Object service of:", srvObjects.URLPath)
-						config.Router.HandleFunc(srvObjects.URLPath, srvObjects.ObjectsServerHandler).Methods("GET")
+						if collectionResourse.CanRead == true {
+							logger.Infoln("Starting TAXII GET Object service of:", srvObjects.URLPath)
+							config.Router.HandleFunc(srvObjects.URLPath, srvObjects.ObjectsServerHandler).Methods("GET")
+						}
+
+						if collectionResourse.CanWrite == true {
+							logger.Infoln("Starting TAXII POST Object service of:", srvObjects.URLPath)
+							config.Router.HandleFunc(srvObjects.URLPath, srvObjects.ObjectsServerWriteHandler).Methods("POST")
+						}
 
 						// --------------------------------------------------
 						// Start a Objects by ID handlers
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/{objectid}/
 						// --------------------------------------------------
-						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
+						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvObjectsByID.DS = ds
 
-						logger.Infoln("Starting TAXII Object by ID service of:", srvObjectsByID.URLPath)
-						config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsByIDServerHandler).Methods("GET")
+						if collectionResourse.CanRead == true {
+							logger.Infoln("Starting TAXII GET Object by ID service of:", srvObjectsByID.URLPath)
+							config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsByIDServerHandler).Methods("GET")
+						}
 
 						// --------------------------------------------------
 						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------
-						srvManifest, _ := server.NewManifestHandler(logger, api, config.CollectionResources[c].ID, config.Global.ServerRecordLimit)
+						srvManifest, _ := server.NewManifestHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvManifest.DS = ds
 
-						logger.Infoln("Starting TAXII Manifest service of:", srvManifest.URLPath)
-						config.Router.HandleFunc(srvManifest.URLPath, srvManifest.ManifestServerHandler).Methods("GET")
+						if collectionResourse.CanRead == true {
+							logger.Infoln("Starting TAXII GET Manifest service of:", srvManifest.URLPath)
+							config.Router.HandleFunc(srvManifest.URLPath, srvManifest.ManifestServerHandler).Methods("GET")
+						}
 
 					} // End for loop api.Collections.ResourceIDs
 				} // End if Collections.Enabled == true
