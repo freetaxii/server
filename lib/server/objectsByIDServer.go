@@ -147,6 +147,6 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+		w.WriteHeader(http.StatusNotAcceptable)
 	}
 }

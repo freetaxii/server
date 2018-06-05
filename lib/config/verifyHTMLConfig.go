@@ -28,7 +28,7 @@ func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
 	// explicitly set to null ("null"). When set explicitly to null that means
 	// it is also invalid.
 	if c.HTML.TemplateDir.Value == "" || c.HTML.TemplateDir.Valid == false {
-		c.Logger.Infoln("CONFIG: The global HTML configuration is missing the html.templatedir directive in the configuration file")
+		c.Logger.Println("CONFIG: The global HTML configuration is missing the html.templatedir directive in the configuration file")
 		problemsFound++
 	} else {
 		problemsFound += c.verifyHTMLTemplateDir("html.templatedir", c.HTML.TemplateDir)
@@ -67,7 +67,7 @@ func (c *ServerConfigType) verifyHTMLTemplateDir(configPath string, templateDir 
 
 	filepath := c.Global.Prefix + templateDir.Value
 	if !c.exists(filepath) {
-		c.Logger.Infoln("CONFIG: The HTML template path", filepath, "can not be opened")
+		c.Logger.Println("CONFIG: The HTML template path", filepath, "can not be opened")
 		problemsFound++
 	}
 	return problemsFound
@@ -81,13 +81,13 @@ func (c *ServerConfigType) verifyGlobalHTMLTemplateFile(configPath, templatePath
 	var problemsFound = 0
 
 	if templatePath == "" {
-		c.Logger.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
+		c.Logger.Println("CONFIG: The HTML template path used by" + configPath + "is missing")
 		problemsFound++
 		return problemsFound
 	}
 
 	if template.Value == "" || template.Valid == false {
-		c.Logger.Infoln("CONFIG: The HTML configuration is missing the" + configPath + "directive in the configuration file")
+		c.Logger.Println("CONFIG: The HTML configuration is missing the" + configPath + "directive in the configuration file")
 		problemsFound++
 		return problemsFound
 	}
@@ -104,14 +104,14 @@ func (c *ServerConfigType) verifyHTMLTemplateFile(configPath, templatePath strin
 	var problemsFound = 0
 
 	if templatePath == "" {
-		c.Logger.Infoln("CONFIG: The HTML template path used by" + configPath + "is missing")
+		c.Logger.Println("CONFIG: The HTML template path used by" + configPath + "is missing")
 		problemsFound++
 		return problemsFound
 	}
 
 	filepath := templatePath + template.Value
 	if !c.exists(filepath) {
-		c.Logger.Infoln("CONFIG: The HTML template path", filepath, "defined at"+configPath+"can not be opened")
+		c.Logger.Println("CONFIG: The HTML template path", filepath, "defined at"+configPath+"can not be opened")
 		problemsFound++
 	}
 

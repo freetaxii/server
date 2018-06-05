@@ -42,8 +42,6 @@ func main() {
 	// Setup logger
 	// --------------------------------------------------
 	logger := log.New(os.Stderr, "", log.LstdFlags)
-	logger.EnableLevel("info")
-	logger.EnableLevel("debug")
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
@@ -52,6 +50,28 @@ func main() {
 	if configError != nil {
 		logger.Fatalln(configError)
 	}
+
+	// --------------------------------------------------
+	// Setup Logging Levels
+	// --------------------------------------------------
+
+	switch config.Logging.Level {
+	case 1:
+		logger.EnableLevel("info")
+	case 3:
+		logger.EnableLevel("info")
+		logger.EnableLevel("warn")
+	case 5:
+		logger.EnableLevel("info")
+		logger.EnableLevel("warn")
+		logger.EnableLevel("debug")
+	case 10:
+		logger.EnableLevel("info")
+		logger.EnableLevel("warn")
+		logger.EnableLevel("debug")
+		logger.EnableLevel("trace")
+	}
+
 	logger.Traceln("TRACE: System Configuration Dump")
 	logger.Tracef("%+v\n", config)
 

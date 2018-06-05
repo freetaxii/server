@@ -35,9 +35,9 @@ func TestHealthCheckHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Accept", "application/vnd.oasis.stix+json")
+	req.Header.Set("Accept", "application/stix+json")
 
-	var objectsSrv STIXServerHandlerType
+	var objectsSrv ServerHandlerType
 	objectsSrv.CollectionID = "1234"
 	objectsSrv.DS = &dummydb{}
 

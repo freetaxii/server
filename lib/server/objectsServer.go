@@ -143,7 +143,7 @@ func (s *ServerHandlerType) ObjectsServerHandler(w http.ResponseWriter, r *http.
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+		w.WriteHeader(http.StatusNotAcceptable)
 	}
 }
 
@@ -259,6 +259,6 @@ func (s *ServerHandlerType) ObjectsServerWriteHandler(w http.ResponseWriter, r *
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+		w.WriteHeader(http.StatusNotAcceptable)
 	}
 }

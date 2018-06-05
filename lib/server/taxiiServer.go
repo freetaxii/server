@@ -93,6 +93,7 @@ func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) 
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII21)
+		w.WriteHeader(http.StatusNotAcceptable)
 	}
 }

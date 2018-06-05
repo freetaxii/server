@@ -40,6 +40,7 @@ type ServerConfigType struct {
 	}
 	Logging struct {
 		Enabled bool
+		Level   int
 		LogFile string
 	}
 	DiscoveryServer struct {
@@ -216,8 +217,6 @@ func (c *ServerConfigType) verifyServerConfig() error {
 	// configuration and verify everything is present and valid.
 	if c.HTML.Enabled.Value == true {
 		problemsFound += c.verifyGlobalHTMLConfig()
-	} else {
-		c.Logger.Infoln("CONFIG: HTML output is disabled in the global configuration")
 	}
 
 	// --------------------------------------------------
@@ -226,14 +225,10 @@ func (c *ServerConfigType) verifyServerConfig() error {
 	// Only verify the Discovery server configuration if it is enabled.
 	if c.DiscoveryServer.Enabled == true {
 		problemsFound += c.verifyDiscoveryConfig()
-	} else {
-		c.Logger.Infoln("CONFIG: The Discovery Server is not enabled in the configuration file")
-	}
 
-	if c.DiscoveryServer.Enabled == true && c.HTML.Enabled.Value == true {
-		problemsFound += c.verifyDiscoveryHTMLConfig()
-	} else {
-		c.Logger.Infoln("CONFIG: The Discovery Server is enabled in the configuration file but HTML output is not")
+		if c.HTML.Enabled.Value == true {
+			problemsFound += c.verifyDiscoveryHTMLConfig()
+		}
 	}
 
 	// --------------------------------------------------
@@ -242,14 +237,10 @@ func (c *ServerConfigType) verifyServerConfig() error {
 	// Only verify the API Root server configuration if it is enabled.
 	if c.APIRootServer.Enabled == true {
 		problemsFound += c.verifyAPIRootConfig()
-	} else {
-		c.Logger.Infoln("CONFIG: The API Root Server is not enabled in the configuration file")
-	}
 
-	if c.APIRootServer.Enabled == true && c.HTML.Enabled.Value == true {
-		problemsFound += c.verifyAPIRootHTMLConfig()
-	} else {
-		c.Logger.Infoln("CONFIG: The API Root Server is enabled in the configuration file but HTML output is not")
+		if c.HTML.Enabled.Value == true {
+			problemsFound += c.verifyAPIRootHTMLConfig()
+		}
 	}
 
 	if problemsFound > 0 {

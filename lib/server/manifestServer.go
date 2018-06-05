@@ -145,6 +145,6 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusUnsupportedMediaType)
+		w.WriteHeader(http.StatusNotAcceptable)
 	}
 }
