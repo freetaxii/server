@@ -76,6 +76,11 @@ func (s *ServerHandlerType) baseHandler(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusOK)
 		j.Encode(s.Resource)
 
+	} else if acceptHeader.TAXII20 == true {
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII20)
+		w.WriteHeader(http.StatusOK)
+		j.Encode(s.Resource)
+
 	} else if acceptHeader.JSON == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 		w.WriteHeader(http.StatusOK)

@@ -110,6 +110,16 @@ func (s *ServerHandlerType) ObjectsByIDServerHandler(w http.ResponseWriter, r *h
 		}
 		j.Encode(s.Resource)
 
+	} else if acceptHeader.STIX20 == true {
+		w.Header().Set("Content-Type", defs.CONTENT_TYPE_STIX20)
+
+		if objectNotFound == true {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		j.Encode(s.Resource)
+
 	} else if acceptHeader.JSON == true {
 		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
 
