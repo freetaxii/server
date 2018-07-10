@@ -21,10 +21,10 @@ import (
 // --------------------------------------------------
 
 /*
-ServerHandlerType - This type will hold the data elements required to process
+ServerHandler - This type will hold the data elements required to process
 all TAXII requests.
 */
-type ServerHandlerType struct {
+type ServerHandler struct {
 	Logger            *log.Logger
 	URLPath           string // Used in HTML output and to build the URL for the next resource.
 	HTMLEnabled       bool   // Is HTML output enabled for this service
@@ -43,8 +43,8 @@ type ServerHandlerType struct {
 // be in a consistent and correct from.
 // ----------------------------------------------------------------------
 
-func New(logger *log.Logger) (ServerHandlerType, error) {
-	var s ServerHandlerType
+func New(logger *log.Logger) (ServerHandler, error) {
+	var s ServerHandler
 
 	if logger == nil {
 		s.Logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -58,7 +58,7 @@ func New(logger *log.Logger) (ServerHandlerType, error) {
 /*
 NewDiscoveryHandler - This function will prepare the data for the Discovery handler.
 */
-func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryServiceType, r resources.DiscoveryType) (ServerHandlerType, error) {
+func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryService, r resources.Discovery) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = c.FullPath
 	s.HTMLEnabled = c.HTML.Enabled.Value
@@ -70,7 +70,7 @@ func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryServiceType, r re
 /*
 NewAPIRootHandler - This function will prepare the data for the API Root handler.
 */
-func NewAPIRootHandler(logger *log.Logger, api config.APIRootServiceType, r resources.APIRootType) (ServerHandlerType, error) {
+func NewAPIRootHandler(logger *log.Logger, api config.APIRootService, r resources.APIRoot) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -82,7 +82,7 @@ func NewAPIRootHandler(logger *log.Logger, api config.APIRootServiceType, r reso
 /*
 NewCollectionsHandler - This function will prepare the data for the Collections handler.
 */
-func NewCollectionsHandler(logger *log.Logger, api config.APIRootServiceType, r resources.CollectionsType, limit int) (ServerHandlerType, error) {
+func NewCollectionsHandler(logger *log.Logger, api config.APIRootService, r resources.Collections, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath + "collections/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -95,7 +95,7 @@ func NewCollectionsHandler(logger *log.Logger, api config.APIRootServiceType, r 
 /*
 NewCollectionHandler - This function will prepare the data for the Collection handler.
 */
-func NewCollectionHandler(logger *log.Logger, api config.APIRootServiceType, r resources.CollectionType, limit int) (ServerHandlerType, error) {
+func NewCollectionHandler(logger *log.Logger, api config.APIRootService, r resources.Collection, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath + "collections/" + r.ID + "/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -108,7 +108,7 @@ func NewCollectionHandler(logger *log.Logger, api config.APIRootServiceType, r r
 /*
 NewObjectsHandler - This function will prepare the data for the Objects handler.
 */
-func NewObjectsHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewObjectsHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -121,7 +121,7 @@ func NewObjectsHandler(logger *log.Logger, api config.APIRootServiceType, collec
 /*
 NewObjectsByIDHandler - This function will prepare the data for the Objects by ID handler.
 */
-func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -134,7 +134,7 @@ func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootServiceType, co
 /*
 NewManifestHandler - This function will prepare the data for the Manifest handler.
 */
-func NewManifestHandler(logger *log.Logger, api config.APIRootServiceType, collectionID string, limit int) (ServerHandlerType, error) {
+func NewManifestHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.FullPath + "collections/" + collectionID + "/manifest/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -145,25 +145,25 @@ func NewManifestHandler(logger *log.Logger, api config.APIRootServiceType, colle
 }
 
 // ----------------------------------------------------------------------
-// Private Methods - ServerHandlerType
+// Private Methods - ServerHandler
 // ----------------------------------------------------------------------
 
 /*
 processURLParameters - This method will process all of the URL parameters from
 an HTTP request.
 */
-func (s *ServerHandlerType) processURLParameters(q *resources.CollectionQueryType, values map[string][]string) error {
+func (s *ServerHandler) processURLParameters(q *resources.CollectionQuery, values map[string][]string) error {
 
-	if values["id"] != nil {
-		q.STIXID = strings.Split(values["id"][0], ",")
+	if values["match[id]"] != nil {
+		q.STIXID = strings.Split(values["match[id]"][0], ",")
 	}
 
-	if values["type"] != nil {
-		q.STIXType = strings.Split(values["type"][0], ",")
+	if values["match[type]"] != nil {
+		q.STIXType = strings.Split(values["match[type]"][0], ",")
 	}
 
-	if values["version"] != nil {
-		q.STIXVersion = strings.Split(values["version"][0], ",")
+	if values["match[version]"] != nil {
+		q.STIXVersion = strings.Split(values["match[version]"][0], ",")
 	}
 
 	if values["added_after"] != nil {

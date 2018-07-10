@@ -13,11 +13,11 @@ import (
 	"github.com/gologme/log"
 )
 
-type HttpHeaderType struct {
+type HttpHeader struct {
 	DebugLevel int
 }
 
-type AcceptHeaderType struct {
+type MediaType struct {
 	TAXII21 bool
 	TAXII20 bool
 	STIX21  bool
@@ -26,9 +26,9 @@ type AcceptHeaderType struct {
 	JSON    bool
 }
 
-func (h *AcceptHeaderType) ParseTAXII(accept string) {
-	// If there is a space after the semicolon, remove it
-	a := strings.Replace(accept, "; ", ";", -1)
+func (h *MediaType) ParseTAXII(media string) {
+	// If there are spaces after the semicolon, remove all of them
+	a := strings.Replace(media, "; ", ";", -1)
 	a1 := strings.Split(a, ",")
 
 	for _, v := range a1 {
@@ -44,8 +44,8 @@ func (h *AcceptHeaderType) ParseTAXII(accept string) {
 	}
 }
 
-func (h *AcceptHeaderType) ParseSTIX(accept string) {
-	a := strings.Replace(accept, " ", "", -1)
+func (h *MediaType) ParseSTIX(media string) {
+	a := strings.Replace(media, " ", "", -1)
 	a1 := strings.Split(a, ",")
 
 	for _, v := range a1 {
@@ -65,7 +65,7 @@ func (h *AcceptHeaderType) ParseSTIX(accept string) {
 // Debug HTTP Headers
 // --------------------------------------------------
 
-func (this *HttpHeaderType) DebugHttpRequest(r *http.Request) {
+func (this *HttpHeader) DebugHttpRequest(r *http.Request) {
 
 	log.Traceln("DEBUG: --------------- BEGIN HTTP DUMP ---------------")
 	log.Traceln("DEBUG: Method", r.Method)

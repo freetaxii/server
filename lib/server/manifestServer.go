@@ -19,9 +19,9 @@ import (
 ManifestServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
-func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
-	var taxiiHeader headers.HttpHeaderType
-	var acceptHeader headers.AcceptHeaderType
+func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
+	var taxiiHeader headers.HttpHeader
+	var acceptHeader headers.MediaType
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	var objectNotFound = false
@@ -99,7 +99,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 	// w.Header().Add("Content-Range", contentRangeHeaderValue)
 
 	if acceptHeader.TAXII21 == true {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII21)
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -109,7 +109,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		j.Encode(s.Resource)
 
 	} else if acceptHeader.TAXII20 == true {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_TAXII20)
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII20)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -119,7 +119,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		j.Encode(s.Resource)
 
 	} else if acceptHeader.JSON == true {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_JSON)
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_JSON)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
@@ -130,7 +130,7 @@ func (s *ServerHandlerType) ManifestServerHandler(w http.ResponseWriter, r *http
 		j.Encode(s.Resource)
 
 	} else if s.HTMLEnabled == true && acceptHeader.HTML == true {
-		w.Header().Set("Content-Type", defs.CONTENT_TYPE_HTML)
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_HTML)
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {

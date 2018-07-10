@@ -41,6 +41,7 @@ func main() {
 	ds.Filename = *sOptDatabaseFilename
 
 	db, sqlerr := sql.Open("sqlite3", ds.Filename)
+	defer db.Close()
 	if sqlerr != nil {
 		log.Fatalln("Unable to open file %s due to error: %v", ds.Filename, sqlerr)
 	}
@@ -51,7 +52,6 @@ func main() {
 	ds.PopulateVocabTables()
 	ds.CreateTAXIITables()
 
-	ds.Close()
 }
 
 // --------------------------------------------------

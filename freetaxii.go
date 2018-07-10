@@ -170,7 +170,7 @@ func main() {
 				if api.Collections.Enabled == true {
 					// Make a new map so we can work on a copy, this way we can
 					// keep permissions unique per API root.
-					colResources := make(map[string]*resources.CollectionType)
+					colResources := make(map[string]*resources.Collection)
 
 					// For each collection listed with ReadAccess add it to our local
 					// copy called colResources and set the CanRead to true
@@ -251,7 +251,7 @@ func main() {
 
 						if collectionResourse.CanRead == true {
 							logger.Infoln("Starting TAXII GET Object by ID service of:", srvObjectsByID.URLPath)
-							config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsByIDServerHandler).Methods("GET")
+							config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsServerHandler).Methods("GET")
 						}
 
 						// --------------------------------------------------

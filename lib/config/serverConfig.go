@@ -36,7 +36,7 @@ type ServerConfigType struct {
 		ServerRecordLimit int
 	}
 	HTML struct {
-		HTMLConfigType
+		HTMLConfig
 	}
 	Logging struct {
 		Enabled bool
@@ -45,19 +45,19 @@ type ServerConfigType struct {
 	}
 	DiscoveryServer struct {
 		Enabled  bool
-		Services []DiscoveryServiceType
+		Services []DiscoveryService
 	} `json:"discovery_server,omitempty"`
 	APIRootServer struct {
 		Enabled  bool
-		Services []APIRootServiceType
+		Services []APIRootService
 	} `json:"apiroot_server,omitempty"`
-	DiscoveryResources  map[string]resources.DiscoveryType  `json:"discovery_resources,omitempty"`  // The key in the map is the ResourceID
-	APIRootResources    map[string]resources.APIRootType    `json:"apiroot_resources,omitempty"`    // The key in the map is the ResourceID
-	CollectionResources map[string]resources.CollectionType `json:"collection_resources,omitempty"` // The key in the map is the ResourceID
+	DiscoveryResources  map[string]resources.Discovery  `json:"discovery_resources,omitempty"`  // The key in the map is the ResourceID
+	APIRootResources    map[string]resources.APIRoot    `json:"apiroot_resources,omitempty"`    // The key in the map is the ResourceID
+	CollectionResources map[string]resources.Collection `json:"collection_resources,omitempty"` // The key in the map is the ResourceID
 }
 
 /*
-BaseServiceType - This struct represents the common properties between the
+BaseService - This struct represents the common properties between the
 Discovery and API-Root services.
 
 Path          - The URL path for this service
@@ -66,25 +66,25 @@ ResourceID    - A unique ID for the resource that this service is using
 ResourcePath  - The actual full URL path for the resource, used for the handler to know where to listen.
 HTML          - The configuration for generating HTML output
 */
-type BaseServiceType struct {
-	Enabled    bool           // User defined in configuration file
-	Path       string         // User defined in configuration file
-	ResourceID string         // User defined in configuration file
-	HTML       HTMLConfigType // User defined in configuration file or set in the verify scripts.
-	FullPath   string         // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
+type BaseService struct {
+	Enabled    bool       // User defined in configuration file
+	Path       string     // User defined in configuration file
+	ResourceID string     // User defined in configuration file
+	HTML       HTMLConfig // User defined in configuration file or set in the verify scripts.
+	FullPath   string     // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
 }
 
 /*
-DiscoveryServiceType - This struct represents an instance of a Discovery server.
+DiscoveryService - This struct represents an instance of a Discovery server.
 If someone tries to set the 'resourcepath' directive in the configuration file it
 will get overwritten in code.
 */
-type DiscoveryServiceType struct {
-	BaseServiceType
+type DiscoveryService struct {
+	BaseService
 }
 
 /*
-APIRootServiceType - This struct represents an instance of an API Root server.
+APIRootService - This struct represents an instance of an API Root server.
 If someone tries to set the 'path' directive in the configuration file it
 will just get overwritten in code.
 ReadAccess - This is a list of collection resource IDs that may have GET access
@@ -92,8 +92,8 @@ at the API Root level
 WriteAccess - This is a list of collection resource IDs that may have POST access
 at the API Root level
 */
-type APIRootServiceType struct {
-	BaseServiceType
+type APIRootService struct {
+	BaseService
 	Collections struct {
 		Enabled     bool     // User defined in configuration file
 		ReadAccess  []string // User defined in configuration file.
@@ -102,7 +102,7 @@ type APIRootServiceType struct {
 }
 
 /*
-HTMLConfigType - This struct holds the configuration elements for generating HTML
+HTMLConfig - This struct holds the configuration elements for generating HTML
 output. This is used at the top level of the configuration file as well as in
 each individual service. This means individual services can have a different
 HTML configuration. I needed to setup my own types for JSON boolean and strings
@@ -116,7 +116,7 @@ TemplateDir       - The location of the template files relative to the base of t
 FullTemplatePath  - The full path of the template directory (prefix + TemplateDir)
 TemplateFiles     - The HTML template filenames in the template directory for the following services
 */
-type HTMLConfigType struct {
+type HTMLConfig struct {
 	Enabled       JSONbool   // User defined in configuration file or set in verifyHTMLConfig()
 	TemplateDir   JSONstring // User defined in configuration file or set in verifyHTMLConfig()
 	TemplateFiles struct {
