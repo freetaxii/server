@@ -4,15 +4,15 @@
 // that can be found in the LICENSE file in the root of the source
 // tree.
 
-package server
+package handlers
 
 import (
 	"os"
 	"strings"
 
-	"github.com/freetaxii/freetaxii-server/lib/config"
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/server/internal/config"
 	"github.com/gologme/log"
 )
 

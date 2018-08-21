@@ -3,16 +3,16 @@
 // Use of this source code is governed by an Apache 2.0 license that can be
 // found in the LICENSE file in the root of the source tree.
 
-package server
+package handlers
 
 import (
 	"encoding/json"
 	"html/template"
 	"net/http"
 
-	"github.com/freetaxii/freetaxii-server/lib/headers"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/server/internal/headers"
 )
 
 /*

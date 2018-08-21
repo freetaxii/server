@@ -12,11 +12,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/freetaxii/freetaxii-server/lib/config"
-	"github.com/freetaxii/freetaxii-server/lib/server"
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/server/internal/config"
+	"github.com/freetaxii/server/internal/handlers"
 	"github.com/gologme/log"
 	"github.com/gorilla/mux"
 	"github.com/pborman/getopt"
@@ -138,7 +138,7 @@ func main() {
 			if s.Enabled == true {
 
 				// Configuration for this specific instance and its resource
-				ts, _ := server.NewDiscoveryHandler(logger, s, config.DiscoveryResources[s.ResourceID])
+				ts, _ := handlers.NewDiscoveryHandler(logger, s, config.DiscoveryResources[s.ResourceID])
 
 				logger.Infoln("Starting TAXII GET Discovery service at:", s.FullPath)
 				router.HandleFunc(s.FullPath, ts.DiscoveryHandler).Methods("GET")
@@ -162,7 +162,7 @@ func main() {
 			if api.Enabled == true {
 
 				logger.Infoln("Starting TAXII GET API Root service at:", api.FullPath)
-				ts, _ := server.NewAPIRootHandler(logger, api, config.APIRootResources[api.ResourceID])
+				ts, _ := handlers.NewAPIRootHandler(logger, api, config.APIRootResources[api.ResourceID])
 				router.HandleFunc(api.FullPath, ts.APIRootHandler).Methods("GET")
 				serviceCounter++
 
@@ -208,7 +208,7 @@ func main() {
 					// Start a Collections Service handler
 					// Example: /api1/collections/
 					// --------------------------------------------------
-					collectionsSrv, _ := server.NewCollectionsHandler(logger, api, *collections, config.Global.ServerRecordLimit)
+					collectionsSrv, _ := handlers.NewCollectionsHandler(logger, api, *collections, config.Global.ServerRecordLimit)
 					logger.Infoln("Starting TAXII GET Collections service of:", collectionsSrv.URLPath)
 					router.HandleFunc(collectionsSrv.URLPath, collectionsSrv.CollectionsHandler).Methods("GET")
 
@@ -221,7 +221,7 @@ func main() {
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/
 						// --------------------------------------------------
 						// We do not need to check to see if the collection is enabled because that was already done
-						collectionSrv, _ := server.NewCollectionHandler(logger, api, *collectionResourse, config.Global.ServerRecordLimit)
+						collectionSrv, _ := handlers.NewCollectionHandler(logger, api, *collectionResourse, config.Global.ServerRecordLimit)
 						logger.Infoln("Starting TAXII GET Collection service of:", collectionSrv.URLPath)
 						router.HandleFunc(collectionSrv.URLPath, collectionSrv.CollectionHandler).Methods("GET")
 
@@ -229,7 +229,7 @@ func main() {
 						// Start an Objects handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/
 						// --------------------------------------------------
-						srvObjects, _ := server.NewObjectsHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
+						srvObjects, _ := handlers.NewObjectsHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvObjects.DS = ds
 
 						if collectionResourse.CanRead == true {
@@ -246,7 +246,7 @@ func main() {
 						// Start a Objects by ID handlers
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/{objectid}/
 						// --------------------------------------------------
-						srvObjectsByID, _ := server.NewObjectsByIDHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
+						srvObjectsByID, _ := handlers.NewObjectsByIDHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvObjectsByID.DS = ds
 
 						if collectionResourse.CanRead == true {
@@ -258,7 +258,7 @@ func main() {
 						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------
-						srvManifest, _ := server.NewManifestHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
+						srvManifest, _ := handlers.NewManifestHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
 						srvManifest.DS = ds
 
 						if collectionResourse.CanRead == true {

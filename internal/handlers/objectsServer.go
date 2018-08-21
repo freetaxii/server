@@ -4,18 +4,18 @@
 // that can be found in the LICENSE file in the root of the source
 // tree.
 
-package server
+package handlers
 
 import (
 	"encoding/json"
 	"html/template"
 	"net/http"
 
-	"github.com/freetaxii/freetaxii-server/lib/headers"
-	"github.com/freetaxii/libstix2/common/stixid"
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects"
 	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/stixid"
+	"github.com/freetaxii/server/internal/headers"
 	"github.com/gorilla/mux"
 )
 
@@ -230,7 +230,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 
 		// Add the object to the datastore, if the decode was successful
 		s.Logger.Debugln("DEBUG: Adding object", id, "to the datastore")
-		err = s.DS.AddSTIXObject(o)
+		err = s.DS.AddObject(o)
 		if err != nil {
 			s.Logger.Warnln("WARN: Error adding object", id, "to datastore", err)
 			failureCount++
