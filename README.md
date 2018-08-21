@@ -1,8 +1,8 @@
-# FreeTAXII/freetaxii-server #
+# FreeTAXII/server #
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/freetaxii/freetaxii-server)](https://goreportcard.com/report/github.com/freetaxii/freetaxii-server)  [![GoDoc](https://godoc.org/github.com/freetaxii/freetaxii-server?status.png)](https://godoc.org/github.com/freetaxii/freetaxii-server)
+[![Go Report Card](https://goreportcard.com/badge/github.com/freetaxii/server)](https://goreportcard.com/report/github.com/freetaxii/server)  [![GoDoc](https://godoc.org/github.com/freetaxii/server?status.png)](https://godoc.org/github.com/freetaxii/server)
 
-The FreeTAXII-Server is a TAXII 2 Server written in Go (golang)
+The FreeTAXII Server is a TAXII 2 Server written in Go (golang)
 
 ## Version ##
 0.0.1
@@ -13,8 +13,8 @@ The FreeTAXII-Server is a TAXII 2 Server written in Go (golang)
 This package can be installed with the go get command:
 
 ```
-go get github.com/freetaxii/freetaxii-server
-cd github.com/freetaxii/freetaxii-server
+go get github.com/freetaxii/server
+cd github.com/freetaxii/server
 go build freetaxii.go
 ```
 
