@@ -1,4 +1,4 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
 // that can be found in the LICENSE file in the root of the source tree.
@@ -18,7 +18,7 @@ import (
 verifyGlobalHTMLConfig - This method will check each of the defined HTML settings
 in the global configuration and return the number of errors found.
 */
-func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
+func (c *ServerConfig) verifyGlobalHTMLConfig() int {
 	var problemsFound = 0
 
 	// ----------------------------------------------------------------------
@@ -57,7 +57,7 @@ func (c *ServerConfigType) verifyGlobalHTMLConfig() int {
 verifyHTMLTemplateDir - This method will verify that the template directory in
 the configuration has a trailing slash and that it is found on the file system.
 */
-func (c *ServerConfigType) verifyHTMLTemplateDir(configPath string, templateDir JSONstring) int {
+func (c *ServerConfig) verifyHTMLTemplateDir(configPath string, templateDir JSONstring) int {
 	var problemsFound = 0
 
 	if !strings.HasSuffix(templateDir.Value, "/") {
@@ -77,7 +77,7 @@ func (c *ServerConfigType) verifyHTMLTemplateDir(configPath string, templateDir 
 verifyGlobalHTMLTemplateFile - This method will verify that the global HTML
 template files are defined and that they can be found on the file system.
 */
-func (c *ServerConfigType) verifyGlobalHTMLTemplateFile(configPath, templatePath string, template JSONstring) int {
+func (c *ServerConfig) verifyGlobalHTMLTemplateFile(configPath, templatePath string, template JSONstring) int {
 	var problemsFound = 0
 
 	if templatePath == "" {
@@ -100,7 +100,7 @@ func (c *ServerConfigType) verifyGlobalHTMLTemplateFile(configPath, templatePath
 verifyHTMLTemplateFile - This method will verify that HTML template files are
 found on the file system.
 */
-func (c *ServerConfigType) verifyHTMLTemplateFile(configPath, templatePath string, template JSONstring) int {
+func (c *ServerConfig) verifyHTMLTemplateFile(configPath, templatePath string, template JSONstring) int {
 	var problemsFound = 0
 
 	if templatePath == "" {
@@ -127,7 +127,7 @@ settings.
 
 This method is called from serverConfig.go-verifyServerConfig()
 */
-func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
+func (c *ServerConfig) verifyDiscoveryHTMLConfig() int {
 	var problemsFound = 0
 
 	// If HTML output is not enabled globally, then skip these tests
@@ -189,7 +189,7 @@ func (c *ServerConfigType) verifyDiscoveryHTMLConfig() int {
 // a service level. If they have, it will check to see if those exists as well.
 // This method will only be called from VerifyServerConfig() if
 // APIRootServer.HTMLEnabled == true
-func (c *ServerConfigType) verifyAPIRootHTMLConfig() int {
+func (c *ServerConfig) verifyAPIRootHTMLConfig() int {
 	var problemsFound = 0
 
 	// If HTML output is not enabled globally, then skip these tests

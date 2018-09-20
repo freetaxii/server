@@ -1,14 +1,12 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
-// that can be found in the LICENSE file in the root of the source
-// tree.
+// that can be found in the LICENSE file in the root of the source tree.
 
 package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
@@ -18,9 +16,9 @@ import (
 )
 
 /*
-ServerConfigType - This type defines the configuration for the entire server.
+ServerConfig - This type defines the configuration for the entire server.
 */
-type ServerConfigType struct {
+type ServerConfig struct {
 	Router *mux.Router
 	Logger *log.Logger
 	Global struct {
@@ -71,7 +69,6 @@ type BaseService struct {
 	Path       string     // User defined in configuration file
 	ResourceID string     // User defined in configuration file
 	HTML       HTMLConfig // User defined in configuration file or set in the verify scripts.
-	FullPath   string     // Set in verifyDiscoveryConfig() or verifyAPIRootConfig()
 }
 
 /*
@@ -137,11 +134,11 @@ type HTMLConfig struct {
 // ----------------------------------------------------------------------
 
 /*
-New - This function will return a ServerConfigType, load the current configuration
+New - This function will return a ServerConfig, load the current configuration
 from a file, and verify that the configuration is correct.
 */
-func New(logger *log.Logger, filename string) (ServerConfigType, error) {
-	var c ServerConfigType
+func New(logger *log.Logger, filename string) (ServerConfig, error) {
+	var c ServerConfig
 
 	if logger == nil {
 		c.Logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -156,7 +153,7 @@ func New(logger *log.Logger, filename string) (ServerConfigType, error) {
 
 	// In addition to checking the configuration for completeness the verify
 	// process will also populate some of the helper values.
-	err2 := c.verifyServerConfig()
+	err2 := c.Verify()
 	if err2 != nil {
 		return c, err2
 	}
@@ -173,7 +170,7 @@ func New(logger *log.Logger, filename string) (ServerConfigType, error) {
 loadServerConfig - This methods takes in a string value representing a
 filename of the configuration file and loads the configuration into memory.
 */
-func (c *ServerConfigType) loadServerConfig(filename string) error {
+func (c *ServerConfig) loadServerConfig(filename string) error {
 	// TODO - Need to make make a validation check for the configuration file
 
 	// Open and read configuration file
@@ -198,62 +195,9 @@ func (c *ServerConfigType) loadServerConfig(filename string) error {
 }
 
 /*
-verifyServerConfig - This method will verify that the configuration file has
-what it needs.
-TODO finish fleshing this out
-*/
-func (c *ServerConfigType) verifyServerConfig() error {
-	var problemsFound = 0
-
-	// --------------------------------------------------
-	// Global Configuration
-	// --------------------------------------------------
-	problemsFound += c.verifyGlobalConfig()
-
-	// --------------------------------------------------
-	// Global HTML Configuration
-	// --------------------------------------------------
-	// If HTML output is turned off globally, then there no need to check the
-	// configuration and verify everything is present and valid.
-	if c.HTML.Enabled.Value == true {
-		problemsFound += c.verifyGlobalHTMLConfig()
-	}
-
-	// --------------------------------------------------
-	// Discovery Server
-	// --------------------------------------------------
-	// Only verify the Discovery server configuration if it is enabled.
-	if c.DiscoveryServer.Enabled == true {
-		problemsFound += c.verifyDiscoveryConfig()
-
-		if c.HTML.Enabled.Value == true {
-			problemsFound += c.verifyDiscoveryHTMLConfig()
-		}
-	}
-
-	// --------------------------------------------------
-	// API Root Server
-	// --------------------------------------------------
-	// Only verify the API Root server configuration if it is enabled.
-	if c.APIRootServer.Enabled == true {
-		problemsFound += c.verifyAPIRootConfig()
-
-		if c.HTML.Enabled.Value == true {
-			problemsFound += c.verifyAPIRootHTMLConfig()
-		}
-	}
-
-	if problemsFound > 0 {
-		c.Logger.Println("ERROR: The configuration has", problemsFound, "error(s)")
-		return errors.New("ERROR: Configuration errors found")
-	}
-	return nil
-}
-
-/*
 exists - This method checks to see if the filename exists on the file system
 */
-func (c *ServerConfigType) exists(name string) bool {
+func (c *ServerConfig) exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
 			return false

@@ -1,4 +1,4 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
 // that can be found in the LICENSE file in the root of the source tree.
@@ -10,10 +10,10 @@ import (
 )
 
 /*
-verifyGlobalDirectives - This method will verify that each required
-configuration directive is present and will return the number of errors found.
+verifyGlobalConfig - This method will verify that each required configuration
+directive is present and will return the number of errors found.
 */
-func (c *ServerConfigType) verifyGlobalConfig() int {
+func (c *ServerConfig) verifyGlobalConfig() int {
 	var problemsFound = 0
 
 	// Protocol Directive
@@ -69,7 +69,7 @@ func (c *ServerConfigType) verifyGlobalConfig() int {
 verifyTLSConfig - This method will verify that each required TLS configuration
 directive are present.
 */
-func (c *ServerConfigType) verifyTLSConfig() int {
+func (c *ServerConfig) verifyTLSConfig() int {
 	var problemsFound = 0
 
 	if c.Global.TLSDir == "" {

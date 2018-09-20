@@ -60,7 +60,7 @@ NewDiscoveryHandler - This function will prepare the data for the Discovery hand
 */
 func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryService, r resources.Discovery) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = c.FullPath
+	s.URLPath = c.Path
 	s.HTMLEnabled = c.HTML.Enabled.Value
 	s.HTMLTemplate = c.HTML.FullTemplatePath + c.HTML.TemplateFiles.Discovery.Value
 	s.Resource = r
@@ -72,7 +72,7 @@ NewAPIRootHandler - This function will prepare the data for the API Root handler
 */
 func NewAPIRootHandler(logger *log.Logger, api config.APIRootService, r resources.APIRoot) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath
+	s.URLPath = api.Path
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.APIRoot.Value
 	s.Resource = r
@@ -84,7 +84,7 @@ NewCollectionsHandler - This function will prepare the data for the Collections 
 */
 func NewCollectionsHandler(logger *log.Logger, api config.APIRootService, r resources.Collections, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath + "collections/"
+	s.URLPath = api.Path + "collections/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Collections.Value
 	s.Resource = r
@@ -97,7 +97,7 @@ NewCollectionHandler - This function will prepare the data for the Collection ha
 */
 func NewCollectionHandler(logger *log.Logger, api config.APIRootService, r resources.Collection, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath + "collections/" + r.ID + "/"
+	s.URLPath = api.Path + "collections/" + r.ID + "/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Collection.Value
 	s.Resource = r
@@ -110,7 +110,7 @@ NewObjectsHandler - This function will prepare the data for the Objects handler.
 */
 func NewObjectsHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/"
+	s.URLPath = api.Path + "collections/" + collectionID + "/objects/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
@@ -123,7 +123,7 @@ NewObjectsByIDHandler - This function will prepare the data for the Objects by I
 */
 func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath + "collections/" + collectionID + "/objects/{objectid}/"
+	s.URLPath = api.Path + "collections/" + collectionID + "/objects/{objectid}/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Objects.Value
 	s.CollectionID = collectionID
@@ -136,7 +136,7 @@ NewManifestHandler - This function will prepare the data for the Manifest handle
 */
 func NewManifestHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
-	s.URLPath = api.FullPath + "collections/" + collectionID + "/manifest/"
+	s.URLPath = api.Path + "collections/" + collectionID + "/manifest/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
 	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Manifest.Value
 	s.CollectionID = collectionID
