@@ -22,7 +22,7 @@ func (c *ServerConfig) verifyDiscoveryConfig() int {
 	var isServiceEnabled = false
 
 	// Loop through each Discovery Service and verify its configuration
-	for i, value := range c.DiscoveryServer.Services {
+	for _, value := range c.DiscoveryServer.Services {
 
 		// Check to see if this service instance is enabled.
 		if value.Enabled == true {
@@ -79,7 +79,7 @@ func (c *ServerConfig) verifyAPIRootConfig() int {
 	var isServiceEnabled = false
 
 	// API Service Directives
-	for i, value := range c.APIRootServer.Services {
+	for _, value := range c.APIRootServer.Services {
 
 		// If this service instance is enabled
 		if value.Enabled == true {

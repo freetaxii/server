@@ -37,7 +37,7 @@ func main() {
 
 	// We are not using the sqlite New() function as it looks for tables that do
 	// not yet exist
-	var ds sqlite3.Datastore
+	var ds sqlite3.Store
 	ds.Filename = *sOptDatabaseFilename
 
 	db, sqlerr := sql.Open("sqlite3", ds.Filename)

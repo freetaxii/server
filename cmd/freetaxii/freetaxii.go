@@ -140,8 +140,8 @@ func main() {
 				// Configuration for this specific instance and its resource
 				ts, _ := handlers.NewDiscoveryHandler(logger, s, config.DiscoveryResources[s.ResourceID])
 
-				logger.Infoln("Starting TAXII GET Discovery service at:", s.FullPath)
-				router.HandleFunc(s.FullPath, ts.DiscoveryHandler).Methods("GET")
+				logger.Infoln("Starting TAXII GET Discovery service at:", s.Path)
+				router.HandleFunc(s.Path, ts.DiscoveryHandler).Methods("GET")
 				serviceCounter++
 			}
 		}
@@ -161,9 +161,9 @@ func main() {
 		for _, api := range config.APIRootServer.Services {
 			if api.Enabled == true {
 
-				logger.Infoln("Starting TAXII GET API Root service at:", api.FullPath)
+				logger.Infoln("Starting TAXII GET API Root service at:", api.Path)
 				ts, _ := handlers.NewAPIRootHandler(logger, api, config.APIRootResources[api.ResourceID])
-				router.HandleFunc(api.FullPath, ts.APIRootHandler).Methods("GET")
+				router.HandleFunc(api.Path, ts.APIRootHandler).Methods("GET")
 				serviceCounter++
 
 				// Loop through the collections, if enabled and start the endpoints

@@ -195,7 +195,10 @@ func (c *ServerConfig) loadServerConfig(filename string) error {
 }
 
 /*
-exists - This method checks to see if the filename exists on the file system
+exists - This method checks to see if the filename exists on the file system.
+This is used by several of the configuration directive checks, basically anytime
+there is a filename defined in the configuration file, this is called to check
+to see if that file actually exists on the file system.
 */
 func (c *ServerConfig) exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {

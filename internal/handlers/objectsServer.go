@@ -12,7 +12,7 @@ import (
 	"net/http"
 
 	"github.com/freetaxii/libstix2/defs"
-	"github.com/freetaxii/libstix2/objects"
+	"github.com/freetaxii/libstix2/objects/bundle"
 	"github.com/freetaxii/libstix2/resources"
 	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/headers"
@@ -118,7 +118,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusPartialContent)
+			w.WriteHeader(http.StatusOK)
 		}
 		j.Encode(s.Resource)
 
@@ -128,7 +128,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusPartialContent)
+			w.WriteHeader(http.StatusOK)
 		}
 		j.Encode(s.Resource)
 
@@ -138,7 +138,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusPartialContent)
+			w.WriteHeader(http.StatusOK)
 		}
 		j.SetIndent("", "    ")
 		j.Encode(s.Resource)
@@ -148,7 +148,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			w.WriteHeader(http.StatusPartialContent)
+			w.WriteHeader(http.StatusOK)
 		}
 
 		// I needed to convert this to actual JSON since if I just used
@@ -195,7 +195,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	// Decode the bundle object itself, but leave the objects array as an
 	// array of raw JSON object objects, we will decode each one later.
 	// ----------------------------------------------------------------------
-	b, err := objects.DecodeBundle(r.Body)
+	b, err := bundle.DecodeRaw(r.Body)
 	if err != nil {
 		s.Logger.Warnln("WARN: Could not decode provided bundle")
 
@@ -219,7 +219,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 
 		// First, decode the first object from the bundle if it succeeds try to
 		// add it to the datastore
-		o, id, err := objects.DecodeObject(v)
+		o, id, err := bundle.DecodeObject(v)
 		if err != nil {
 			// TODO Track something to send error back to client in status resource
 			s.Logger.Warnln("WARN: Error decoding object in bundle", err)
