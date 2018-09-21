@@ -14,7 +14,7 @@ import (
 
 	"github.com/freetaxii/libstix2/datastore"
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
-	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/resources/collections"
 	"github.com/freetaxii/server/internal/config"
 	"github.com/freetaxii/server/internal/handlers"
 	"github.com/gologme/log"
@@ -170,7 +170,7 @@ func main() {
 				if api.Collections.Enabled == true {
 					// Make a new map so we can work on a copy, this way we can
 					// keep permissions unique per API root.
-					colResources := make(map[string]*resources.Collection)
+					colResources := make(map[string]*collections.Collection)
 
 					// For each collection listed with ReadAccess add it to our local
 					// copy called colResources and set the CanRead to true
@@ -198,7 +198,7 @@ func main() {
 					// and add them to the Collection. This will prevent any collections
 					// from showing up in the list if they do not have at least
 					// read or write permissions.
-					collections := resources.NewCollections()
+					collections := collections.New()
 					for key, _ := range colResources {
 						col := colResources[key]
 						collections.AddCollection(col)

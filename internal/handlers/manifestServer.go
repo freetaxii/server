@@ -11,7 +11,8 @@ import (
 	"net/http"
 
 	"github.com/freetaxii/libstix2/defs"
-	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/resources/collections"
+	"github.com/freetaxii/libstix2/resources/taxiierror"
 	"github.com/freetaxii/server/internal/headers"
 )
 
@@ -26,7 +27,7 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 
 	var objectNotFound = false
 	var addedFirst, addedLast string
-	q := resources.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
+	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
@@ -66,7 +67,7 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 	results, err := s.DS.GetManifestData(*q)
 
 	if err != nil {
-		taxiiError := resources.NewError()
+		taxiiError := taxiierror.New()
 		title := "ERROR: " + err.Error()
 		taxiiError.SetTitle(title)
 		desc := "The requested had the following problem: " + err.Error()

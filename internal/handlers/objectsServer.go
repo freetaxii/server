@@ -13,7 +13,8 @@ import (
 
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects/bundle"
-	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/resources/collections"
+	"github.com/freetaxii/libstix2/resources/taxiierror"
 	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/headers"
 	"github.com/gorilla/mux"
@@ -30,7 +31,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 
 	var objectNotFound = false
 	var addedFirst, addedLast string
-	q := resources.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
+	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	s.Logger.Infoln("INFO: Found GET Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
@@ -81,7 +82,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	results, err := s.DS.GetBundle(*q)
 
 	if err != nil {
-		taxiiError := resources.NewError()
+		taxiiError := taxiierror.New()
 		title := "ERROR: " + err.Error()
 		taxiiError.SetTitle(title)
 		desc := "The requested had the following problem: " + err.Error()
@@ -241,9 +242,8 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 
 		// If the add was successful then lets add an entry in to the collection
 		// record table.
-		entry := resources.CreateCollectionRecord(s.CollectionID, id)
 		s.Logger.Debugln("DEBUG: Adding Collection Entry of", s.CollectionID, id)
-		err = s.DS.AddTAXIIObject(entry)
+		err = s.DS.AddToCollection(s.CollectionID, id)
 		if err != nil {
 			s.Logger.Debugln(err)
 		}

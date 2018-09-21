@@ -11,7 +11,9 @@ import (
 	"strings"
 
 	"github.com/freetaxii/libstix2/datastore"
-	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/resources/apiroot"
+	"github.com/freetaxii/libstix2/resources/collections"
+	"github.com/freetaxii/libstix2/resources/discovery"
 	"github.com/freetaxii/server/internal/config"
 	"github.com/gologme/log"
 )
@@ -58,7 +60,7 @@ func New(logger *log.Logger) (ServerHandler, error) {
 /*
 NewDiscoveryHandler - This function will prepare the data for the Discovery handler.
 */
-func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryService, r resources.Discovery) (ServerHandler, error) {
+func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryService, r discovery.Discovery) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = c.Path
 	s.HTMLEnabled = c.HTML.Enabled.Value
@@ -70,7 +72,7 @@ func NewDiscoveryHandler(logger *log.Logger, c config.DiscoveryService, r resour
 /*
 NewAPIRootHandler - This function will prepare the data for the API Root handler.
 */
-func NewAPIRootHandler(logger *log.Logger, api config.APIRootService, r resources.APIRoot) (ServerHandler, error) {
+func NewAPIRootHandler(logger *log.Logger, api config.APIRootService, r apiroot.APIRoot) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.Path
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -82,7 +84,7 @@ func NewAPIRootHandler(logger *log.Logger, api config.APIRootService, r resource
 /*
 NewCollectionsHandler - This function will prepare the data for the Collections handler.
 */
-func NewCollectionsHandler(logger *log.Logger, api config.APIRootService, r resources.Collections, limit int) (ServerHandler, error) {
+func NewCollectionsHandler(logger *log.Logger, api config.APIRootService, r collections.Collections, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.Path + "collections/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -95,7 +97,7 @@ func NewCollectionsHandler(logger *log.Logger, api config.APIRootService, r reso
 /*
 NewCollectionHandler - This function will prepare the data for the Collection handler.
 */
-func NewCollectionHandler(logger *log.Logger, api config.APIRootService, r resources.Collection, limit int) (ServerHandler, error) {
+func NewCollectionHandler(logger *log.Logger, api config.APIRootService, r collections.Collection, limit int) (ServerHandler, error) {
 	s, _ := New(logger)
 	s.URLPath = api.Path + "collections/" + r.ID + "/"
 	s.HTMLEnabled = api.HTML.Enabled.Value
@@ -152,7 +154,7 @@ func NewManifestHandler(logger *log.Logger, api config.APIRootService, collectio
 processURLParameters - This method will process all of the URL parameters from
 an HTTP request.
 */
-func (s *ServerHandler) processURLParameters(q *resources.CollectionQuery, values map[string][]string) error {
+func (s *ServerHandler) processURLParameters(q *collections.CollectionQuery, values map[string][]string) error {
 
 	if values["match[id]"] != nil {
 		q.STIXID = strings.Split(values["match[id]"][0], ",")

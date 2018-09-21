@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/freetaxii/libstix2/resources"
+	"github.com/freetaxii/libstix2/resources/apiroot"
+	"github.com/freetaxii/libstix2/resources/collections"
+	"github.com/freetaxii/libstix2/resources/discovery"
 	"github.com/gologme/log"
 	"github.com/gorilla/mux"
 )
@@ -49,9 +51,9 @@ type ServerConfig struct {
 		Enabled  bool
 		Services []APIRootService
 	} `json:"apiroot_server,omitempty"`
-	DiscoveryResources  map[string]resources.Discovery  `json:"discovery_resources,omitempty"`  // The key in the map is the ResourceID
-	APIRootResources    map[string]resources.APIRoot    `json:"apiroot_resources,omitempty"`    // The key in the map is the ResourceID
-	CollectionResources map[string]resources.Collection `json:"collection_resources,omitempty"` // The key in the map is the ResourceID
+	DiscoveryResources  map[string]discovery.Discovery    `json:"discovery_resources,omitempty"`  // The key in the map is the ResourceID
+	APIRootResources    map[string]apiroot.APIRoot        `json:"apiroot_resources,omitempty"`    // The key in the map is the ResourceID
+	CollectionResources map[string]collections.Collection `json:"collection_resources,omitempty"` // The key in the map is the ResourceID
 }
 
 /*
@@ -134,11 +136,12 @@ type HTMLConfig struct {
 // ----------------------------------------------------------------------
 
 /*
-New - This function will return a ServerConfig, load the current configuration
-from a file, and verify that the configuration is correct.
+New - This function will load the current configuration from a file, verify that
+the configuration is correct, and then return a ServerConfig type.
 */
 func New(logger *log.Logger, filename string) (ServerConfig, error) {
 	var c ServerConfig
+	var err error
 
 	if logger == nil {
 		c.Logger = log.New(os.Stderr, "", log.LstdFlags)
@@ -146,16 +149,16 @@ func New(logger *log.Logger, filename string) (ServerConfig, error) {
 		c.Logger = logger
 	}
 
-	err1 := c.loadServerConfig(filename)
-	if err1 != nil {
-		return c, err1
+	err = c.loadServerConfig(filename)
+	if err != nil {
+		return c, err
 	}
 
 	// In addition to checking the configuration for completeness the verify
 	// process will also populate some of the helper values.
-	err2 := c.Verify()
-	if err2 != nil {
-		return c, err2
+	err = c.Verify()
+	if err != nil {
+		return c, err
 	}
 	return c, nil
 }
