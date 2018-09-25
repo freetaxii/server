@@ -1,8 +1,7 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
-// that can be found in the LICENSE file in the root of the source
-// tree.
+// that can be found in the LICENSE file in the root of the source tree.
 
 package handlers
 
@@ -53,11 +52,15 @@ baseHandler - This method handles all requests for the following TAXII
 media type responses: Discovery, API-Root, Collections, and Collection
 */
 func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
-	var taxiiHeader headers.HttpHeader
 	var acceptHeader headers.MediaType
 
+	// If trace is enabled in the logger, than decode the HTTP Request to the log
+	if s.Logger.GetLevel("trace") {
+		headers.DebugHttpRequest(r)
+	}
+
 	// --------------------------------------------------
-	// 1st check authentication
+	// 1st Check Authentication
 	// --------------------------------------------------
 
 	// If authentication is required and the client does not provide credentials
@@ -80,14 +83,9 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 			s.sendUnauthenticatedError(w)
 			return
 		}
-	}
+	} // End Authentication Check
 
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
-
-	// If trace is enabled in the logger, than decode the HTTP Request to the log
-	if s.Logger.GetLevel("trace") {
-		taxiiHeader.DebugHttpRequest(r)
-	}
 
 	// --------------------------------------------------
 	// Encode outgoing response message

@@ -13,10 +13,6 @@ import (
 	"github.com/gologme/log"
 )
 
-type HttpHeader struct {
-	DebugLevel int
-}
-
 type MediaType struct {
 	TAXII21 bool
 	TAXII20 bool
@@ -65,7 +61,7 @@ func (h *MediaType) ParseSTIX(media string) {
 // Debug HTTP Headers
 // --------------------------------------------------
 
-func (this *HttpHeader) DebugHttpRequest(r *http.Request) {
+func DebugHttpRequest(r *http.Request) {
 
 	log.Traceln("DEBUG: --------------- BEGIN HTTP DUMP ---------------")
 	log.Traceln("DEBUG: Method", r.Method)

@@ -1,7 +1,7 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
-// Use of this source code is governed by an Apache 2.0 license that can be
-// found in the LICENSE file in the root of the source tree.
+// Use of this source code is governed by an Apache 2.0 license
+// that can be found in the LICENSE file in the root of the source tree.
 
 package handlers
 
@@ -21,11 +21,15 @@ ManifestServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
 func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
-	var taxiiHeader headers.HttpHeader
 	var acceptHeader headers.MediaType
 
+	// If trace is enabled in the logger, than decode the HTTP Request to the log
+	if s.Logger.GetLevel("trace") {
+		headers.DebugHttpRequest(r)
+	}
+
 	// --------------------------------------------------
-	// 1st check authentication
+	// 1st Check Authentication
 	// --------------------------------------------------
 
 	// If authentication is required and the client does not provide credentials
@@ -48,7 +52,7 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 			s.sendUnauthenticatedError(w)
 			return
 		}
-	}
+	} // End Authentication Check
 
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
@@ -57,11 +61,6 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
-
-	// If trace is enabled in the logger, than decode the HTTP Request to the log
-	if s.Logger.GetLevel("trace") {
-		taxiiHeader.DebugHttpRequest(r)
-	}
 
 	// httpHeaderRange := r.Header.Get("Range")
 
