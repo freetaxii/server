@@ -27,6 +27,33 @@ objects from the TAXII server.
 func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
 	var taxiiHeader headers.HttpHeader
 	var acceptHeader headers.MediaType
+
+	// --------------------------------------------------
+	// 1st check authentication
+	// --------------------------------------------------
+
+	// If authentication is required and the client does not provide credentials
+	// or their credentials do not match, then send an error message.
+	// We need to return right here as to prevent further processing.
+	if s.Authenticated == true {
+		s.Logger.Debugln("DEBUG: Authentication Enabled")
+		if s.BasicAuth == true {
+			s.Logger.Debugln("DEBUG: Basic Authentication Enabled")
+			w.Header().Set("WWW-Authenticate", `Basic realm="Authentication Required"`)
+			if success := s.authenticate(r.BasicAuth()); success != true {
+				s.Logger.Debugln("DEBUG: Authentication failed for", r.RemoteAddr, "at", r.RequestURI)
+				s.sendUnauthenticatedError(w)
+				return
+			}
+		} else {
+			// If authentication is enabled, but basic is not, then fail since
+			// no other authentication is currently enabled.
+			s.Logger.Debugln("DEBUG: Authentication method from", r.RemoteAddr, "at", r.RequestURI, "not supported")
+			s.sendUnauthenticatedError(w)
+			return
+		}
+	}
+
 	acceptHeader.ParseSTIX(r.Header.Get("Accept"))
 
 	var objectNotFound = false
@@ -182,6 +209,33 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	var taxiiHeader headers.HttpHeader
 	var acceptHeader headers.MediaType
 	var contentHeader headers.MediaType
+
+	// --------------------------------------------------
+	// 1st check authentication
+	// --------------------------------------------------
+
+	// If authentication is required and the client does not provide credentials
+	// or their credentials do not match, then send an error message.
+	// We need to return right here as to prevent further processing.
+	if s.Authenticated == true {
+		s.Logger.Debugln("DEBUG: Authentication Enabled")
+		if s.BasicAuth == true {
+			s.Logger.Debugln("DEBUG: Basic Authentication Enabled")
+			w.Header().Set("WWW-Authenticate", `Basic realm="Authentication Required"`)
+			if success := s.authenticate(r.BasicAuth()); success != true {
+				s.Logger.Debugln("DEBUG: Authentication failed for", r.RemoteAddr, "at", r.RequestURI)
+				s.sendUnauthenticatedError(w)
+				return
+			}
+		} else {
+			// If authentication is enabled, but basic is not, then fail since
+			// no other authentication is currently enabled.
+			s.Logger.Debugln("DEBUG: Authentication method from", r.RemoteAddr, "at", r.RequestURI, "not supported")
+			s.sendUnauthenticatedError(w)
+			return
+		}
+	}
+
 	acceptHeader.ParseSTIX(r.Header.Get("Accept"))
 	contentHeader.ParseSTIX(r.Header.Get("Content-type"))
 

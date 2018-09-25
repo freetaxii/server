@@ -8,6 +8,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -54,6 +55,33 @@ media type responses: Discovery, API-Root, Collections, and Collection
 func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 	var taxiiHeader headers.HttpHeader
 	var acceptHeader headers.MediaType
+
+	// --------------------------------------------------
+	// 1st check authentication
+	// --------------------------------------------------
+
+	// If authentication is required and the client does not provide credentials
+	// or their credentials do not match, then send an error message.
+	// We need to return right here as to prevent further processing.
+	if s.Authenticated == true {
+		s.Logger.Debugln("DEBUG: Authentication Enabled")
+		if s.BasicAuth == true {
+			s.Logger.Debugln("DEBUG: Basic Authentication Enabled")
+			w.Header().Set("WWW-Authenticate", `Basic realm="Authentication Required"`)
+			if success := s.authenticate(r.BasicAuth()); success != true {
+				s.Logger.Debugln("DEBUG: Authentication failed for", r.RemoteAddr, "at", r.RequestURI)
+				s.sendUnauthenticatedError(w)
+				return
+			}
+		} else {
+			// If authentication is enabled, but basic is not, then fail since
+			// no other authentication is currently enabled.
+			s.Logger.Debugln("DEBUG: Authentication method from", r.RemoteAddr, "at", r.RequestURI, "not supported")
+			s.sendUnauthenticatedError(w)
+			return
+		}
+	}
+
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
@@ -100,5 +128,7 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
 		w.WriteHeader(http.StatusNotAcceptable)
+		// TODO make this an actual TAXII error message
+		fmt.Fprintln(w, "Unsupported Media Type")
 	}
 }

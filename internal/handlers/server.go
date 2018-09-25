@@ -1,4 +1,4 @@
-// Copyright 2017 Bret Jordan, All rights reserved.
+// Copyright 2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
 // that can be found in the LICENSE file in the root of the source
@@ -31,8 +31,10 @@ type ServerHandler struct {
 	URLPath           string // Used in HTML output and to build the URL for the next resource.
 	HTMLEnabled       bool   // Is HTML output enabled for this service
 	HTMLTemplate      string // The full file path (prefix + HTML template directory + template filename)
-	CollectionID      string
-	ServerRecordLimit int // The maximum number of records that the server will respond with.
+	CollectionID      string // The collection ID that is being used
+	ServerRecordLimit int    // The maximum number of records that the server will respond with.
+	Authenticated     bool   // Is this handler to be authenticated
+	BasicAuth         bool   // Is Basic Auth used
 	DS                datastore.Datastorer
 	Resource          interface{} // This holds the actual resource and is populated in the main freetaxii.go
 }
@@ -53,6 +55,10 @@ func New(logger *log.Logger) (ServerHandler, error) {
 	} else {
 		s.Logger = logger
 	}
+
+	// TODO for right now lets just force this until we can plumb this in through the configuration file
+	s.Authenticated = true
+	s.BasicAuth = true
 
 	return s, nil
 }
