@@ -1,4 +1,4 @@
-// Copyright 2018 Bret Jordan, All rights reserved.
+// Copyright 2015-2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
 // that can be found in the LICENSE file in the root of the source tree.
@@ -21,7 +21,7 @@ ManifestServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
 func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Request) {
-	var acceptHeader headers.MediaType
+	s.Logger.Infoln("INFO: Found Manifest request from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -54,13 +54,15 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 		}
 	} // End Authentication Check
 
+	// --------------------------------------------------
+	// Check Accept Header Media Type
+	// --------------------------------------------------
+	var acceptHeader headers.MediaType
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	var objectNotFound = false
 	var addedFirst, addedLast string
 	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
-
-	s.Logger.Infoln("INFO: Found Request on the Manifest Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// httpHeaderRange := r.Header.Get("Range")
 
@@ -182,6 +184,7 @@ func (s *ServerHandler) ManifestServerHandler(w http.ResponseWriter, r *http.Req
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.WriteHeader(http.StatusNotAcceptable)
+		s.sendUnsupportedMediaTypeError(w)
+		return
 	}
 }

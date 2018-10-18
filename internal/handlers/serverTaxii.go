@@ -1,4 +1,4 @@
-// Copyright 2018 Bret Jordan, All rights reserved.
+// Copyright 2015-2018 Bret Jordan, All rights reserved.
 //
 // Use of this source code is governed by an Apache 2.0 license
 // that can be found in the LICENSE file in the root of the source tree.
@@ -7,7 +7,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -52,7 +51,6 @@ baseHandler - This method handles all requests for the following TAXII
 media type responses: Discovery, API-Root, Collections, and Collection
 */
 func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
-	var acceptHeader headers.MediaType
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -85,6 +83,10 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	} // End Authentication Check
 
+	// --------------------------------------------------
+	// Check Accept Header Media Type
+	// --------------------------------------------------
+	var acceptHeader headers.MediaType
 	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	// --------------------------------------------------
@@ -124,9 +126,7 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
-		w.WriteHeader(http.StatusNotAcceptable)
-		// TODO make this an actual TAXII error message
-		fmt.Fprintln(w, "Unsupported Media Type")
+		s.sendUnsupportedMediaTypeError(w)
+		return
 	}
 }
