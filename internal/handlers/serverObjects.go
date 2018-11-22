@@ -13,7 +13,6 @@ import (
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects/bundle"
 	"github.com/freetaxii/libstix2/resources/collections"
-	"github.com/freetaxii/libstix2/resources/taxiierror"
 	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/headers"
 	"github.com/gorilla/mux"
@@ -59,7 +58,6 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 
 	acceptHeader.ParseSTIX(r.Header.Get("Accept"))
 
-	var objectNotFound = false
 	var addedFirst, addedLast string
 	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
@@ -104,19 +102,12 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
 
-	results, err := s.DS.GetBundle(*q)
+	results, err := s.DS.GetObjects(*q)
 
 	if err != nil {
-		taxiiError := taxiierror.New()
-		title := "ERROR: " + err.Error()
-		taxiiError.SetTitle(title)
-		desc := "The requested had the following problem: " + err.Error()
-		taxiiError.SetDescription(desc)
-		taxiiError.SetHTTPStatus("404")
-		s.Resource = taxiiError
-		objectNotFound = true
 		s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
-
+		s.sendGetObjectsError(w)
+		return
 	} else {
 		s.Resource = results.BundleData
 		addedFirst = results.DateAddedFirst
@@ -138,6 +129,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	// contentRangeHeaderValue := "items " + strconv.Itoa(results.RangeBegin) + "-" + strconv.Itoa(results.RangeEnd) + "/" + strconv.Itoa(results.Size)
 	// w.Header().Add("Content-Range", contentRangeHeaderValue)
 
+	var objectNotFound = false
 	if acceptHeader.STIX21 == true {
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_STIX21)
 
@@ -305,7 +297,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	s.Logger.Debugln("DEBUG: Total objects that failed to be added to the datastore", failureCount)
 	// unmarshal content and write data
 
-	//results, err := s.DS.GetBundle(*q)
+	//results, err := s.DS.GetObjects(*q)
 
 	// if err != nil {
 	// 	taxiiError := resources.NewError()

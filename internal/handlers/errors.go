@@ -57,3 +57,25 @@ func (s *ServerHandler) sendUnsupportedMediaTypeError(w http.ResponseWriter) {
 	j.SetIndent("", "    ")
 	j.Encode(e)
 }
+
+/*
+sendGetObjectsError - This method will send the correct TAXII error
+message for a session that requests some objects but an error is returned.
+*/
+func (s *ServerHandler) sendGetObjectsError(w http.ResponseWriter) {
+
+	// Setup JSON stream encoder
+	j := json.NewEncoder(w)
+
+	w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
+	w.WriteHeader(http.StatusNotFound)
+
+	e := taxiierror.New()
+	e.SetTitle("Get Objects Error")
+	e.SetDescription("The request for objects caused an error.")
+	e.SetErrorCode("404")
+	e.SetHTTPStatus("404 Not Found")
+
+	j.SetIndent("", "    ")
+	j.Encode(e)
+}
