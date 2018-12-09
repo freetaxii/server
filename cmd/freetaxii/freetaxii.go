@@ -53,7 +53,6 @@ func main() {
 	// --------------------------------------------------
 	// Setup Logging Levels
 	// --------------------------------------------------
-
 	switch config.Logging.Level {
 	case 1:
 		logger.EnableLevel("info")
@@ -99,7 +98,7 @@ func main() {
 	switch config.Global.DbType {
 	case "sqlite3":
 		databaseFilename := config.Global.Prefix + config.Global.DbFile
-		ds = sqlite3.New(logger, databaseFilename)
+		ds = sqlite3.New(logger, databaseFilename, config.CollectionResources)
 	default:
 		logger.Fatalln("ERROR: unknown database type, or no database type defined in the server global configuration")
 	}

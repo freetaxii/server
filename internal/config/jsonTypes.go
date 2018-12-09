@@ -31,8 +31,13 @@ type JSONstring struct {
 }
 
 /*
-UnmarshalJSON - This method will handle the unmarshalling of content for the
-JSONbool type
+UnmarshalJSON - This method defines the unmarshal process for the JSONbool type.
+We need to track of the value was set, set to null, or actually set to true or
+false. This is important since not being set is not the same thing has false or
+true. This comes into play when you need to inherit some previous higher level
+setting. Meaning if you set a property higher up in the configuration to true or
+false, then you want that to be cascaded down and without doing this, it does
+not work.
 */
 func (b *JSONbool) UnmarshalJSON(data []byte) error {
 	// If this method was called, the value was set.
