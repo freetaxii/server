@@ -33,7 +33,6 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	// --------------------------------------------------
 	// 1st Check Authentication
 	// --------------------------------------------------
-
 	// If authentication is required and the client does not provide credentials
 	// or their credentials do not match, then send an error message.
 	// We need to return right here as to prevent further processing.
@@ -109,7 +108,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		s.sendGetObjectsError(w)
 		return
 	} else {
-		s.Resource = results.BundleData
+		s.Resource = results.ObjectData
 		addedFirst = results.DateAddedFirst
 		addedLast = results.DateAddedLast
 		s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
@@ -208,7 +207,6 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	// --------------------------------------------------
 	// 1st Check Authentication
 	// --------------------------------------------------
-
 	// If authentication is required and the client does not provide credentials
 	// or their credentials do not match, then send an error message.
 	// We need to return right here as to prevent further processing.
