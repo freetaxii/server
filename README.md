@@ -5,7 +5,7 @@
 The FreeTAXII Server is a TAXII 2 Server written in Go (golang)
 
 ## Version ##
-0.0.1
+0.3.1
 
 
 ## Installation ##
@@ -57,13 +57,13 @@ Below is a list of major features and which ones have been implemented:
 - [x] Collection
 - [x] Objects (GET)
 - [ ] Objects (POST)
-- [ ] Objects By ID
-- [ ] Manifests
+- [x] Objects By ID
+- [x] Manifests
 - [ ] Status
-- [ ] URL Filtering
+- [x] URL Filtering
 - [x] Configuration from a file
 - [ ] Configuration from a database
-- [ ] Pagination
+- [x] Pagination
 - [ ] Authentication
 
 

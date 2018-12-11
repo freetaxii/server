@@ -56,8 +56,8 @@ func New(logger *log.Logger) (ServerHandler, error) {
 	}
 
 	// TODO for right now lets just force this until we can plumb this in through the configuration file
-	s.Authenticated = true
-	s.BasicAuth = true
+	s.Authenticated = false
+	s.BasicAuth = false
 
 	return s, nil
 }
