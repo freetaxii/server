@@ -13,8 +13,8 @@ The FreeTAXII Server is a TAXII 2 Server written in Go (golang)
 This package can be installed with the go get command:
 
 ```
-go get github.com/freetaxii/server
-cd github.com/freetaxii/server
+go get github.com/freetaxii/server/cmd/freetaxii
+cd github.com/freetaxii/server/cmd/freetaxii
 go build freetaxii.go
 ```
 
