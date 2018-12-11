@@ -129,18 +129,8 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	// w.Header().Add("Content-Range", contentRangeHeaderValue)
 
 	var objectNotFound = false
-	if acceptHeader.STIX21 == true {
-		w.Header().Set("Content-Type", defs.MEDIA_TYPE_STIX21)
-
-		if objectNotFound == true {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
-		j.Encode(s.Resource)
-
-	} else if acceptHeader.STIX20 == true {
-		w.Header().Set("Content-Type", defs.MEDIA_TYPE_STIX20)
+	if acceptHeader.TAXII21 == true {
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
 
 		if objectNotFound == true {
 			w.WriteHeader(http.StatusNotFound)
