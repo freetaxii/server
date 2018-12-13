@@ -20,13 +20,13 @@ import (
 )
 
 /*
-ObjectsServerHandler - This method will handle all of the requests for STIX
+STIXContentServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
-func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.Request) {
 	var addedFirst, addedLast string
 
-	s.Logger.Infoln("INFO: Found GET Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
+	s.Logger.Infoln("INFO: Found GET Request from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -80,7 +80,7 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	urlParameters := r.URL.Query()
-	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent URL parameters:", urlParameters)
+	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following (", len(urlParameters), ") url parameters:", urlParameters)
 
 	errURLParameters := s.processURLParameters(q, urlParameters)
 	if errURLParameters != nil {
@@ -92,8 +92,24 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	// ----------------------------------------------------------------------
 	// Handle Requests for all Objects
 	// ----------------------------------------------------------------------
+	if path.Base(r.URL.Path) == "manifest" {
+		s.Logger.Debugln("DEBUG: Found a GET Request for manifests")
+		results, err := s.DS.GetManifestData(*q)
+
+		if err != nil {
+			s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+			s.sendGetObjectsError(w)
+			return
+		}
+		s.Resource = results.ManifestData
+		addedFirst = results.DateAddedFirst
+		addedLast = results.DateAddedLast
+		s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
+
+	}
+
 	if path.Base(r.URL.Path) == "objects" {
-		s.Logger.Debugln("DEBUG: Found a request for all objects")
+		s.Logger.Debugln("DEBUG: Found a GET Request for all objects")
 		results, err := s.DS.GetObjects(*q)
 
 		if err != nil {

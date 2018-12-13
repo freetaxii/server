@@ -232,7 +232,7 @@ func main() {
 
 						if collectionResourse.CanRead == true {
 							logger.Infoln("Starting TAXII GET Object service of:", srvObjects.URLPath)
-							config.Router.HandleFunc(srvObjects.URLPath, srvObjects.ObjectsServerHandler).Methods("GET")
+							config.Router.HandleFunc(srvObjects.URLPath, srvObjects.STIXContentServerHandler).Methods("GET")
 						}
 
 						if collectionResourse.CanWrite == true {
@@ -249,7 +249,7 @@ func main() {
 
 						if collectionResourse.CanRead == true {
 							logger.Infoln("Starting TAXII GET Object by ID service of:", srvObjectsByID.URLPath)
-							config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.ObjectsServerHandler).Methods("GET")
+							config.Router.HandleFunc(srvObjectsByID.URLPath, srvObjectsByID.STIXContentServerHandler).Methods("GET")
 						}
 
 						// --------------------------------------------------
@@ -261,7 +261,7 @@ func main() {
 
 						if collectionResourse.CanRead == true {
 							logger.Infoln("Starting TAXII GET Object Versions service of:", srvObjectVersions.URLPath)
-							config.Router.HandleFunc(srvObjectVersions.URLPath, srvObjectVersions.ObjectsServerHandler).Methods("GET")
+							config.Router.HandleFunc(srvObjectVersions.URLPath, srvObjectVersions.STIXContentServerHandler).Methods("GET")
 						}
 
 						// --------------------------------------------------
@@ -273,7 +273,7 @@ func main() {
 
 						if collectionResourse.CanRead == true {
 							logger.Infoln("Starting TAXII GET Manifest service of:", srvManifest.URLPath)
-							config.Router.HandleFunc(srvManifest.URLPath, srvManifest.ManifestServerHandler).Methods("GET")
+							config.Router.HandleFunc(srvManifest.URLPath, srvManifest.STIXContentServerHandler).Methods("GET")
 						}
 
 					} // End for loop api.Collections.ResourceIDs

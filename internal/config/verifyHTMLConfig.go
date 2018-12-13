@@ -89,7 +89,7 @@ func (c *ServerConfig) verifyGlobalHTMLTemplateFile(configPath, templatePath str
 	}
 
 	if template.Value == "" || template.Valid == false {
-		c.Logger.Println("CONFIG: The HTML configuration is missing the" + configPath + "directive in the configuration file")
+		c.Logger.Println("CONFIG: The HTML configuration is missing the", configPath, "directive in the configuration file")
 		problemsFound++
 		return problemsFound
 	}
@@ -113,7 +113,7 @@ func (c *ServerConfig) verifyHTMLTemplateFile(configPath, templatePath string, t
 
 	filepath := templatePath + template.Value
 	if !c.exists(filepath) {
-		c.Logger.Println("CONFIG: The HTML template path", filepath, "defined at"+configPath+"can not be opened")
+		c.Logger.Println("CONFIG: The HTML template path", filepath, "defined at", configPath, " can not be opened")
 		problemsFound++
 	}
 
