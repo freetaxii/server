@@ -124,6 +124,7 @@ type HTMLConfig struct {
 		Collections JSONstring
 		Collection  JSONstring
 		Objects     JSONstring
+		Versions    JSONstring
 		Manifest    JSONstring
 	}
 	FullTemplatePath string // Set in verifyHTMLConfig(), this is the full path to template files

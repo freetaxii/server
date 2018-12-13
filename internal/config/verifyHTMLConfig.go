@@ -43,6 +43,8 @@ func (c *ServerConfig) verifyGlobalHTMLConfig() int {
 	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collections", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Collections)
 	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.collection", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Collection)
 	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.objects", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Objects)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.versions", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Versions)
+	problemsFound += c.verifyGlobalHTMLTemplateFile("html.templatefiles.manifest", c.HTML.FullTemplatePath, c.HTML.TemplateFiles.Manifest)
 
 	// ----------------------------------------------------------------------
 	// Return number of errors if there are any
@@ -228,7 +230,7 @@ func (c *ServerConfig) verifyAPIRootHTMLConfig() int {
 			c.APIRootServer.Services[i].HTML.TemplateFiles.APIRoot = c.HTML.TemplateFiles.APIRoot
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
-			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.apiroot"
 			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.APIRoot)
 		}
 
@@ -236,7 +238,7 @@ func (c *ServerConfig) verifyAPIRootHTMLConfig() int {
 			c.APIRootServer.Services[i].HTML.TemplateFiles.Collections = c.HTML.TemplateFiles.Collections
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
-			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.collections"
 			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Collections)
 		}
 
@@ -244,7 +246,7 @@ func (c *ServerConfig) verifyAPIRootHTMLConfig() int {
 			c.APIRootServer.Services[i].HTML.TemplateFiles.Collection = c.HTML.TemplateFiles.Collection
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
-			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.collection"
 			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Collection)
 		}
 
@@ -252,15 +254,23 @@ func (c *ServerConfig) verifyAPIRootHTMLConfig() int {
 			c.APIRootServer.Services[i].HTML.TemplateFiles.Objects = c.HTML.TemplateFiles.Objects
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
-			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.objects"
 			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Objects)
+		}
+
+		if s.HTML.TemplateFiles.Versions.Set == false || s.HTML.TemplateFiles.Versions.Valid == false {
+			c.APIRootServer.Services[i].HTML.TemplateFiles.Versions = c.HTML.TemplateFiles.Versions
+		} else {
+			// If it was redefined we need to verify that it is found on the file system.
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.versions"
+			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Versions)
 		}
 
 		if s.HTML.TemplateFiles.Manifest.Set == false || s.HTML.TemplateFiles.Manifest.Valid == false {
 			c.APIRootServer.Services[i].HTML.TemplateFiles.Manifest = c.HTML.TemplateFiles.Manifest
 		} else {
 			// If it was redefined we need to verify that it is found on the file system.
-			text := "apirootserver.services[" + indexString + "].html.templatefiles.discovery"
+			text := "apirootserver.services[" + indexString + "].html.templatefiles.manifest"
 			problemsFound += c.verifyHTMLTemplateFile(text, s.HTML.FullTemplatePath, s.HTML.TemplateFiles.Manifest)
 		}
 	} // End for loop

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"path"
 
 	"github.com/freetaxii/libstix2/defs"
 	"github.com/freetaxii/libstix2/objects/bundle"
@@ -23,7 +24,9 @@ ObjectsServerHandler - This method will handle all of the requests for STIX
 objects from the TAXII server.
 */
 func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Request) {
-	var acceptHeader headers.MediaType
+	var addedFirst, addedLast string
+
+	s.Logger.Infoln("INFO: Found GET Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -55,13 +58,6 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		}
 	} // End Authentication Check
 
-	acceptHeader.ParseSTIX(r.Header.Get("Accept"))
-
-	var addedFirst, addedLast string
-	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
-
-	s.Logger.Infoln("INFO: Found GET Request on the Objects Server Handler from", r.RemoteAddr, "for collection:", s.CollectionID)
-
 	// httpHeaderRange := r.Header.Get("Range")
 
 	// myregexp := regexp.MustCompile(`^items \d+-\d+$`)
@@ -77,21 +73,11 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 	// }
 
 	// ----------------------------------------------------------------------
-	// Handle URL Parameters
+	// Handle URL Parameters and Path Variables
 	// ----------------------------------------------------------------------
 
-	urlvars := mux.Vars(r)
-	if urlvars["objectid"] != "" {
-		urlObjectID := urlvars["objectid"]
-		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent URL path value:", urlObjectID)
-
-		// TODO check to see if objectid is valid first, change to make work with custom objects
-		if stixid.ValidSTIXID(urlObjectID) {
-			q.STIXID = append(q.STIXID, urlObjectID)
-		} else if stixid.ValidSTIXObjectType(urlObjectID) {
-			q.STIXType = append(q.STIXType, urlObjectID)
-		}
-	}
+	// Setup Query object to handle URL parameters and path variables
+	q := collections.NewCollectionQuery(s.CollectionID, s.ServerRecordLimit)
 
 	urlParameters := r.URL.Query()
 	s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent URL parameters:", urlParameters)
@@ -101,63 +87,114 @@ func (s *ServerHandler) ObjectsServerHandler(w http.ResponseWriter, r *http.Requ
 		s.Logger.Warnln("WARN: invalid URL parameters from client", r.RemoteAddr, "with URL parameters", urlParameters, errURLParameters)
 	}
 
-	results, err := s.DS.GetObjects(*q)
+	urlvars := mux.Vars(r)
 
-	if err != nil {
-		s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
-		s.sendGetObjectsError(w)
-		return
-	} else {
+	// ----------------------------------------------------------------------
+	// Handle Requests for all Objects
+	// ----------------------------------------------------------------------
+	if path.Base(r.URL.Path) == "objects" {
+		s.Logger.Debugln("DEBUG: Found a request for all objects")
+		results, err := s.DS.GetObjects(*q)
+
+		if err != nil {
+			s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+			s.sendGetObjectsError(w)
+			return
+		}
 		s.Resource = results.ObjectData
 		addedFirst = results.DateAddedFirst
 		addedLast = results.DateAddedLast
 		s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
+
+	}
+
+	// ----------------------------------------------------------------------
+	// Handle Requests for an Object by ID
+	// ----------------------------------------------------------------------
+	if urlvars["objectid"] != "" {
+		urlObjectID := urlvars["objectid"]
+		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent URL path value:", urlObjectID)
+
+		// TODO check to see if objectid is valid first, change to make work with custom objects
+		if stixid.ValidSTIXID(urlObjectID) {
+			q.STIXID = append(q.STIXID, urlObjectID)
+		}
+		if stixid.ValidSTIXObjectType(urlObjectID) {
+			q.STIXType = append(q.STIXType, urlObjectID)
+		}
+
+		if path.Base(r.URL.Path) == "versions" {
+			// This is a simple get versions of an object ID request
+			s.Logger.Debugln("DEBUG: Found a request for the versions of an object by ID")
+			results, err := s.DS.GetVersions(*q)
+
+			if err != nil {
+				s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+				s.sendGetObjectsError(w)
+				return
+			}
+			s.Resource = results.VersionsData
+			addedFirst = results.DateAddedFirst
+			addedLast = results.DateAddedLast
+			s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
+
+		} else {
+			// This is a simple get objects by ID request
+			s.Logger.Debugln("DEBUG: Found a request for an object by ID")
+			results, err := s.DS.GetObjects(*q)
+
+			if err != nil {
+				s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
+				s.sendGetObjectsError(w)
+				return
+			}
+			s.Resource = results.ObjectData
+			addedFirst = results.DateAddedFirst
+			addedLast = results.DateAddedLast
+			s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
+
+		}
 	}
 
 	// --------------------------------------------------
 	// Encode outgoing response message
 	// --------------------------------------------------
 
-	// Setup JSON stream encoder
-	j := json.NewEncoder(w)
+	// Get Accept Header
+	var acceptHeader headers.MediaType
+	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 	w.Header().Add("X-TAXII-Date-Added-First", addedFirst)
 	w.Header().Add("X-TAXII-Date-Added-Last", addedLast)
-	// contentRangeHeaderValue := "items " + strconv.Itoa(results.RangeBegin) + "-" + strconv.Itoa(results.RangeEnd) + "/" + strconv.Itoa(results.Size)
-	// w.Header().Add("Content-Range", contentRangeHeaderValue)
 
+	// This clearly does not work yet.  Need to move the declaration up and
+	// do a check to see if there is data coming back from the query
 	var objectNotFound = false
-	if acceptHeader.TAXII21 == true {
-		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
+	if objectNotFound == true {
+		s.sendStatusNotFound(w)
+		return
+	}
 
-		if objectNotFound == true {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
+	if acceptHeader.TAXII21 == true {
+		// Setup JSON stream encoder
+		j := json.NewEncoder(w)
+		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
+		w.WriteHeader(http.StatusOK)
 		j.Encode(s.Resource)
 
 	} else if acceptHeader.JSON == true {
+		// Setup JSON stream encoder
+		j := json.NewEncoder(w)
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_JSON)
-
-		if objectNotFound == true {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
+		w.WriteHeader(http.StatusOK)
 		j.SetIndent("", "    ")
 		j.Encode(s.Resource)
 
 	} else if s.HTMLEnabled == true && acceptHeader.HTML == true {
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_HTML)
-		if objectNotFound == true {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			w.WriteHeader(http.StatusOK)
-		}
-
+		w.WriteHeader(http.StatusOK)
 		// I needed to convert this to actual JSON since if I just used
 		// s.Resource like in other handlers I would get the string output of
 		// a Golang struct which is not the same. The reason it works else where

@@ -253,6 +253,18 @@ func main() {
 						}
 
 						// --------------------------------------------------
+						// Start a Objects by ID Versions handlers
+						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/objects/{objectid}/versions/
+						// --------------------------------------------------
+						srvObjectVersions, _ := handlers.NewObjectVersionsHandler(logger, api, collectionResourse.ID, config.Global.ServerRecordLimit)
+						srvObjectVersions.DS = ds
+
+						if collectionResourse.CanRead == true {
+							logger.Infoln("Starting TAXII GET Object Versions service of:", srvObjectVersions.URLPath)
+							config.Router.HandleFunc(srvObjectVersions.URLPath, srvObjectVersions.ObjectsServerHandler).Methods("GET")
+						}
+
+						// --------------------------------------------------
 						// Start a Manifest handler
 						// Example: /api1/collections/9cfa669c-ee94-4ece-afd2-f8edac37d8fd/manifest/
 						// --------------------------------------------------

@@ -139,6 +139,19 @@ func NewObjectsByIDHandler(logger *log.Logger, api config.APIRootService, collec
 }
 
 /*
+NewObjectVersionsHandler - This function will prepare the data for the Objects by ID handler.
+*/
+func NewObjectVersionsHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
+	s, _ := New(logger)
+	s.URLPath = api.Path + "collections/" + collectionID + "/objects/{objectid}/versions/"
+	s.HTMLEnabled = api.HTML.Enabled.Value
+	s.HTMLTemplate = api.HTML.FullTemplatePath + api.HTML.TemplateFiles.Versions.Value
+	s.CollectionID = collectionID
+	s.ServerRecordLimit = limit
+	return s, nil
+}
+
+/*
 NewManifestHandler - This function will prepare the data for the Manifest handler.
 */
 func NewManifestHandler(logger *log.Logger, api config.APIRootService, collectionID string, limit int) (ServerHandler, error) {
