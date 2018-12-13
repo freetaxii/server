@@ -32,11 +32,8 @@ gorilla/mux
 
 libstix2
 	go get github.com/freetaxii/libstix2
-	Copyright (c) 2017 Bret Jordan. All rights reserved. 
+	Copyright (c) 2015-2018 Bret Jordan. All rights reserved. 
 
-libtaxii2
-	go get github.com/freetaxii/libtaxii2
-	Copyright (c) 2017 Bret Jordan. All rights reserved.
 ```
 
 This software uses the following builtin libraries:
