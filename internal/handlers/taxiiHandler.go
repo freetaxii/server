@@ -93,18 +93,19 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 	// Encode outgoing response message
 	// --------------------------------------------------
 
-	// Setup JSON stream encoder
-	j := json.NewEncoder(w)
-
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
 	if acceptHeader.TAXII21 == true {
+		// Setup JSON stream encoder
+		j := json.NewEncoder(w)
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
 		w.WriteHeader(http.StatusOK)
 		j.Encode(s.Resource)
 
 	} else if acceptHeader.JSON == true {
+		// Setup JSON stream encoder
+		j := json.NewEncoder(w)
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_JSON)
 		w.WriteHeader(http.StatusOK)
 		j.SetIndent("", "    ")

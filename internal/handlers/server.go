@@ -13,6 +13,7 @@ import (
 	"github.com/freetaxii/libstix2/resources/apiroot"
 	"github.com/freetaxii/libstix2/resources/collections"
 	"github.com/freetaxii/libstix2/resources/discovery"
+	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/config"
 	"github.com/gologme/log"
 )
@@ -175,11 +176,21 @@ an HTTP request.
 func (s *ServerHandler) processURLParameters(q *collections.CollectionQuery, values map[string][]string) error {
 
 	if values["match[id]"] != nil {
-		q.STIXID = strings.Split(values["match[id]"][0], ",")
+		ids := strings.Split(values["match[id]"][0], ",")
+		for _, v := range ids {
+			if stixid.ValidSTIXID(v) {
+				q.STIXID = append(q.STIXID, v)
+			}
+		}
 	}
 
 	if values["match[type]"] != nil {
-		q.STIXType = strings.Split(values["match[type]"][0], ",")
+		objTypes := strings.Split(values["match[type]"][0], ",")
+		for _, v := range objTypes {
+			if stixid.ValidSTIXObjectType(v) {
+				q.STIXType = append(q.STIXType, v)
+			}
+		}
 	}
 
 	if values["match[version]"] != nil {

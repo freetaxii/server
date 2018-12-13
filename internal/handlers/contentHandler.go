@@ -58,20 +58,6 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 		}
 	} // End Authentication Check
 
-	// httpHeaderRange := r.Header.Get("Range")
-
-	// myregexp := regexp.MustCompile(`^items \d+-\d+$`)
-	// if myregexp.MatchString(httpHeaderRange) {
-	// 	rangeData := strings.Split(httpHeaderRange, " ")
-	// 	if rangeData[0] == "items" {
-	// 		values := strings.Split(rangeData[1], "-")
-	// 		q.RangeBegin, _ = strconv.Atoi(values[0])
-	// 		q.RangeEnd, _ = strconv.Atoi(values[1])
-
-	// 		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent the following range parameters:", values[0], values[1])
-	// 	}
-	// }
-
 	// ----------------------------------------------------------------------
 	// Handle URL Parameters and Path Variables
 	// ----------------------------------------------------------------------
@@ -90,7 +76,7 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 	urlvars := mux.Vars(r)
 
 	// ----------------------------------------------------------------------
-	// Handle Requests for all Objects
+	// Handle Requests for Manifest data
 	// ----------------------------------------------------------------------
 	if path.Base(r.URL.Path) == "manifest" {
 		s.Logger.Debugln("DEBUG: Found a GET Request for manifests")
@@ -108,6 +94,9 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 
 	}
 
+	// ----------------------------------------------------------------------
+	// Handle Requests for all Objects
+	// ----------------------------------------------------------------------
 	if path.Base(r.URL.Path) == "objects" {
 		s.Logger.Debugln("DEBUG: Found a GET Request for all objects")
 		results, err := s.DS.GetObjects(*q)
@@ -125,23 +114,46 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 	}
 
 	// ----------------------------------------------------------------------
-	// Handle Requests for an Object by ID
+	// Handle Requests for an Object by ID and Versions
 	// ----------------------------------------------------------------------
 	if urlvars["objectid"] != "" {
 		urlObjectID := urlvars["objectid"]
 		s.Logger.Debugln("DEBUG: Client", r.RemoteAddr, "sent URL path value:", urlObjectID)
 
-		// TODO check to see if objectid is valid first, change to make work with custom objects
+		// Since this endpoint does not allow the match[id] or match[type] filters
+		// lets clear them out, just in case the client is behaving badly
+		if len(q.STIXID) > 0 {
+			s.Logger.Infoln("INFO: Client", r.RemoteAddr, "sent a STIX ID as a filter parameter when not allowed")
+			q.STIXID = nil
+		}
+
+		if len(q.STIXType) > 0 {
+			s.Logger.Infoln("INFO: Client", r.RemoteAddr, "sent a STIX Type as a filter parameter when not allowed")
+			q.STIXType = nil
+		}
+
+		// TODO check to see if objectid is a valid STIX ID before we add it to the
+		// filter list.
+		// TODO change to make work with custom objects
 		if stixid.ValidSTIXID(urlObjectID) {
 			q.STIXID = append(q.STIXID, urlObjectID)
-		}
-		if stixid.ValidSTIXObjectType(urlObjectID) {
-			q.STIXType = append(q.STIXType, urlObjectID)
+		} else {
+			s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to invalid STIX ID in object by ID path")
+			s.sendGetObjectsError(w)
+			return
 		}
 
 		if path.Base(r.URL.Path) == "versions" {
 			// This is a simple get versions of an object ID request
-			s.Logger.Debugln("DEBUG: Found a request for the versions of an object by ID")
+			s.Logger.Debugln("DEBUG: Found a GET Request for the versions of an object by ID")
+
+			// Since this endpoint does not allow the match[id] or match[type] filters
+			// lets clear them out, just in case the client is behaving badly
+			if len(q.STIXVersion) > 0 {
+				s.Logger.Infoln("INFO: Client", r.RemoteAddr, "sent a STIX Version as a filter parameter when not allowed")
+				q.STIXVersion = nil
+			}
+
 			results, err := s.DS.GetVersions(*q)
 
 			if err != nil {
@@ -156,7 +168,7 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 
 		} else {
 			// This is a simple get objects by ID request
-			s.Logger.Debugln("DEBUG: Found a request for an object by ID")
+			s.Logger.Debugln("DEBUG: Found a GET Request for an object by ID")
 			results, err := s.DS.GetObjects(*q)
 
 			if err != nil {
