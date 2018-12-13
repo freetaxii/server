@@ -48,18 +48,30 @@ Below is a list of major features and which ones have been implemented:
 
 - [x] TLS 1.2
 - [x] Discovery Service
+  - [x] Multiple Discovery Services
 - [x] API Root Service
-- [x] Multiple API Roots
-- [x] Collections
-- [x] Collection
-- [x] Objects (GET)
-- [ ] Objects (POST)
-- [x] Objects By ID
-- [x] Manifests
-- [ ] Status
+  - [x] Multiple API Roots Services
+- [x] Endpoints
+  - [x] Discovery
+  - [x] API Root
+  - [x] Collections
+  - [x] Collection
+  - [x] Objects (GET)
+  - [ ] Objects (POST)
+  - [x] Objects By ID
+  - [x] Manifest
+  - [x] Versions
+  - [ ] Status
 - [x] URL Filtering
-- [x] Configuration from a file
-- [ ] Configuration from a database
+  - [x] added_after
+  - [x] limit
+  - [x] match[id]
+  - [x] match[type]
+  - [x] match[version]
+  - [x] match[spec_version]
+- [x] Configuration
+  - [x] From a file
+  - [ ] From a database
 - [x] Pagination
 - [ ] Authentication
 
