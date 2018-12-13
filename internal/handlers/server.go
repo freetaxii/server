@@ -14,6 +14,7 @@ import (
 	"github.com/freetaxii/libstix2/resources/collections"
 	"github.com/freetaxii/libstix2/resources/discovery"
 	"github.com/freetaxii/libstix2/stixid"
+	"github.com/freetaxii/libstix2/timestamp"
 	"github.com/freetaxii/server/internal/config"
 	"github.com/gologme/log"
 )
@@ -175,6 +176,28 @@ an HTTP request.
 */
 func (s *ServerHandler) processURLParameters(q *collections.CollectionQuery, values map[string][]string) error {
 
+	if values["added_after"] != nil {
+		after := strings.Split(values["added_after"][0], ",")
+		for _, v := range after {
+			if timestamp.Valid(v) {
+				q.AddedAfter = append(q.AddedAfter, v)
+			}
+		}
+	}
+
+	if values["added_before"] != nil {
+		before := strings.Split(values["added_before"][0], ",")
+		for _, v := range before {
+			if timestamp.Valid(v) {
+				q.AddedBefore = append(q.AddedBefore, v)
+			}
+		}
+	}
+
+	if values["limit"] != nil {
+		q.Limit = strings.Split(values["limit"][0], ",")
+	}
+
 	if values["match[id]"] != nil {
 		ids := strings.Split(values["match[id]"][0], ",")
 		for _, v := range ids {
@@ -194,26 +217,34 @@ func (s *ServerHandler) processURLParameters(q *collections.CollectionQuery, val
 	}
 
 	if values["match[version]"] != nil {
-		q.STIXVersion = strings.Split(values["match[version]"][0], ",")
+		vers := strings.Split(values["match[version]"][0], ",")
+		for _, v := range vers {
+			if timestamp.Valid(v) {
+				q.STIXVersion = append(q.STIXVersion, v)
+			}
+		}
 	}
 
-	if values["added_after"] != nil {
-		q.AddedAfter = strings.Split(values["added_after"][0], ",")
-	}
-
-	if values["added_before"] != nil {
-		q.AddedBefore = strings.Split(values["added_before"][0], ",")
-	}
-
-	if values["limit"] != nil {
-		q.Limit = strings.Split(values["limit"][0], ",")
+	// This list needs to also be updated in t_collectindataManifest.go : sqlCollectionDataWhereSpecVersion
+	if values["match[spec_version]"] != nil {
+		specV := strings.Split(values["match[spec_version]"][0], ",")
+		for _, v := range specV {
+			switch v {
+			case "2.0":
+				q.SpecVersion = append(q.SpecVersion, v)
+			case "2.1":
+				q.SpecVersion = append(q.SpecVersion, v)
+			}
+		}
 	}
 
 	s.Logger.Debugln("DEBUG: URL Parameter ID", q.STIXID)
 	s.Logger.Debugln("DEBUG: URL Parameter Type", q.STIXType)
 	s.Logger.Debugln("DEBUG: URL Parameter Version", q.STIXVersion)
+	s.Logger.Debugln("DEBUG: URL Parameter Spec Version", q.SpecVersion)
 	s.Logger.Debugln("DEBUG: URL Parameter Added After", q.AddedAfter)
 	s.Logger.Debugln("DEBUG: URL Parameter Added Before", q.AddedBefore)
 	s.Logger.Debugln("DEBUG: URL Parameter Limit", q.Limit)
+
 	return nil
 }
