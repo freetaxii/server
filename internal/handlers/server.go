@@ -219,7 +219,9 @@ func (s *ServerHandler) processURLParameters(q *collections.CollectionQuery, val
 	if values["match[version]"] != nil {
 		vers := strings.Split(values["match[version]"][0], ",")
 		for _, v := range vers {
-			if timestamp.Valid(v) {
+			if v == "all" || v == "last" || v == "first" {
+				q.STIXVersion = append(q.STIXVersion, v)
+			} else if timestamp.Valid(v) {
 				q.STIXVersion = append(q.STIXVersion, v)
 			}
 		}
