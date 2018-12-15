@@ -122,7 +122,7 @@ func (s *ServerHandler) baseHandler(w http.ResponseWriter, r *http.Request) {
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		s.sendUnsupportedMediaTypeError(w)
+		s.sendNotAcceptableError(w)
 		return
 	}
 }

@@ -36,11 +36,11 @@ func (s *ServerHandler) sendUnauthenticatedError(w http.ResponseWriter) {
 }
 
 /*
-sendUnsupportedMediaTypeError - This method will send the correct TAXII error
+sendNotAcceptableError - This method will send the correct TAXII error
 message for a session that requests an unsupported media type in the accept
 header.
 */
-func (s *ServerHandler) sendUnsupportedMediaTypeError(w http.ResponseWriter) {
+func (s *ServerHandler) sendNotAcceptableError(w http.ResponseWriter) {
 
 	// Setup JSON stream encoder
 	j := json.NewEncoder(w)
@@ -52,7 +52,30 @@ func (s *ServerHandler) sendUnsupportedMediaTypeError(w http.ResponseWriter) {
 	e.SetTitle("Wrong Media Type")
 	e.SetDescription("The requested media type in the accept header is not supported.")
 	e.SetErrorCode("406")
-	e.SetHTTPStatus("406 Unsupported Media Type")
+	e.SetHTTPStatus("406 Not Acceptable")
+
+	j.SetIndent("", "    ")
+	j.Encode(e)
+}
+
+/*
+sendUnsupportedMediaTypeError - This method will send the correct TAXII error
+message for a session that requests an unsupported media type in the content-type
+header.
+*/
+func (s *ServerHandler) sendUnsupportedMediaTypeError(w http.ResponseWriter) {
+
+	// Setup JSON stream encoder
+	j := json.NewEncoder(w)
+
+	w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
+	w.WriteHeader(http.StatusUnsupportedMediaType)
+
+	e := taxiierror.New()
+	e.SetTitle("Wrong Media Type")
+	e.SetDescription("The requested media type in the content-type header is not supported.")
+	e.SetErrorCode("415")
+	e.SetHTTPStatus("415 Unsupported Media Type")
 
 	j.SetIndent("", "    ")
 	j.Encode(e)
@@ -75,6 +98,28 @@ func (s *ServerHandler) sendGetObjectsError(w http.ResponseWriter) {
 	e.SetDescription("The request for objects caused an error.")
 	e.SetErrorCode("404")
 	e.SetHTTPStatus("404 Not Found")
+
+	j.SetIndent("", "    ")
+	j.Encode(e)
+}
+
+/*
+sendParseObjectsError - This method will send the correct TAXII error
+message for a session that posts some objects but an error is returned.
+*/
+func (s *ServerHandler) sendParseObjectsError(w http.ResponseWriter) {
+
+	// Setup JSON stream encoder
+	j := json.NewEncoder(w)
+
+	w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
+	w.WriteHeader(http.StatusBadRequest)
+
+	e := taxiierror.New()
+	e.SetTitle("Post Objects Error")
+	e.SetDescription("The request to post objects caused an error.")
+	e.SetErrorCode("400")
+	e.SetHTTPStatus("400 Bad Request")
 
 	j.SetIndent("", "    ")
 	j.Encode(e)

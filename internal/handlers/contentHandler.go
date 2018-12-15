@@ -12,8 +12,9 @@ import (
 	"path"
 
 	"github.com/freetaxii/libstix2/defs"
-	"github.com/freetaxii/libstix2/objects/bundle"
+	"github.com/freetaxii/libstix2/objects"
 	"github.com/freetaxii/libstix2/resources/collections"
+	"github.com/freetaxii/libstix2/resources/envelope"
 	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/headers"
 	"github.com/gorilla/mux"
@@ -241,7 +242,7 @@ func (s *ServerHandler) STIXContentServerHandler(w http.ResponseWriter, r *http.
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		s.sendUnsupportedMediaTypeError(w)
+		s.sendNotAcceptableError(w)
 		return
 	}
 }
@@ -251,8 +252,8 @@ ObjectsServerWriteHandler - This method will handle all POST requests of STIX
 objects from the TAXII server.
 */
 func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http.Request) {
-	var acceptHeader headers.MediaType
-	var contentHeader headers.MediaType
+
+	s.Logger.Infoln("INFO: Found POST Request on the Objects Server from", r.RemoteAddr, "for collection:", s.CollectionID)
 
 	// If trace is enabled in the logger, than decode the HTTP Request to the log
 	if s.Logger.GetLevel("trace") {
@@ -284,26 +285,31 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 		}
 	} // End Authentication Check
 
-	acceptHeader.ParseSTIX(r.Header.Get("Accept"))
-	contentHeader.ParseSTIX(r.Header.Get("Content-type"))
-
-	s.Logger.Infoln("INFO: Found POST Request on the Objects Server from", r.RemoteAddr, "for collection:", s.CollectionID)
-
 	// ----------------------------------------------------------------------
-	// Decode the bundle object itself, but leave the objects array as an
-	// array of raw JSON object objects, we will decode each one later.
+	// Check content-type header first
 	// ----------------------------------------------------------------------
-	b, err := bundle.DecodeRaw(r.Body)
-	if err != nil {
-		s.Logger.Warnln("WARN: Could not decode provided bundle")
+	var contentHeader headers.MediaType
+	contentHeader.ParseTAXII(r.Header.Get("Content-type"))
 
-		// TODO if this is an error we need to eject right here and sent error message back to client.
+	if contentHeader.TAXII21 != true {
+		s.sendUnsupportedMediaTypeError(w)
+		return
 	}
 
-	// TODO first check content-type header
+	// ----------------------------------------------------------------------
+	// Decode the envelope object itself, but leave the objects array as an
+	// array of raw JSON object objects, we will decode each one later.
+	// ----------------------------------------------------------------------
+	e, err := envelope.DecodeRaw(r.Body)
+	if err != nil {
+		s.Logger.Warnln("WARN: Could not decode provided envelope")
+
+		s.sendParseObjectsError(w)
+		return
+	}
 
 	// ----------------------------------------------------------------------
-	// Decode each object in the bundle one at a time. If the object is valid
+	// Decode each object in the envelope one at a time. If the object is valid
 	// write it off to the datastore.
 	// Lets keep a count of the number of objects that are successful and the
 	// number that are not successful in addition to a total count
@@ -311,16 +317,16 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	totalCount := 0
 	successCount := 0
 	failureCount := 0
-	for _, v := range b.Objects {
+	for _, v := range e.Objects {
 		totalCount++
-		s.Logger.Debugln("DEBUG: Processing bundle object number", totalCount)
+		s.Logger.Debugln("DEBUG: Processing envelope object number", totalCount)
 
-		// First, decode the first object from the bundle if it succeeds try to
+		// First, decode the first object from the envelope if it succeeds try to
 		// add it to the datastore
-		o, id, err := bundle.DecodeObject(v)
+		o, id, err := objects.Decode(v)
 		if err != nil {
 			// TODO Track something to send error back to client in status resource
-			s.Logger.Warnln("WARN: Error decoding object in bundle", err)
+			s.Logger.Warnln("WARN: Error decoding object in envelope", err)
 			failureCount++
 			// If there is an error, lets just skip and move on to the next object
 			continue
@@ -345,50 +351,33 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 			s.Logger.Debugln(err)
 		}
 	}
-	s.Logger.Debugln("DEBUG: Total number of objects in Bundle", totalCount)
+	s.Logger.Debugln("DEBUG: Total number of objects in Envelope", totalCount)
 	s.Logger.Debugln("DEBUG: Total objects successfully added to datastore", successCount)
 	s.Logger.Debugln("DEBUG: Total objects that failed to be added to the datastore", failureCount)
-	// unmarshal content and write data
-
-	//results, err := s.DS.GetObjects(*q)
-
-	// if err != nil {
-	// 	taxiiError := resources.NewError()
-	// 	title := "ERROR: " + err.Error()
-	// 	taxiiError.SetTitle(title)
-	// 	desc := "The requested had the following problem: " + err.Error()
-	// 	taxiiError.SetDescription(desc)
-	// 	taxiiError.SetHTTPStatus("404")
-	// 	s.Resource = taxiiError
-	// 	objectNotFound = true
-	// 	s.Logger.Infoln("INFO: Sending error response to", r.RemoteAddr, "due to:", err.Error())
-
-	// } else {
 
 	s.Logger.Infoln("INFO: Sending response to", r.RemoteAddr)
-	// }
 
 	// --------------------------------------------------
 	// Encode outgoing response message
 	// --------------------------------------------------
 
-	// Setup JSON stream encoder for response
-	j := json.NewEncoder(w)
+	// Get Accept Header
+	var acceptHeader headers.MediaType
+	acceptHeader.ParseTAXII(r.Header.Get("Accept"))
 
 	// Set header for TLS
 	w.Header().Add("Strict-Transport-Security", "max-age=86400; includeSubDomains")
 
 	if acceptHeader.TAXII21 == true {
+		// Setup JSON stream encoder for response
+		j := json.NewEncoder(w)
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII21)
 		w.WriteHeader(http.StatusAccepted)
 		j.Encode(s.Resource)
 
-	} else if acceptHeader.TAXII20 == true {
-		w.Header().Set("Content-Type", defs.MEDIA_TYPE_TAXII20)
-		w.WriteHeader(http.StatusAccepted)
-		j.Encode(s.Resource)
-
 	} else if acceptHeader.JSON == true {
+		// Setup JSON stream encoder for response
+		j := json.NewEncoder(w)
 		w.Header().Set("Content-Type", defs.MEDIA_TYPE_JSON)
 		w.WriteHeader(http.StatusAccepted)
 		j.SetIndent("", "    ")
@@ -416,7 +405,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 		htmlTemplateResource.Execute(w, s)
 
 	} else {
-		s.sendUnsupportedMediaTypeError(w)
+		s.sendNotAcceptableError(w)
 		return
 	}
 }
