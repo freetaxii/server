@@ -13,9 +13,16 @@ The FreeTAXII Server is a TAXII 2 Server written in Go (golang)
 This package can be installed with the go get command:
 
 ```
-go get github.com/freetaxii/server/cmd/freetaxii
+go get -u -v github.com/freetaxii/server/cmd/freetaxii
 cd github.com/freetaxii/server/cmd/freetaxii
 go build freetaxii.go
+```
+
+To create the Sqlite3 database, run the following command:
+
+```
+cd github.com/freetaxii/server/cmd/createdb
+go run createSqlite3Database.go
 ```
 
 ## Dependencies ##
