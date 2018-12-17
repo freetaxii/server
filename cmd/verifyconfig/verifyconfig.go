@@ -7,10 +7,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/freetaxii/freetaxii-server/lib/config"
+	"github.com/freetaxii/server/internal/config"
+	"github.com/gologme/log"
 	"github.com/pborman/getopt"
 )
 
@@ -31,24 +31,27 @@ var (
 )
 
 func main() {
-	configFileName := processCommandLineFlags()
+	processCommandLineFlags()
+
+	logger := log.New(os.Stderr, "", log.LstdFlags)
+	logger.EnableLevel("info")
+	logger.EnableLevel("debug")
 
 	// --------------------------------------------------
 	// Define variables
 	// --------------------------------------------------
 
-	var taxiiServerConfig config.ServerConfigType
+	_, err := config.New(logger, *sOptServerConfigFilename)
+
+	if err != nil {
+		logger.Fatalln(err)
+	}
 
 	// --------------------------------------------------
 	// Load System and Server Configuration
 	// --------------------------------------------------
 
-	taxiiServerConfig.LoadServerConfig(configFileName)
-	configError := taxiiServerConfig.VerifyServerConfig()
-	if configError != nil {
-		log.Fatalln(configError)
-	}
-	log.Println("No errors found")
+	logger.Println("No errors found")
 }
 
 // --------------------------------------------------
