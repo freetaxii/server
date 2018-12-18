@@ -31,10 +31,11 @@ BUILD=`git rev-parse HEAD`
 # LDFLAGS=-ldflags "-X main.Build=$(BUILD)"
 
 
+.PHONY: clean distro
+
 # Default target builds FreeTAXII
 default:
 	@echo "$(OK_COLOR)==> Please run \"make distro\"...$(NO_COLOR)";
-
 
 # Installs FreeTAXII and copies needed files
 distro:
@@ -77,5 +78,5 @@ clean:
 	if [ -d $(BUILD_DIR) ] ; then rm -rf $(BUILD_DIR) ; fi
 
 
-.PHONY: clean install
+
 
