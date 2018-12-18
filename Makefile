@@ -1,7 +1,7 @@
-// Copyright 2015-2018 Bret Jordan, All rights reserved.
-//
-// Use of this source code is governed by an Apache 2.0 license
-// that can be found in the LICENSE file in the root of the source tree.
+# Copyright 2015-2018 Bret Jordan, All rights reserved.
+#
+# Use of this source code is governed by an Apache 2.0 license
+# that can be found in the LICENSE file in the root of the source tree.
 
 GO_CMD=go
 GO_BUILD=$(GO_CMD) build
@@ -16,39 +16,65 @@ WARN_COLOR=\033[33;01m
 
 # Binary filename
 BINARY=freetaxii
-
+VERSION=0.3.1
+BUILD_DIR = srcbuild
+BIN_DIR = bin
+LOG_DIR = log
+DB_DIR = db
+ETC_DIR = etc
+TEMPLATES_DIR = templates
 
 # The build version that we want to pass in to the application during compile time
 BUILD=`git rev-parse HEAD`
 
 # Setup the -ldflags option for go build here, interpolate the variable values 
-LDFLAGS=-ldflags "-X main.Build=$(BUILD)"
+# LDFLAGS=-ldflags "-X main.Build=$(BUILD)"
 
 
 # Default target builds FreeTAXII
 default:
-	@echo "$(OK_COLOR)==> Building $(BINARY)...$(NO_COLOR)"; \
-	$(GO_BUILD) $(LDFLAGS) -o $(BINARY)
+	@echo "$(OK_COLOR)==> Please run \"make distro\"...$(NO_COLOR)";
 
-# Build a version specifically for Darwin 64-bit
-darwin:
-	@echo "$(OK_COLOR)==> Building $(BINARY) for Darwin...$(NO_COLOR)"; \
-	GOOS=darwin GOARCH=amd64 $(GO_BUILD) $(LDFLAGS) -o $(BINARY)-darwin-amd64
-
-# Build a version specificatlly for Linux 64-bit
-linux64:
-	@echo "$(OK_COLOR)==> Building $(BINARY) for Linux64...$(NO_COLOR)"; \
-	GOOS=linux GOARCH=amd64 $(GO_BUILD) $(LDFLAGS) -o $(BINARY)-linux-amd64	
 
 # Installs FreeTAXII and copies needed files
-install:
-	@echo "$(OK_COLOR)==> Installing $(BINARY)...$(NO_COLOR)"; \
-	$(GO_INSTALL) $(LDFLAGS)
+distro:
+	@echo "$(OK_COLOR)==> Removing Existing Distribution Package...$(NO_COLOR)"; \
+	if [ -d $(BUILD_DIR) ] ; then rm -rf $(BUILD_DIR) ; fi
+
+	@echo "$(OK_COLOR)==> Setting Up Distribution Directories...$(NO_COLOR)"; \
+	mkdir -p $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR); \
+	mkdir -p $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(DB_DIR); \
+	mkdir -p $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(ETC_DIR)/tls; \
+	mkdir -p $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(LOG_DIR); \
+	mkdir -p $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(TEMPLATES_DIR);
+
+	@echo "$(OK_COLOR)==> Building Application Files...$(NO_COLOR)"; \
+	$(GO_BUILD) -v -o $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BINARY) cmd/freetaxii/freetaxii.go; \
+	$(GO_BUILD) -v -o $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR)/createSqlite3Database cmd/createdb/createSqlite3Database.go; \
+	$(GO_BUILD) -v -o $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR)/verifyconfig cmd/verifyconfig/verifyconfig.go;
+
+	@echo "$(OK_COLOR)==> Copying Needed Files...$(NO_COLOR)"; \
+	cp -R cmd/freetaxii/templates/* $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(TEMPLATES_DIR)/; \
+	cp cmd/freetaxii/etc/freetaxii.conf $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(ETC_DIR)/; \
+	touch $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(LOG_DIR)/$(BINARY).log;
+
+	@echo "$(OK_COLOR)==> Creating Database File...$(NO_COLOR)"; \
+	cd $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR)/; \
+	./createSqlite3Database;
+
+	@echo "$(OK_COLOR)==> Creating Tarball...$(NO_COLOR)"; \
+	cd $(BUILD_DIR)/; \
+	tar -cf $(BINARY)-$(VERSION).tar $(BINARY)-$(VERSION);
+
+	@echo "$(OK_COLOR)==> Compressing Tarball...$(NO_COLOR)"; \
+	cd $(BUILD_DIR)/; \
+	gzip $(BINARY)-$(VERSION).tar; 
+
 
 # Clean up the project: delete binaries
 clean:
-	@echo "$(OK_COLOR)==> Cleaning $(BINARY)...$(NO_COLOR)"; \
-	if [ -f $(BINARY) ] ; then rm $(BINARY) ; fi
+	@echo "$(OK_COLOR)==> Removing Existing Distribution Package $(BINARY)...$(NO_COLOR)"; \
+	if [ -d $(BUILD_DIR) ] ; then rm -rf $(BUILD_DIR) ; fi
 
 
 .PHONY: clean install
