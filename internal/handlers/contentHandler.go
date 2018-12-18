@@ -302,7 +302,7 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 	// ----------------------------------------------------------------------
 	e, err := envelope.DecodeRaw(r.Body)
 	if err != nil {
-		s.Logger.Warnln("WARN: Could not decode provided envelope")
+		s.Logger.Errorln("ERROR: Could not decode provided envelope")
 
 		s.sendParseObjectsError(w)
 		return
