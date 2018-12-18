@@ -54,11 +54,9 @@ A boolean flag to enable logging
 #### loglevel ####
 An integer with a value of 1-5 that specifies the current logging level. The log levels are currently defined as:
 
-- Log Level 1 = basic system logging information, sent to STDOUT unless Enabled = true then it is logged to a file
-- Log Level 2 =
-- Log Level 3 = detailed debugging information and code troubleshooting
-- Log Level 4 =
-- Log Level 5 = RAW packet/message decode and output
+- Log Level 1 = Information messages
+- Log Level 3 = Information and warning messages
+- Log Level 5 = Information, warning, and debug messages
 
 #### logfile ####
 The location of the log file. Example: log/freetaxii.log
