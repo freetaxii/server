@@ -71,6 +71,9 @@ distro:
 	cd $(BUILD_DIR)/; \
 	gzip $(BINARY)-$(VERSION).tar; 
 
+	@echo "$(OK_COLOR)==> Moving Compressed Tarball...$(NO_COLOR)"; \
+	mv $(BUILD_DIR)/$(BINARY)-$(VERSION).tar.gz ./
+
 
 # Clean up the project: delete binaries
 clean:
