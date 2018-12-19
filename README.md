@@ -37,6 +37,10 @@ gorilla/mux
 	go get github.com/gorilla/mux
 	Copyright (c) 2012 Rodrigo Moraes
 
+gologme/log
+  go get github.com/gologme/log
+  Copyright (c) 2017 Bret Jordan. All rights reserved.
+
 libstix2
 	go get github.com/freetaxii/libstix2
 	Copyright (c) 2015-2018 Bret Jordan. All rights reserved. 
@@ -45,7 +49,7 @@ libstix2
 
 This software uses the following builtin libraries:
 ```
-crypto/tls, encoding/json, errors, fmt, html/template, io/ioutil, log, net/http, os, strings, time
+crypto/tls, database/sql, encoding/json, errors, fmt, html/template, io/ioutil, log, net/http, os, path, strconv, strings, time
 	Copyright 2009 The Go Authors
 ```
 

@@ -8,10 +8,10 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/freetaxii/libstix2/datastore/sqlite3"
+	"github.com/gologme/log"
 	"github.com/pborman/getopt"
 )
 
