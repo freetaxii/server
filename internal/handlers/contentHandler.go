@@ -15,6 +15,7 @@ import (
 	"github.com/freetaxii/libstix2/objects"
 	"github.com/freetaxii/libstix2/resources/collections"
 	"github.com/freetaxii/libstix2/resources/envelope"
+	"github.com/freetaxii/libstix2/resources/status"
 	"github.com/freetaxii/libstix2/stixid"
 	"github.com/freetaxii/server/internal/headers"
 	"github.com/gorilla/mux"
@@ -296,6 +297,11 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 		return
 	}
 
+	statusMessage := status.New()
+	statusMessage.SetNewID()
+	statusMessage.SetStatusCompleted()
+	statusMessage.SetRequestTimestampToCurrentTime()
+
 	// ----------------------------------------------------------------------
 	// Decode the envelope object itself, but leave the objects array as an
 	// array of raw JSON object objects, we will decode each one later.
@@ -326,8 +332,9 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 		o, id, err := objects.Decode(v)
 		if err != nil {
 			// TODO Track something to send error back to client in status resource
-			s.Logger.Warnln("WARN: Error decoding object in envelope", err)
+			s.Logger.Errorln("ERROR: Error decoding object in envelope", err)
 			failureCount++
+			statusMessage.CreateFailureDetails(id, "", "Object failed")
 			// If there is an error, lets just skip and move on to the next object
 			continue
 		}
@@ -336,12 +343,14 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 		s.Logger.Debugln("DEBUG: Adding object", id, "to the datastore")
 		err = s.DS.AddObject(o)
 		if err != nil {
-			s.Logger.Warnln("WARN: Error adding object", id, "to datastore", err)
+			s.Logger.Errorln("ERROR: Error adding object", id, "to datastore", err)
 			failureCount++
+			statusMessage.CreateFailureDetails(id, "", "Object failed")
 			// If there was an error, lets just skip and move on to the next object
 			continue
 		}
 		successCount++
+		statusMessage.CreateSuccessDetails(id, "", "Object added")
 
 		// If the add was successful then lets add an entry in to the collection
 		// record table.
@@ -351,6 +360,13 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 			s.Logger.Debugln(err)
 		}
 	}
+
+	statusMessage.SetTotalCount(totalCount)
+	statusMessage.SetSuccessCount(successCount)
+	statusMessage.SetFailureCount(failureCount)
+
+	s.Resource = statusMessage
+
 	s.Logger.Debugln("DEBUG: Total number of objects in Envelope", totalCount)
 	s.Logger.Debugln("DEBUG: Total objects successfully added to datastore", successCount)
 	s.Logger.Debugln("DEBUG: Total objects that failed to be added to the datastore", failureCount)
