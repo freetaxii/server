@@ -68,10 +68,10 @@ Below is a list of major features and which ones have been implemented:
   - [x] Collections
   - [x] Collection
   - [x] Objects (GET)
-  - [ ] Objects (POST)
+  - [x] Objects (POST)
   - [x] Objects By ID
+  - [x] Object Versions
   - [x] Manifest
-  - [x] Versions
   - [ ] Status
 - [x] URL Filtering
   - [x] added_after
@@ -85,6 +85,9 @@ Below is a list of major features and which ones have been implemented:
   - [ ] From a database
 - [x] Pagination
 - [ ] Authentication
+- [ ] Max Content Size Checking
+- [x] HTML Templates
+  - [x] Per Service Templates
 
 
 ## License ##
