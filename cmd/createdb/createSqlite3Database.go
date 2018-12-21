@@ -19,13 +19,13 @@ import (
 // populated by the Makefile and uses the Git Head hash as its identifier.
 // These variables are used in the console output for --version and --help.
 var (
-	Version = "0.3.1"
+	Version = "0.3.2"
 	Build   string
 )
 
 // These global variables are for dealing with command line options
 var (
-	defaultDatabaseFilename = "../db/freetaxii.db"
+	defaultDatabaseFilename = "freetaxii.db"
 	sOptDatabaseFilename    = getopt.StringLong("filename", 'f', defaultDatabaseFilename, "Database Filename", "string")
 	bOptHelp                = getopt.BoolLong("help", 0, "Help")
 	bOptVer                 = getopt.BoolLong("version", 0, "Version")
