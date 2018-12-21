@@ -63,6 +63,9 @@ distro:
 	cd $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR)/; \
 	./createSqlite3Database;
 
+	@echo "$(OK_COLOR)==> Move Database File To DB Directory...$(NO_COLOR)"; \
+	mv $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(BIN_DIR)/freetaxii.db $(BUILD_DIR)/$(BINARY)-$(VERSION)/$(DB_DIR);
+
 	@echo "$(OK_COLOR)==> Creating Tarball...$(NO_COLOR)"; \
 	cd $(BUILD_DIR)/; \
 	tar -cf $(BINARY)-$(VERSION).tar $(BINARY)-$(VERSION);
