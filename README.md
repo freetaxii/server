@@ -38,8 +38,8 @@ gorilla/mux
 	Copyright (c) 2012 Rodrigo Moraes
 
 gologme/log
-  go get github.com/gologme/log
-  Copyright (c) 2017 Bret Jordan. All rights reserved.
+	go get github.com/gologme/log
+	Copyright (c) 2017 Bret Jordan. All rights reserved.
 
 libstix2
 	go get github.com/freetaxii/libstix2
