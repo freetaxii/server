@@ -329,7 +329,8 @@ func (s *ServerHandler) ObjectsServerWriteHandler(w http.ResponseWriter, r *http
 
 		// First, decode the first object from the envelope if it succeeds try to
 		// add it to the datastore
-		o, id, err := objects.Decode(v)
+		o, err := objects.Decode(v)
+		id := o.GetID()
 		if err != nil {
 			// TODO Track something to send error back to client in status resource
 			s.Logger.Errorln("ERROR: Error decoding object in envelope", err)
